@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { AuthProvider } from './src/context/AuthContext';
 import { ExpenseProvider } from './src/context/ExpenseContext';
@@ -207,16 +208,18 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <ExpenseProvider>
-          <TransactionProvider>
-            <ThemeProvider>
-              <RootNavigator />
-            </ThemeProvider>
-          </TransactionProvider>
-        </ExpenseProvider>
-      </AuthProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AuthProvider>
+          <ExpenseProvider>
+            <TransactionProvider>
+              <ThemeProvider>
+                <RootNavigator />
+              </ThemeProvider>
+            </TransactionProvider>
+          </ExpenseProvider>
+        </AuthProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
