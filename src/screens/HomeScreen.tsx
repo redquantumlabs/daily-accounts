@@ -15,7 +15,7 @@ import EmptyState from '../components/EmptyState';
 export default function HomeScreen({ navigation }: any) {
   const colors = useThemeColors();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const { user } = useAuthContext();
+  const { profileName } = useAuthContext();
   const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats } = useTransactionContext();
   const { currency, isAmountsVisible } = useExpenseContext();
 
@@ -216,7 +216,7 @@ export default function HomeScreen({ navigation }: any) {
           numberOfLines={1}
           adjustsFontSizeToFit
         >
-          {greeting}, {user?.firstName || 'User'}{user?.lastName ? ` ${user.lastName}` : ''}!
+          {greeting}, {profileName?.firstName || 'User'}{profileName?.lastName ? ` ${profileName.lastName}` : ''}!
         </AppText>
       </View>
 

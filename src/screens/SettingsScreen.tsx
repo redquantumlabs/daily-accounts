@@ -21,7 +21,7 @@ import { changeIcon } from 'react-native-change-icon';
 export default function SettingsScreen({ navigation }: any) {
   const colors = useThemeColors();
   const { isDarkTheme, toggleTheme, refreshTheme, accentColor, setAccentColor, appIcon, updateAppIcon } = useThemeContext();
-  const { logout, refreshAuth, user } = useAuthContext();
+  const { profileName, refreshAuth } = useAuthContext();
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isImportTxModalVisible, setIsImportTxModalVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -217,7 +217,7 @@ export default function SettingsScreen({ navigation }: any) {
           <View style={styles.rowLeft}>
             <Ionicons name="person-outline" size={22} color={colors.primary} style={styles.icon} />
             <AppText style={[styles.text, { color: colors.text }]}>
-              {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User Profile'}
+              {profileName?.firstName ? `${profileName.firstName} ${profileName.lastName || ''}`.trim() : 'Set Name'}
             </AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
@@ -641,13 +641,6 @@ export default function SettingsScreen({ navigation }: any) {
         )}
       </View>
 
-      <TouchableOpacity
-        style={[styles.logoutButton, { backgroundColor: '#ff4444', marginTop: 10 }]}
-        onPress={logout}
-      >
-        <AppText style={styles.logoutText}>Log Out</AppText>
-      </TouchableOpacity>
-
       <ImportSheetModal
         visible={isImportModalVisible}
         onClose={() => setIsImportModalVisible(false)}
@@ -745,17 +738,6 @@ const styles = StyleSheet.create({
     marginRight: 16,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logoutButton: {
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  logoutText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   processingOverlay: {
     flex: 1,
