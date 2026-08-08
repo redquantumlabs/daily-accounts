@@ -1,0 +1,610 @@
+import React, { useState, useMemo } from 'react';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppText from '../components/AppText';
+import { useThemeContext } from '../context/ThemeContext';
+import { useExpenseContext } from '../context/ExpenseContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { formatAmount } from '../utils/format';
+import PremiumCardBackground from '../components/PremiumCardBackground';
+import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+export default function IncomeScreen() {
+  const colors = useThemeColors();
+  const { isDarkTheme } = useThemeContext();
+  const { expenses, monthlyIncomes, updateMonthlyIncome, currency, isAmountsVisible } = useExpenseContext();
+  const insets = useSafeAreaInsets();
+
+  const currentYear = new Date().getFullYear();
+  const startYear = 2022;
+  const years = Array.from({ length: currentYear - startYear + 1 }, (_, i) => currentYear - i);
+
+  const [selectedYear, setSelectedYear] = useState<number | 'All'>(currentYear);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<{ monthIndex: number; monthName: string } | null>(null);
+  
+  const [isSummaryHidden, setIsSummaryHidden] = React.useState(!isAmountsVisible);
+  const [hiddenItems, setHiddenItems] = React.useState<Record<string, boolean>>({});
+
+  const toggleHiddenItem = (key: string) => {
+    setHiddenItems(prev => {
+      const current = prev[key] ?? !isAmountsVisible;
+      return { ...prev, [key]: !current };
+    });
+  };
+  
+  const [incomeInput, setIncomeInput] = useState('');
+  const [error, setError] = useState('');
+
+  const monthlyStats = useMemo(() => {
+    if (selectedYear === 'All') return [];
+    return MONTHS.map((monthName, index) => {
+      const monthNumber = index + 1;
+      const key = `${selectedYear}-${String(monthNumber).padStart(2, '0')}`;
+
+      const income = monthlyIncomes[key] || 0;
+
+      const expense = expenses
+        .filter(e => {
+          return parseISOYear(e.date) === selectedYear && parseISOMonth(e.date) === index;
+        })
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      const balance = income - expense;
+
+      const now = new Date();
+      let daysToConsider = 1;
+      if (selectedYear === now.getFullYear() && monthNumber === now.getMonth() + 1) {
+        daysToConsider = Math.max(now.getDate() - 1, 1);
+      } else if ((selectedYear as number) < now.getFullYear() || ((selectedYear as number) === now.getFullYear() && monthNumber < now.getMonth() + 1)) {
+        daysToConsider = new Date(selectedYear as number, monthNumber, 0).getDate();
+      } else {
+        daysToConsider = new Date(selectedYear as number, monthNumber, 0).getDate();
+      }
+      const dailyAverage = expense / daysToConsider;
+
+      return {
+        monthIndex: monthNumber,
+        monthName,
+        income,
+        expense,
+        balance,
+        dailyAverage
+      };
+    });
+  }, [selectedYear, expenses, monthlyIncomes]);
+
+  const yearlyTotals = useMemo(() => {
+    if (selectedYear === 'All') return { income: 0, expense: 0, balance: 0, monthlyAverage: 0 };
+    const totals = monthlyStats.reduce(
+      (acc, curr) => {
+        acc.income += curr.income;
+        acc.expense += curr.expense;
+        acc.balance += curr.balance;
+        return acc;
+      },
+      { income: 0, expense: 0, balance: 0 }
+    );
+
+    const now = new Date();
+    let monthsToConsider = 12;
+    if (selectedYear === now.getFullYear()) {
+      monthsToConsider = Math.max(now.getMonth(), 1);
+    } else if ((selectedYear as number) < now.getFullYear()) {
+      monthsToConsider = 12;
+    }
+    const monthlyAverage = totals.expense / monthsToConsider;
+
+    return { ...totals, monthlyAverage };
+  }, [monthlyStats, selectedYear]);
+
+  const allYearsStats = useMemo(() => {
+    if (selectedYear !== 'All') return [];
+
+    return years.map(year => {
+      let income = 0;
+      let expense = 0;
+
+      expense = expenses
+        .filter(e => parseISOYear(e.date) === year)
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      for (let i = 1; i <= 12; i++) {
+        const key = `${year}-${String(i).padStart(2, '0')}`;
+        income += (monthlyIncomes[key] || 0);
+      }
+
+      const now = new Date();
+      let monthsToConsider = 12;
+      if (year === now.getFullYear()) {
+        monthsToConsider = Math.max(now.getMonth(), 1);
+      }
+      const monthlyAverage = expense / monthsToConsider;
+
+      return {
+        year,
+        income,
+        expense,
+        balance: income - expense,
+        monthlyAverage
+      };
+    });
+  }, [selectedYear, years, expenses, monthlyIncomes]);
+
+  const overallTotals = useMemo(() => {
+    if (selectedYear !== 'All') return { income: 0, expense: 0, balance: 0, yearlyAverage: 0 };
+    const totals = allYearsStats.reduce((acc, curr) => {
+      acc.income += curr.income;
+      acc.expense += curr.expense;
+      acc.balance += curr.balance;
+      return acc;
+    }, { income: 0, expense: 0, balance: 0 });
+
+    const yearlyAverage = totals.expense / Math.max(allYearsStats.length - 1, 1);
+
+    return { ...totals, yearlyAverage };
+  }, [allYearsStats, selectedYear]);
+
+  React.useEffect(() => {
+    setIsSummaryHidden(!isAmountsVisible);
+    setHiddenItems({});
+  }, [isAmountsVisible]);
+
+  const handleOpenModal = (monthIndex: number, monthName: string, currentIncome: number) => {
+    setSelectedMonth({ monthIndex, monthName });
+    setIncomeInput(currentIncome > 0 ? currentIncome.toString() : '');
+    setError('');
+    setIsModalVisible(true);
+  };
+
+  const handleSaveIncome = async () => {
+    if (!selectedMonth || selectedYear === 'All') return;
+
+    const amountStr = incomeInput.trim();
+    if (!amountStr) {
+      // If empty, save as 0
+      await updateMonthlyIncome(selectedYear, selectedMonth.monthIndex, 0);
+      setIsModalVisible(false);
+      return;
+    }
+
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount < 0) {
+      setError('Please enter a valid positive number.');
+      return;
+    }
+
+    await updateMonthlyIncome(selectedYear, selectedMonth.monthIndex, amount);
+    setIsModalVisible(false);
+  };
+  const renderProgressBar = (income: number, expense: number, balance: number, averageText?: string) => {
+    const expensePercent = income > 0 ? (expense / income) * 100 : (expense > 0 ? 100 : 0);
+    const availablePercent = income > 0 ? (balance / income) * 100 : (balance > 0 ? 100 : 0);
+
+    return (
+      <View style={{ marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>
+            EXPENSE {expensePercent.toFixed(2)}%
+          </AppText>
+          <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>
+            AVAILABLE BALANCE {availablePercent.toFixed(2)}%
+          </AppText>
+        </View>
+        <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 4, flexDirection: 'row', overflow: 'hidden' }}>
+          <View style={{ height: '100%', width: `${Math.min(100, expensePercent)}%`, backgroundColor: '#ff4444' }} />
+          <View style={{ height: '100%', width: `${Math.max(0, 100 - expensePercent)}%`, backgroundColor: income > 0 && balance > 0 ? '#00C851' : 'transparent' }} />
+        </View>
+        {averageText && (
+          <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 12 }}>
+            {averageText}
+          </AppText>
+        )}
+      </View>
+    );
+  };
+
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.yearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.yearScroll}>
+          {(['All', ...years] as (number | 'All')[]).map(year => (
+            <TouchableOpacity
+              key={year}
+              style={[
+                styles.yearChip,
+                { backgroundColor: selectedYear === year ? colors.primary : colors.surface }
+              ]}
+              onPress={() => setSelectedYear(year)}
+            >
+              <AppText style={[styles.yearChipText, { color: selectedYear === year ? '#fff' : colors.text }]}>
+                {year}
+              </AppText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.header}>
+          <AppText style={[styles.title, { color: colors.text }]}>
+            {selectedYear === 'All' ? 'Yearly Income' : 'Monthly Income'}
+          </AppText>
+          <AppText style={styles.subtitle} numberOfLines={1} adjustsFontSizeToFit>
+            {selectedYear === 'All' ? 'View your yearly income and expense overview.' : 'Track income vs expenses to see your balance.'}
+          </AppText>
+        </View>
+
+        {selectedYear === 'All' ? (
+          <>
+            <PremiumCardBackground color={colors.primary} style={styles.yearlySummaryCard}>
+              <View style={{ marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <AppText style={{ fontSize: 16, color: '#FFF', fontWeight: 'bold' }}>
+                  Overall Overview
+                </AppText>
+                <TouchableOpacity onPress={() => setIsSummaryHidden(!isSummaryHidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                  <Ionicons name={isSummaryHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.yearlyStatsRow}>
+                <View style={styles.yearlyStatColumn}>
+                  <AppText style={styles.statLabelWhite}>Total Income</AppText>
+                  <AppText style={[styles.statValue, { color: overallTotals.income === 0 ? '#FFF' : '#00C851' }]}>
+                    {isSummaryHidden ? '••••' : `+${currency}${formatAmount(overallTotals.income)}`}
+                  </AppText>
+                </View>
+                <View style={styles.yearlyStatColumn}>
+                  <AppText style={styles.statLabelWhite}>Total Expense</AppText>
+                  <AppText style={[styles.statValue, { color: overallTotals.expense === 0 ? '#FFF' : '#ff4444' }]}>
+                    {isSummaryHidden ? '••••' : `-${currency}${formatAmount(overallTotals.expense)}`}
+                  </AppText>
+                </View>
+                <View style={styles.yearlyStatColumn}>
+                  <AppText style={styles.statLabelWhite}>Available Balance</AppText>
+                  <AppText style={[styles.statValue, { color: overallTotals.balance === 0 ? '#FFF' : (overallTotals.balance > 0 ? '#00C851' : '#ff4444') }]}>
+                    {isSummaryHidden ? '••••' : `${overallTotals.balance === 0 ? '' : (overallTotals.balance > 0 ? '+' : '-')}${currency}${formatAmount(Math.abs(overallTotals.balance))}`}
+                  </AppText>
+                </View>
+              </View>
+              {renderProgressBar(overallTotals.income, overallTotals.expense, overallTotals.balance, `Yearly Avg: ${currency}${formatAmount(overallTotals.yearlyAverage)}`)}
+            </PremiumCardBackground>
+
+            <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
+
+            <View style={styles.list}>
+              {allYearsStats.map((stat) => (
+                <TouchableOpacity
+                  key={stat.year}
+                  onPress={() => setSelectedYear(stat.year)}
+                >
+                  <PremiumCardBackground color={colors.primary} style={styles.monthCard}>
+                    <View style={styles.cardHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <AppText style={[styles.monthName, { color: '#FFF' }]}>{stat.year} Overview</AppText>
+                        <Ionicons name="chevron-forward" size={18} color="#FFF" style={{ marginLeft: 4 }} />
+                      </View>
+                      <TouchableOpacity onPress={() => toggleHiddenItem(`year-${stat.year}`)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                        <Ionicons name={(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.statsRow}>
+                      <View style={styles.statColumn}>
+                        <AppText style={styles.statLabelWhite}>Total Income</AppText>
+                        <AppText style={[styles.statValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `+${currency}${formatAmount(stat.income)}`}
+                        </AppText>
+                      </View>
+
+                      <View style={styles.statColumn}>
+                        <AppText style={styles.statLabelWhite}>Total Expense</AppText>
+                        <AppText style={[styles.statValue, { color: stat.expense === 0 ? '#FFF' : '#ff4444' }]}>
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `-${currency}${formatAmount(stat.expense)}`}
+                        </AppText>
+                      </View>
+
+                      <View style={styles.statColumn}>
+                        <AppText style={styles.statLabelWhite}>Available Balance</AppText>
+                        <AppText
+                          style={[styles.statValue, { color: stat.balance === 0 ? '#FFF' : (stat.balance > 0 ? '#00C851' : '#ff4444') }]}
+                        >
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${formatAmount(Math.abs(stat.balance))}`}
+                        </AppText>
+                      </View>
+                    </View>
+                    {renderProgressBar(stat.income, stat.expense, stat.balance, `Monthly Avg: ${currency}${formatAmount(stat.monthlyAverage)}`)}
+                  </PremiumCardBackground>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        ) : (
+          <>
+            <PremiumCardBackground color={colors.primary} style={styles.yearlySummaryCard}>
+              <View style={{ marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <AppText style={{ fontSize: 16, color: '#FFF', fontWeight: 'bold' }}>
+                  {selectedYear} Overview
+                </AppText>
+                <TouchableOpacity onPress={() => setIsSummaryHidden(!isSummaryHidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                  <Ionicons name={isSummaryHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.yearlyStatsRow}>
+                <View style={styles.yearlyStatColumn}>
+                  <AppText style={styles.statLabelWhite}>Total Income</AppText>
+                  <AppText style={[styles.statValue, { color: yearlyTotals.income === 0 ? '#FFF' : '#00C851' }]}>
+                    {isSummaryHidden ? '••••' : `+${currency}${formatAmount(yearlyTotals.income)}`}
+                  </AppText>
+                </View>
+                <View style={styles.yearlyStatColumn}>
+                  <AppText style={styles.statLabelWhite}>Total Expense</AppText>
+                  <AppText style={[styles.statValue, { color: yearlyTotals.expense === 0 ? '#FFF' : '#ff4444' }]}>
+                    {isSummaryHidden ? '••••' : `-${currency}${formatAmount(yearlyTotals.expense)}`}
+                  </AppText>
+                </View>
+                <View style={styles.yearlyStatColumn}>
+                  <AppText style={styles.statLabelWhite}>Available Balance</AppText>
+                  <AppText style={[styles.statValue, { color: yearlyTotals.balance === 0 ? '#FFF' : (yearlyTotals.balance > 0 ? '#00C851' : '#ff4444') }]}>
+                    {isSummaryHidden ? '••••' : `${yearlyTotals.balance === 0 ? '' : (yearlyTotals.balance > 0 ? '+' : '-')}${currency}${formatAmount(Math.abs(yearlyTotals.balance))}`}
+                  </AppText>
+                </View>
+              </View>
+              {renderProgressBar(yearlyTotals.income, yearlyTotals.expense, yearlyTotals.balance, `Monthly Avg: ${currency}${formatAmount(yearlyTotals.monthlyAverage)}`)}
+            </PremiumCardBackground>
+
+            <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
+
+            <View style={styles.list}>
+              {monthlyStats.map((stat, index) => (
+                <TouchableOpacity
+                  key={stat.monthIndex}
+                  onPress={() => handleOpenModal(stat.monthIndex, stat.monthName, stat.income)}
+                >
+                  <PremiumCardBackground color={colors.primary} style={styles.monthCard}>
+                    <View style={styles.cardHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <AppText style={[styles.monthName, { color: '#FFF' }]}>{stat.monthName}</AppText>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Ionicons name="pencil" size={18} color="rgba(255,255,255,0.7)" style={{ marginRight: 12 }} />
+                        <TouchableOpacity onPress={() => toggleHiddenItem(`month-${stat.monthIndex}`)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                          <Ionicons name={(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <View style={styles.statsRow}>
+                      <View style={styles.statColumn}>
+                        <AppText style={styles.statLabelWhite}>Income</AppText>
+                        <AppText style={[styles.statValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `+${currency}${formatAmount(stat.income)}`}
+                        </AppText>
+                      </View>
+
+                      <View style={styles.statColumn}>
+                        <AppText style={styles.statLabelWhite}>Expense</AppText>
+                        <AppText style={[styles.statValue, { color: stat.expense === 0 ? '#FFF' : '#ff4444' }]}>
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `-${currency}${formatAmount(stat.expense)}`}
+                        </AppText>
+                      </View>
+
+                      <View style={styles.statColumn}>
+                        <AppText style={styles.statLabelWhite}>Available  Balance</AppText>
+                        <AppText
+                          style={[styles.statValue, { color: stat.balance === 0 ? '#FFF' : (stat.balance > 0 ? '#00C851' : '#ff4444') }]}
+                        >
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${formatAmount(Math.abs(stat.balance))}`}
+                        </AppText>
+                      </View>
+                    </View>
+                    {renderProgressBar(stat.income, stat.expense, stat.balance, `Daily Avg: ${currency}${formatAmount(stat.dailyAverage)}`)}
+                  </PremiumCardBackground>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      <Modal visible={isModalVisible} transparent animationType="slide" onRequestClose={() => setIsModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
+            >
+              <View style={styles.modalHeader}>
+                <AppText style={[styles.modalTitle, { color: colors.text }]}>
+                  Income for {selectedMonth?.monthName} {selectedYear}
+                </AppText>
+                <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+                  <Ionicons name="close" size={24} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.inputWrapper}>
+                <AppText style={[styles.label, { color: colors.text }]}>Income Amount</AppText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                  placeholder="0.00"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                  value={incomeInput}
+                  onChangeText={(text) => {
+                    setIncomeInput(text);
+                    setError('');
+                  }}
+                  autoFocus
+                />
+                {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
+              </View>
+
+              <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSaveIncome}>
+                <AppText style={styles.saveButtonText}>Save Income</AppText>
+              </TouchableOpacity>
+
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  yearSelectorContainer: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  yearScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  yearChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  yearChipText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  scroll: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#888',
+    lineHeight: 20,
+  },
+  yearlySummaryCard: {
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  yearlyStatsRow: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  yearlyStatColumn: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  list: {
+    gap: 0,
+  },
+  monthCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  monthName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  statsRow: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  statColumn: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#888',
+    textTransform: 'uppercase',
+    fontWeight: '600',
+  },
+  statLabelWhite: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    textTransform: 'uppercase',
+    fontWeight: '600',
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  inputWrapper: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  saveButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
