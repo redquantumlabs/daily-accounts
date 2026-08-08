@@ -9,6 +9,6 @@ export const getAppIconImage = (appIcon: string) => {
     case 'orange':
       return require('../../assets/icon-orange.png');
     default:
-      return require('../../assets/icon.png');
+      return require('../../assets/icon-red.png');
   }
 };
