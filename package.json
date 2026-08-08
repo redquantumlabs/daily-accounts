@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android --main-activity MainActivityDefault",
+    "android-release": "react-native run-android --mode Release --main-activity MainActivityDefault",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
