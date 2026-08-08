@@ -40,7 +40,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         id: `${SUMMARY_PREFIX}${i}`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${summaryTotal}.`,
-        android: { channelId: 'default' }
+        android: { channelId: 'default', smallIcon: 'ic_notification' }
       }, summaryTrigger);
 
       // ---- Reminder ----
@@ -54,7 +54,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         id: `${REMINDER_PREFIX}${i}`,
         title: "Daily Reminder",
         body: "You haven't logged any expenses today. Don't forget to track your spending!",
-        android: { channelId: 'default' }
+        android: { channelId: 'default', smallIcon: 'ic_notification' }
       }, reminderTrigger);
     }
 
@@ -67,7 +67,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         id: `${REMINDER_PREFIX}0`,
         title: "Daily Reminder",
         body: "You haven't logged any expenses today. Don't forget to track your spending!",
-        android: { channelId: 'default' }
+        android: { channelId: 'default', smallIcon: 'ic_notification' }
       }, trigger);
     }
 
@@ -86,7 +86,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         id: `${SUMMARY_PREFIX}0`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${yesterdayTotal}.`,
-        android: { channelId: 'default' }
+        android: { channelId: 'default', smallIcon: 'ic_notification' }
       }, trigger);
     }
 
@@ -100,7 +100,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
       id: `${MONTHLY_PREFIX}`,
       title: "Monthly Summary \uD83D\uDCCA",
       body: `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`,
-      android: { channelId: 'default' }
+      android: { channelId: 'default', smallIcon: 'ic_notification' }
     }, trigger);
 
   } catch (error) {
