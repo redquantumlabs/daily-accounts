@@ -3,7 +3,6 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import AppText from '../components/AppText';
-import { useAuthContext } from '../context/AuthContext';
 import { useTransactionContext } from '../context/TransactionContext';
 import { useExpenseContext } from '../context/ExpenseContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -15,7 +14,6 @@ import EmptyState from '../components/EmptyState';
 export default function HomeScreen({ navigation }: any) {
   const colors = useThemeColors();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const { profileName } = useAuthContext();
   const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats } = useTransactionContext();
   const { currency, isAmountsVisible } = useExpenseContext();
 
@@ -34,17 +32,6 @@ export default function HomeScreen({ navigation }: any) {
     });
   };
 
-  const currentHour = new Date().getHours();
-  let greeting = '';
-  if (currentHour >= 5 && currentHour < 12) {
-    greeting = 'Good Morning';
-  } else if (currentHour >= 12 && currentHour < 18) {
-    greeting = 'Good Afternoon';
-  } else if (currentHour >= 18 && currentHour < 22) {
-    greeting = 'Good Evening';
-  } else {
-    greeting = 'Hello';
-  }
 
   let totalBalance = 0;
   let totalCredit = 0;
@@ -210,15 +197,6 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <AppText 
-          style={[styles.greetingText, { color: colors.primary }]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-        >
-          {greeting}, {profileName?.firstName || 'User'}{profileName?.lastName ? ` ${profileName.lastName}` : ''}!
-        </AppText>
-      </View>
 
       <DraggableFlatList
         data={accounts}
@@ -244,15 +222,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 20,
-    paddingTop: 10,
-    paddingBottom: 0,
-  },
-  greetingText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
+
   scrollContent: {
     padding: 20,
     paddingTop: 10,
