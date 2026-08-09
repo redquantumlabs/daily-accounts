@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
+    "android": "react-native run-android --appId com.rql.dailyaccounts.debug",
     "android-release": "react-native run-android --mode Release",
     "ios": "react-native run-ios",
     "lint": "eslint .",
