@@ -7,8 +7,8 @@ const MONTHLY_PREFIX = 'monthly_';
 
 export const scheduleAllNotifications = async (expenses: Expense[], currency: string, summaryTime: Date, reminderTime: Date) => {
   try {
-    // Cancel all existing scheduled notifications
-    await notifee.cancelAllNotifications();
+    // Cancel all existing scheduled notifications without clearing delivered ones
+    await notifee.cancelTriggerNotifications();
 
     const now = new Date();
     const todayStr = now.toDateString();
