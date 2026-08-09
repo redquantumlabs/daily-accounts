@@ -22,6 +22,8 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     });
     const currentMonthTotal = currentMonthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
 
+    const promises: Promise<any>[] = [];
+
     for (let i = 1; i <= 14; i++) {
       const targetDate = new Date(now);
       targetDate.setDate(targetDate.getDate() + i);
@@ -35,12 +37,12 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         timestamp: targetDate.getTime(),
       };
 
-      await notifee.createTriggerNotification({
+      promises.push(notifee.createTriggerNotification({
         id: `${SUMMARY_PREFIX}${i}`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${summaryTotal}.`,
         android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
-      }, summaryTrigger);
+      }, summaryTrigger));
 
       // ---- Reminders ----
       for (let rIndex = 0; rIndex < reminderTimes.length; rIndex++) {
@@ -52,12 +54,12 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
           timestamp: rTargetDate.getTime(),
         };
 
-        await notifee.createTriggerNotification({
+        promises.push(notifee.createTriggerNotification({
           id: `${REMINDER_PREFIX}${i}_${rIndex}`,
           title: "Daily Reminder",
           body: "You haven't logged any expenses today. Don't forget to track your spending!",
           android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
-        }, reminderTrigger);
+        }, reminderTrigger));
       }
     }
 
@@ -73,12 +75,12 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         }
 
         const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: todayReminder.getTime() };
-        await notifee.createTriggerNotification({
+        promises.push(notifee.createTriggerNotification({
           id: `${REMINDER_PREFIX}0_${rIndex}`,
           title: "Daily Reminder",
           body: reminderBody,
           android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
-        }, trigger);
+        }, trigger));
       }
     }
 
@@ -93,12 +95,12 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
       const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
 
       const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: todaySummary.getTime() };
-      await notifee.createTriggerNotification({
+      promises.push(notifee.createTriggerNotification({
         id: `${SUMMARY_PREFIX}0`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${yesterdayTotal}.`,
         android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
-      }, trigger);
+      }, trigger));
     }
 
     const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -107,12 +109,14 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     const currentMonthName = monthNames[now.getMonth()];
 
     const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: nextMonthDate.getTime() };
-    await notifee.createTriggerNotification({
+    promises.push(notifee.createTriggerNotification({
       id: `${MONTHLY_PREFIX}`,
       title: "Monthly Summary \uD83D\uDCCA",
       body: `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`,
       android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
-    }, trigger);
+    }, trigger));
+
+    await Promise.all(promises);
 
   } catch (error) {
     console.log('Error scheduling notifications:', error);

@@ -353,9 +353,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimeMorningStorageKey, autoBackupTimeEveningStorageKey, amountsVisibleStorageKey]);
 
   useEffect(() => {
-    if (!isLoading) {
+    if (isLoading) return;
+
+    const timeoutId = setTimeout(() => {
       scheduleAllNotifications(expenses, currency, summaryTime, reminderTimes);
-    }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
   }, [expenses, currency, isLoading, summaryTime, reminderTimes]);
 
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
