@@ -70,11 +70,11 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuthContext();
 
-  const storageKey = user ? `${TRANSACTIONS_KEY}_${user.email}` : TRANSACTIONS_KEY;
-  const orderStorageKey = user ? `@app_account_order_${user.email}` : '@app_account_order';
-  const manualAccountsStorageKey = user ? `@app_manual_accounts_${user.email}` : '@app_manual_accounts';
-  const excludedStorageKey = user ? `@app_account_excluded_${user.email}` : '@app_account_excluded';
-  const showStatsStorageKey = user ? `@app_show_card_stats_${user.email}` : '@app_show_card_stats';
+  const storageKey = TRANSACTIONS_KEY;
+  const orderStorageKey = '@app_account_order';
+  const manualAccountsStorageKey = '@app_manual_accounts';
+  const excludedStorageKey = '@app_account_excluded';
+  const showStatsStorageKey = '@app_show_card_stats';
 
   const loadData = async () => {
     try {

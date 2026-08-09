@@ -5,7 +5,7 @@ const SUMMARY_PREFIX = 'summary_';
 const REMINDER_PREFIX = 'reminder_';
 const MONTHLY_PREFIX = 'monthly_';
 
-export const scheduleAllNotifications = async (expenses: Expense[], currency: string, summaryTime: Date, reminderTime: Date) => {
+export const scheduleAllNotifications = async (expenses: Expense[], currency: string, summaryTime: Date, reminderTimes: Date[]) => {
   try {
     // Cancel all existing scheduled notifications without clearing delivered ones
     await notifee.cancelTriggerNotifications();
@@ -15,7 +15,6 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
 
     const todayExpenses = expenses.filter(e => new Date(e.date).toDateString() === todayStr);
     const todayTotal = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
-    const hasTodayExpense = todayExpenses.length > 0;
 
     const currentMonthExpenses = expenses.filter(e => {
       const d = new Date(e.date);
@@ -43,32 +42,44 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
       }, summaryTrigger);
 
-      // ---- Reminder ----
-      targetDate.setHours(reminderTime.getHours(), reminderTime.getMinutes(), 0, 0);
-      const reminderTrigger: TimestampTrigger = {
-        type: TriggerType.TIMESTAMP,
-        timestamp: targetDate.getTime(),
-      };
+      // ---- Reminders ----
+      for (let rIndex = 0; rIndex < reminderTimes.length; rIndex++) {
+        const rTime = reminderTimes[rIndex];
+        const rTargetDate = new Date(targetDate);
+        rTargetDate.setHours(rTime.getHours(), rTime.getMinutes(), 0, 0);
+        const reminderTrigger: TimestampTrigger = {
+          type: TriggerType.TIMESTAMP,
+          timestamp: rTargetDate.getTime(),
+        };
 
-      await notifee.createTriggerNotification({
-        id: `${REMINDER_PREFIX}${i}`,
-        title: "Daily Reminder",
-        body: "You haven't logged any expenses today. Don't forget to track your spending!",
-        android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
-      }, reminderTrigger);
+        await notifee.createTriggerNotification({
+          id: `${REMINDER_PREFIX}${i}_${rIndex}`,
+          title: "Daily Reminder",
+          body: "You haven't logged any expenses today. Don't forget to track your spending!",
+          android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
+        }, reminderTrigger);
+      }
     }
 
-    if (!hasTodayExpense && (now.getHours() < reminderTime.getHours() || (now.getHours() === reminderTime.getHours() && now.getMinutes() < reminderTime.getMinutes()))) {
-      const todayReminder = new Date(now);
-      todayReminder.setHours(reminderTime.getHours(), reminderTime.getMinutes(), 0, 0);
-      
-      const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: todayReminder.getTime() };
-      await notifee.createTriggerNotification({
-        id: `${REMINDER_PREFIX}0`,
-        title: "Daily Reminder",
-        body: "You haven't logged any expenses today. Don't forget to track your spending!",
-        android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
-      }, trigger);
+    for (let rIndex = 0; rIndex < reminderTimes.length; rIndex++) {
+      const rTime = reminderTimes[rIndex];
+      if (now.getHours() < rTime.getHours() || (now.getHours() === rTime.getHours() && now.getMinutes() < rTime.getMinutes())) {
+        const todayReminder = new Date(now);
+        todayReminder.setHours(rTime.getHours(), rTime.getMinutes(), 0, 0);
+        
+        let reminderBody = "You haven't logged any expenses today. Don't forget to track your spending!";
+        if (todayTotal > 0) {
+          reminderBody = `You've spent ${currency}${todayTotal} today. Don't forget to log any other expenses!`;
+        }
+
+        const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: todayReminder.getTime() };
+        await notifee.createTriggerNotification({
+          id: `${REMINDER_PREFIX}0_${rIndex}`,
+          title: "Daily Reminder",
+          body: reminderBody,
+          android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
+        }, trigger);
+      }
     }
 
     if (now.getHours() < summaryTime.getHours() || (now.getHours() === summaryTime.getHours() && now.getMinutes() < summaryTime.getMinutes())) {

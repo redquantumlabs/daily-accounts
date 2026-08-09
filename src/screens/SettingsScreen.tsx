@@ -201,7 +201,7 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
-  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTime, updateReminderTime, autoBackupTimeMorning, updateAutoBackupTimeMorning, autoBackupTimeEvening, updateAutoBackupTimeEvening, isAmountsVisible, toggleAmountsVisibility } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimeMorning, updateAutoBackupTimeMorning, autoBackupTimeEvening, updateAutoBackupTimeEvening, isAmountsVisible, toggleAmountsVisibility } = useExpenseContext();
   const { accounts, excludedFromTotal, toggleAccountInTotal, refreshTransactionData, showCardStats, toggleShowCardStats } = useTransactionContext();
 
   return (
@@ -448,16 +448,27 @@ export default function SettingsScreen({ navigation }: any) {
         </TouchableOpacity>
         <View style={styles.divider} />
 
+        {reminderTimes.map((rTime, index) => (
+          <View key={index} style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Ionicons name="alarm-outline" size={22} color={colors.primary} style={styles.icon} />
+              <AppText style={[styles.text, { color: colors.text }]}>Daily Reminder {index + 1}</AppText>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 16 }}>
+                {rTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </AppText>
+              <TouchableOpacity onPress={() => removeReminderTime(index)}>
+                <Ionicons name="trash-outline" size={20} color="#ff4444" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
+
         <TouchableOpacity style={styles.row} onPress={() => setActivePicker('reminder')}>
           <View style={styles.rowLeft}>
-            <Ionicons name="alarm-outline" size={22} color={colors.primary} style={styles.icon} />
-            <AppText style={[styles.text, { color: colors.text }]}>Reminder Notification</AppText>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
-              {reminderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </AppText>
-            <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            <Ionicons name="add-circle-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.primary, fontWeight: 'bold' }]}>Add Reminder Time</AppText>
           </View>
         </TouchableOpacity>
         <View style={styles.divider} />
@@ -621,7 +632,7 @@ export default function SettingsScreen({ navigation }: any) {
         <DateTimePicker
           value={
             activePicker === 'summary' ? summaryTime :
-              activePicker === 'reminder' ? reminderTime :
+              activePicker === 'reminder' ? new Date() :
                 activePicker === 'backupMorning' ? autoBackupTimeMorning :
                   autoBackupTimeEvening
           }
@@ -633,7 +644,7 @@ export default function SettingsScreen({ navigation }: any) {
             setActivePicker(null);
             if (selectedDate && event.type !== 'dismissed') {
               if (currentPicker === 'summary') updateSummaryTime(selectedDate);
-              else if (currentPicker === 'reminder') updateReminderTime(selectedDate);
+              else if (currentPicker === 'reminder') addReminderTime(selectedDate);
               else if (currentPicker === 'backupMorning') updateAutoBackupTimeMorning(selectedDate);
               else if (currentPicker === 'backupEvening') updateAutoBackupTimeEvening(selectedDate);
             }
