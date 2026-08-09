@@ -4,7 +4,6 @@ import LinearGradient from 'react-native-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
-import { getAppIconImage } from '../utils/iconUtils';
 import { useThemeContext } from '../context/ThemeContext';
 
 interface AnimatedSplashScreenProps {
@@ -12,7 +11,6 @@ interface AnimatedSplashScreenProps {
 }
 
 export default function AnimatedSplashScreen({ accentColor }: AnimatedSplashScreenProps) {
-  const { appIcon } = useThemeContext();
   const progressAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -107,7 +105,7 @@ export default function AnimatedSplashScreen({ accentColor }: AnimatedSplashScre
 
       <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }], alignItems: 'center', width: '100%' }}>
         <Image
-          source={getAppIconImage(appIcon)}
+          source={require('../../android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png')}
           style={[styles.logo, { borderRadius: 20, width: 200, height: 200 }]}
           resizeMode="contain"
         />
