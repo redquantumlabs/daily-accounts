@@ -7,8 +7,9 @@ import App from './App';
 import { name as appName } from './app.json';
 import BackgroundFetch from 'react-native-background-fetch';
 import { performBackgroundTasks } from './src/tasks/backgroundTask';
+import notifee, { EventType } from '@notifee/react-native';
 
-const HeadlessTask = async (event: any) => {
+const HeadlessTask = async (event) => {
   const taskId = event.taskId;
   const isTimeout = event.timeout;
   if (isTimeout) {
@@ -20,5 +21,11 @@ const HeadlessTask = async (event: any) => {
 };
 
 BackgroundFetch.registerHeadlessTask(HeadlessTask);
+
+notifee.onBackgroundEvent(async ({ type, detail }) => {
+  if (type === EventType.DELIVERED) {
+    await performBackgroundTasks();
+  }
+});
 
 AppRegistry.registerComponent(appName, () => App);

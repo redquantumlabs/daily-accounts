@@ -210,6 +210,32 @@ export default function SettingsScreen({ navigation }: any) {
     });
   };
 
+  const handleTroubleshootNotifications = async () => {
+    try {
+      await notifee.requestPermission();
+      
+      const channelId = await notifee.createChannel({
+        id: 'daily_accounts',
+        name: 'Daily Accounts Channel',
+      });
+
+      await notifee.displayNotification({
+        title: 'Troubleshooting Complete \uD83D\uDEE0\uFE0F',
+        body: 'If you see this, your notifications are working correctly!',
+        android: {
+          channelId,
+          smallIcon: 'ic_notification',
+          pressAction: {
+            id: 'default',
+          },
+        },
+      });
+      Alert.alert('Success', 'A test notification has been sent. Please check your notification drawer.');
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to display notification: ' + e.message);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.group, { backgroundColor: colors.card }]}>
@@ -504,6 +530,15 @@ export default function SettingsScreen({ navigation }: any) {
             </AppText>
             <Ionicons name="chevron-forward" size={20} color={colors.text} />
           </View>
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        
+        <TouchableOpacity style={styles.row} onPress={handleTroubleshootNotifications}>
+          <View style={styles.rowLeft}>
+            <Ionicons name="build-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Troubleshoot Notifications</AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
