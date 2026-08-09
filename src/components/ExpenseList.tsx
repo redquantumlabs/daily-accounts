@@ -261,6 +261,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
         const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fileName), {
           mimeType: 'application/pdf'
         });
+        await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
         if (notifee) {
           await notifee.displayNotification({ title: "Download Complete", body: "Expense report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts' } });
         }

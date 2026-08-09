@@ -350,7 +350,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fileName), {
           mimeType: 'application/pdf'
         });
-        await SAF.writeFile(fileUri.uri, file.base64);
+        await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
         
         if (notifee) {
           await notifee.displayNotification({ title: "Download Complete", body: "Account report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts' } });
