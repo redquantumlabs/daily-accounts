@@ -29,13 +29,32 @@ export default function SettingsScreen({ navigation }: any) {
   const [isTotalBalanceExpanded, setIsTotalBalanceExpanded] = useState(false);
   const [activePicker, setActivePicker] = useState<'summary' | 'reminder' | 'backupMorning' | 'backupEvening' | null>(null);
 
+  const formatPath = (uri: string | null) => {
+    if (!uri) return 'Not Set';
+    try {
+      const decoded = decodeURIComponent(uri);
+      if (decoded.includes('primary:')) {
+        const path = decoded.split('primary:')[1];
+        return path ? path : 'Internal Storage Root';
+      } else if (decoded.includes(':')) {
+        const path = decoded.split(':').pop();
+        return path ? path : 'Storage Root';
+      } else {
+        const parts = decoded.split('/');
+        return parts.pop() || 'Custom Path';
+      }
+    } catch (_e) {
+      return 'Custom Path';
+    }
+  };
+
   const handleSetDownloadPath = async () => {
     if (Platform.OS !== 'android') {
       Alert.alert('Unsupported', 'Setting a default download path is only available on Android devices due to system limitations.');
       return;
     }
     try {
-            const doc = await SAF.openDocumentTree(true);
+      const doc = await SAF.openDocumentTree(true);
       if (doc && doc.uri) {
         await updateDownloadPath(doc.uri);
         Alert.alert('Success', 'Download path set successfully! Future PDF reports will be saved here automatically.');
@@ -51,27 +70,28 @@ export default function SettingsScreen({ navigation }: any) {
       return;
     }
     try {
-            const doc = await SAF.openDocumentTree(true);
+      const doc = await SAF.openDocumentTree(true);
       if (doc && doc.uri) {
         await updateBackupPath(doc.uri);
         Alert.alert('Success', 'Backup path set successfully! Future backups will be saved here automatically (keeping the last 5).');
       }
-    } catch (e: any) {        Alert.alert('Error', 'Failed to set backup path: ' + e.message);
-      }
-    };
-    
-    const handleBackup = async () => {
-      try {
-        setIsProcessing(true);
-        const keys = await AsyncStorage.getAllKeys();
-        const backupData = await AsyncStorage.getMany(keys);
-        const backupString = JSON.stringify(backupData);
-  
-        if (backupPathUri && Platform.OS === 'android') {
-          const timestamp = new Date().getTime();
-          const filename = `DailyAccountsBackup_${timestamp}.json`;
-          const fileUri = await SAF.createFile(backupPathUri + '%2F' + encodeURIComponent(filename), {
-            mimeType: 'application/json'
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to set backup path: ' + e.message);
+    }
+  };
+
+  const handleBackup = async () => {
+    try {
+      setIsProcessing(true);
+      const keys = await AsyncStorage.getAllKeys();
+      const backupData = await AsyncStorage.getMany(keys);
+      const backupString = JSON.stringify(backupData);
+
+      if (backupPathUri && Platform.OS === 'android') {
+        const timestamp = new Date().getTime();
+        const filename = `DailyAccountsBackup_${timestamp}.json`;
+        const fileUri = await SAF.createFile(backupPathUri + '%2F' + encodeURIComponent(filename), {
+          mimeType: 'application/json'
         });
         await SAF.writeFile(fileUri.uri, backupString);
 
@@ -104,11 +124,11 @@ export default function SettingsScreen({ navigation }: any) {
         const timestamp = new Date().getTime();
         const fileUri = RNFS.DocumentDirectoryPath + `/DailyAccountsBackup_${timestamp}.json`;
         await RNFS.writeFile(fileUri, backupString, 'utf8');
-        
+
         await Share.open({
-            url: `file://${fileUri}`,
-            type: 'application/json',
-            title: 'Save Backup'
+          url: `file://${fileUri}`,
+          type: 'application/json',
+          title: 'Save Backup'
         });
       }
     } catch (e: any) {
@@ -539,7 +559,7 @@ export default function SettingsScreen({ navigation }: any) {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginLeft: 20 }}>
                 <AppText style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
-                  {downloadPathUri ? decodeURIComponent(downloadPathUri.split('%3A').pop() || 'Custom Path') : 'Not Set'}
+                  {formatPath(downloadPathUri)}
                 </AppText>
                 {downloadPathUri ? (
                   <TouchableOpacity onPress={() => updateDownloadPath(null)} style={{ padding: 4 }}>
@@ -561,7 +581,7 @@ export default function SettingsScreen({ navigation }: any) {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginLeft: 20 }}>
                 <AppText style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
-                  {backupPathUri ? decodeURIComponent(backupPathUri.split('%3A').pop() || 'Custom Path') : 'Not Set'}
+                  {formatPath(backupPathUri)}
                 </AppText>
                 {backupPathUri ? (
                   <TouchableOpacity onPress={() => updateBackupPath(null)} style={{ padding: 4 }}>
