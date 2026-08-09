@@ -431,8 +431,8 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
     return (
       <ScaleDecorator>
         <Swipeable
-          renderRightActions={(isSelectMode || isReorderMode) ? undefined : renderRightActions}
-          renderLeftActions={(isSelectMode || isReorderMode) ? undefined : renderLeftActions}
+          renderRightActions={renderRightActions}
+          renderLeftActions={renderLeftActions}
           enabled={!(isSelectMode || isReorderMode)}
         >
           <TouchableOpacity

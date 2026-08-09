@@ -105,11 +105,11 @@ const TransactionListItem = React.memo(({
   };
   return (
     <ScaleDecorator>
-      <Swipeable
-        renderRightActions={isSelectMode ? undefined : renderRightActions}
-        renderLeftActions={isSelectMode ? undefined : renderLeftActions}
-        enabled={!isSelectMode}
-      >
+        <Swipeable
+          renderRightActions={renderRightActions}
+          renderLeftActions={renderLeftActions}
+          enabled={!isSelectMode}
+        >
         <TouchableOpacity
           style={[styles.expenseRow, { backgroundColor: isSelected ? colors.surface : colors.card, elevation: isSelected ? 4 : (isActive ? 8 : 0) }]}
           onPress={() => handleRowPress(tx)}

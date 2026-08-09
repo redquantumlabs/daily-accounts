@@ -408,7 +408,9 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const reorderExpensesByDate = async (dateStr: string, reorderedDayExpenses: Expense[]) => {
     const otherExpenses = expenses.filter(e => new Date(e.date).toDateString() !== dateStr);
     
-    const baseDate = new Date(dateStr);
+    if (reorderedDayExpenses.length === 0) return;
+    
+    const baseDate = new Date(reorderedDayExpenses[0].date);
     
     const updatedReordered = reorderedDayExpenses.map((exp, index) => {
       const newDate = new Date(baseDate);
