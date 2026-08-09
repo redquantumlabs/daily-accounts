@@ -262,7 +262,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
           mimeType: 'application/pdf'
         });
         if (notifee) {
-          await notifee.displayNotification({ title: "Download Complete", body: "Expense report saved to your chosen downloads folder.", android: { channelId: 'default' } });
+          await notifee.displayNotification({ title: "Download Complete", body: "Expense report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts' } });
         }
         Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
       } else {
@@ -274,7 +274,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
       }
     } catch (error) {
       if (notifee) {
-        await notifee.displayNotification({ title: "Download Failed", body: `Failed to generate expense report.`, android: { channelId: 'default' } });
+        await notifee.displayNotification({ title: "Download Failed", body: `Failed to generate expense report.`, android: { channelId: 'daily_accounts' } });
       }
       Alert.alert('Error', 'Failed to generate or save PDF report.' + error);
     } finally {
