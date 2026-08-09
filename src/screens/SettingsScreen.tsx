@@ -204,13 +204,19 @@ export default function SettingsScreen({ navigation }: any) {
   const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimeMorning, updateAutoBackupTimeMorning, autoBackupTimeEvening, updateAutoBackupTimeEvening, isAmountsVisible, toggleAmountsVisibility } = useExpenseContext();
   const { accounts, excludedFromTotal, toggleAccountInTotal, refreshTransactionData, showCardStats, toggleShowCardStats } = useTransactionContext();
 
+  const handleNav = (screen: string) => {
+    requestAnimationFrame(() => {
+      navigation.navigate(screen);
+    });
+  };
+
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.group, { backgroundColor: colors.card }]}>
         <AppText style={[styles.sectionTitle, { color: colors.text }]}>Profile</AppText>
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('Profile')}
+          onPress={() => handleNav('Profile')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="person-outline" size={22} color={colors.primary} style={styles.icon} />
@@ -283,7 +289,7 @@ export default function SettingsScreen({ navigation }: any) {
         <AppText style={[styles.sectionTitle, { color: colors.text }]}>Preferences</AppText>
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('Currency')}
+          onPress={() => handleNav('Currency')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="cash-outline" size={22} color={colors.primary} style={styles.icon} />
@@ -311,7 +317,7 @@ export default function SettingsScreen({ navigation }: any) {
         <View style={styles.divider} />
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('Budget')}
+          onPress={() => handleNav('Budget')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="wallet-outline" size={22} color={colors.primary} style={styles.icon} />
@@ -322,7 +328,7 @@ export default function SettingsScreen({ navigation }: any) {
         <View style={styles.divider} />
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('Income')}
+          onPress={() => handleNav('Income')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="calendar-outline" size={22} color={colors.primary} style={styles.icon} />
@@ -333,7 +339,7 @@ export default function SettingsScreen({ navigation }: any) {
         <View style={styles.divider} />
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('Categories')}
+          onPress={() => handleNav('Categories')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="pricetag-outline" size={22} color={colors.primary} style={styles.icon} />
@@ -344,7 +350,7 @@ export default function SettingsScreen({ navigation }: any) {
         <View style={styles.divider} />
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('PaymentModes')}
+          onPress={() => handleNav('PaymentModes')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="card-outline" size={22} color={colors.primary} style={styles.icon} />
@@ -355,7 +361,7 @@ export default function SettingsScreen({ navigation }: any) {
         <View style={styles.divider} />
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('AnalyticsChartSettings')}
+          onPress={() => handleNav('AnalyticsChartSettings')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="bar-chart-outline" size={22} color={colors.primary} style={styles.icon} />
@@ -369,7 +375,7 @@ export default function SettingsScreen({ navigation }: any) {
         <View style={styles.divider} />
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('ManageAccounts')}
+          onPress={() => handleNav('ManageAccounts')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="business-outline" size={22} color={colors.primary} style={styles.icon} />
