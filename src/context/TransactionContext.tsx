@@ -79,35 +79,38 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const storedTransactions = await AsyncStorage.getItem(storageKey);
+      const keys = [storageKey, orderStorageKey, manualAccountsStorageKey, excludedStorageKey, showStatsStorageKey];
+      const data = await AsyncStorage.getMany(keys);
+
+      const storedTransactions = data[storageKey];
       if (storedTransactions) {
         setTransactions(JSON.parse(storedTransactions));
       } else {
         setTransactions([]);
       }
 
-      const storedOrder = await AsyncStorage.getItem(orderStorageKey);
+      const storedOrder = data[orderStorageKey];
       if (storedOrder) {
         setAccountOrder(JSON.parse(storedOrder));
       } else {
         setAccountOrder([]);
       }
 
-      const storedManualAccounts = await AsyncStorage.getItem(manualAccountsStorageKey);
+      const storedManualAccounts = data[manualAccountsStorageKey];
       if (storedManualAccounts) {
         setManualAccounts(JSON.parse(storedManualAccounts));
       } else {
         setManualAccounts([]);
       }
 
-      const storedExcluded = await AsyncStorage.getItem(excludedStorageKey);
+      const storedExcluded = data[excludedStorageKey];
       if (storedExcluded) {
         setExcludedFromTotal(JSON.parse(storedExcluded));
       } else {
         setExcludedFromTotal([]);
       }
 
-      const storedShowStats = await AsyncStorage.getItem(showStatsStorageKey);
+      const storedShowStats = data[showStatsStorageKey];
       if (storedShowStats !== null) {
         setShowCardStats(JSON.parse(storedShowStats));
       } else {

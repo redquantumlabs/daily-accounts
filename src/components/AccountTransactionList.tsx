@@ -168,7 +168,7 @@ interface AccountTransactionListProps {
 export default function AccountTransactionList({ accountFilter }: AccountTransactionListProps) {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
-  const { transactions, deleteTransaction, bulkDeleteTransactions, reorderTransactionsByDate } = useTransactionContext();
+  const { transactions, deleteTransaction, bulkDeleteTransactions, reorderTransactionsByDate, isLoading } = useTransactionContext();
   const { currency, downloadPathUri, isAmountsVisible } = useExpenseContext();
 
   const [selectedTransaction, setSelectedTransaction] = useState<AccountTransaction | null>(null);
@@ -187,6 +187,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
   const [displayCount, setDisplayCount] = useState(50);
 
   const [flatDataState, setFlatDataState] = useState<AccountTransaction[]>([]);
+  const [prevFiltered, setPrevFiltered] = useState<AccountTransaction[] | null>(null);
   const draggedItemDateRef = React.useRef<string | null>(null);
 
   // Compute available filter options
@@ -240,9 +241,12 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [baseTransactions, searchQuery, selectedYears, selectedMonths, selectedTypes]);
 
-  React.useEffect(() => {
-    setFlatDataState(filteredTransactions.slice(0, displayCount));
-  }, [filteredTransactions, displayCount]);
+  const derivedFiltered = useMemo(() => filteredTransactions.slice(0, displayCount), [filteredTransactions, displayCount]);
+
+  if (derivedFiltered !== prevFiltered) {
+    setPrevFiltered(derivedFiltered);
+    setFlatDataState(derivedFiltered);
+  }
 
   const handleDragEnd = async ({ data, from, to }: { data: AccountTransaction[], from: number, to: number }) => {
     const draggedDate = draggedItemDateRef.current;
@@ -502,13 +506,19 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         updateCellsBatchingPeriod={30}
         removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
-          <EmptyState
-            icon={baseTransactions.length === 0 ? "card-outline" : "search-outline"}
-            title={baseTransactions.length === 0 ? "No Transactions Yet" : "No Results"}
-            message={baseTransactions.length === 0 ? "You haven't added any transactions to this account yet." : "No transactions match your search or filters."}
-            actionLabel={baseTransactions.length === 0 ? "Add Transaction" : undefined}
-            onAction={baseTransactions.length === 0 ? () => setIsModalVisible(true) : undefined}
-          />
+          isLoading ? (
+            <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center' }}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : (
+            <EmptyState
+              icon={baseTransactions.length === 0 ? "card-outline" : "search-outline"}
+              title={baseTransactions.length === 0 ? "No Transactions Yet" : "No Results"}
+              message={baseTransactions.length === 0 ? "You haven't added any transactions to this account yet." : "No transactions match your search or filters."}
+              actionLabel={baseTransactions.length === 0 ? "Add Transaction" : undefined}
+              onAction={baseTransactions.length === 0 ? () => setIsModalVisible(true) : undefined}
+            />
+          )
         }
         ListFooterComponent={
           filteredTransactions.length > displayCount ? (

@@ -41,7 +41,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
   const colors = useThemeColors();
   const navigation = useNavigation<any>();
   const { isDarkTheme } = useThemeContext();
-  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget, downloadPathUri, reorderExpensesByDate, isAmountsVisible } = useExpenseContext();
+  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget, downloadPathUri, reorderExpensesByDate, isAmountsVisible, isLoading } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [displayCount, setDisplayCount] = useState(10);
@@ -50,6 +50,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
   const [isDownloading, setIsDownloading] = useState(false);
   const draggedItemDateRef = useRef<string | null>(null);
   const [flatDataState, setFlatDataState] = useState<ListItem[]>([]);
+  const [prevDerived, setPrevDerived] = useState<ListItem[] | null>(null);
 
   const [isListHidden, setIsListHidden] = useState(!isAmountsVisible);
   React.useEffect(() => {
@@ -305,9 +306,10 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
     return data;
   }, [filteredExpenses, displayCount]);
 
-  React.useEffect(() => {
+  if (derivedFlatData !== prevDerived) {
+    setPrevDerived(derivedFlatData);
     setFlatDataState(derivedFlatData);
-  }, [derivedFlatData]);
+  }
 
   const handleDragEnd = async ({ data, from, to }: { data: ListItem[], from: number, to: number }) => {
     const draggedDate = draggedItemDateRef.current;
@@ -626,7 +628,11 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
     </>
   );
 
-  const listEmpty = (
+  const listEmpty = isLoading ? (
+    <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator size="large" color={colors.primary} />
+    </View>
+  ) : (
     <EmptyState
       icon={expenses.length === 0 ? "wallet-outline" : "search-outline"}
       title={expenses.length === 0 ? "No Expenses Yet" : "No Results"}

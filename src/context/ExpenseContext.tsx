@@ -208,14 +208,16 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const storedExpenses = await AsyncStorage.getItem(storageKey);
+      const keys = [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimeMorningStorageKey, autoBackupTimeEveningStorageKey];
+      const data = await AsyncStorage.getMany(keys);
+      const storedExpenses = data[storageKey];
       if (storedExpenses) {
         setExpenses(JSON.parse(storedExpenses));
       } else {
         setExpenses([]);
       }
 
-      const storedCategories = await AsyncStorage.getItem(categoriesStorageKey);
+      const storedCategories = data[categoriesStorageKey];
       if (storedCategories) {
         const parsed = JSON.parse(storedCategories);
         parsed.sort((a: Category, b: Category) => a.name.localeCompare(b.name));
@@ -224,7 +226,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setCategories([]);
       }
 
-      const storedPaymentModes = await AsyncStorage.getItem(paymentModesStorageKey);
+      const storedPaymentModes = data[paymentModesStorageKey];
       if (storedPaymentModes) {
         const parsed = JSON.parse(storedPaymentModes);
         parsed.sort((a: PaymentMode, b: PaymentMode) => a.name.localeCompare(b.name));
@@ -233,14 +235,14 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setPaymentModes([]);
       }
 
-      const storedCurrency = await AsyncStorage.getItem(currencyStorageKey);
+      const storedCurrency = data[currencyStorageKey];
       if (storedCurrency) {
         setCurrency(storedCurrency);
       } else {
         setCurrency('$');
       }
 
-      const storedBudgets = await AsyncStorage.getItem(budgetStorageKey);
+      const storedBudgets = data[budgetStorageKey];
       if (storedBudgets) {
         const parsed = JSON.parse(storedBudgets);
         if (parsed.monthly) setMonthlyBudget(parsed.monthly);
@@ -250,74 +252,74 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setYearlyBudget(0);
       }
 
-      const storedShowMonthly = await AsyncStorage.getItem(showMonthlyBudgetStorageKey);
+      const storedShowMonthly = data[showMonthlyBudgetStorageKey];
       if (storedShowMonthly !== null) {
         setShowMonthlyBudget(storedShowMonthly === 'true');
       } else {
         setShowMonthlyBudget(true);
       }
 
-      const storedAmountsVisible = await AsyncStorage.getItem(amountsVisibleStorageKey);
+      const storedAmountsVisible = data[amountsVisibleStorageKey];
       if (storedAmountsVisible !== null) {
         setIsAmountsVisible(storedAmountsVisible === 'true');
       } else {
         setIsAmountsVisible(false);
       }
 
-      const storedShowYearly = await AsyncStorage.getItem(showYearlyBudgetStorageKey);
+      const storedShowYearly = data[showYearlyBudgetStorageKey];
       if (storedShowYearly !== null) {
         setShowYearlyBudget(storedShowYearly === 'true');
       } else {
         setShowYearlyBudget(true);
       }
 
-      const storedShowYearCard = await AsyncStorage.getItem(showYearCardStorageKey);
+      const storedShowYearCard = data[showYearCardStorageKey];
       if (storedShowYearCard !== null) {
         setShowYearCard(storedShowYearCard === 'true');
       } else {
         setShowYearCard(true);
       }
 
-      const storedChartType = await AsyncStorage.getItem(analyticsChartTypeStorageKey);
+      const storedChartType = data[analyticsChartTypeStorageKey];
       if (storedChartType === 'Pie' || storedChartType === 'Donut') {
         setAnalyticsChartType(storedChartType);
       } else {
         setAnalyticsChartType('Pie');
       }
 
-      const storedChartStyle = await AsyncStorage.getItem(chartStyleStorageKey);
+      const storedChartStyle = data[chartStyleStorageKey];
       if (storedChartStyle === 'Classic' || storedChartStyle === '3D' || storedChartStyle === 'Spaced' || storedChartStyle === 'Semi-Circle') {
         setChartStyle(storedChartStyle);
       } else {
         setChartStyle('Classic');
       }
 
-      const storedDownloadPath = await AsyncStorage.getItem(downloadPathStorageKey);
+      const storedDownloadPath = data[downloadPathStorageKey];
       if (storedDownloadPath !== null) {
         setDownloadPathUri(storedDownloadPath);
       } else {
         setDownloadPathUri(null);
       }
 
-      const storedBackupPath = await AsyncStorage.getItem(backupPathStorageKey);
+      const storedBackupPath = data[backupPathStorageKey];
       if (storedBackupPath !== null) {
         setBackupPathUri(storedBackupPath);
       } else {
         setBackupPathUri(null);
       }
 
-      const storedMonthlyIncomes = await AsyncStorage.getItem(monthlyIncomesStorageKey);
+      const storedMonthlyIncomes = data[monthlyIncomesStorageKey];
       if (storedMonthlyIncomes !== null) {
         setMonthlyIncomes(JSON.parse(storedMonthlyIncomes));
       } else {
         setMonthlyIncomes({});
       }
 
-      const storedSummaryTime = await AsyncStorage.getItem(summaryTimeStorageKey);
+      const storedSummaryTime = data[summaryTimeStorageKey];
       if (storedSummaryTime) setSummaryTime(new Date(storedSummaryTime));
       else setSummaryTime(new Date(new Date().setHours(8, 0, 0, 0)));
 
-      const storedReminderTime = await AsyncStorage.getItem(reminderTimeStorageKey);
+      const storedReminderTime = data[reminderTimeStorageKey];
       if (storedReminderTime) {
         try {
           const parsed = JSON.parse(storedReminderTime);
@@ -333,11 +335,11 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setReminderTimes([new Date(new Date().setHours(18, 0, 0, 0))]);
       }
 
-      const storedAutoBackupMorning = await AsyncStorage.getItem(autoBackupTimeMorningStorageKey);
+      const storedAutoBackupMorning = data[autoBackupTimeMorningStorageKey];
       if (storedAutoBackupMorning) setAutoBackupTimeMorning(new Date(storedAutoBackupMorning));
       else setAutoBackupTimeMorning(new Date(new Date().setHours(9, 0, 0, 0)));
 
-      const storedAutoBackupEvening = await AsyncStorage.getItem(autoBackupTimeEveningStorageKey);
+      const storedAutoBackupEvening = data[autoBackupTimeEveningStorageKey];
       if (storedAutoBackupEvening) setAutoBackupTimeEvening(new Date(storedAutoBackupEvening));
       else setAutoBackupTimeEvening(new Date(new Date().setHours(21, 0, 0, 0)));
 
