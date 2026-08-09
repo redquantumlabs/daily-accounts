@@ -7,6 +7,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Expense, Category } from '../context/ExpenseContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AddCategoryModal from './AddCategoryModal';
+import AddPaymentModeModal from './AddPaymentModeModal';
 
 interface AddExpenseModalProps {
   visible: boolean;
@@ -30,6 +32,8 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
   const [descriptionError, setDescriptionError] = useState('');
   const [categoryError, setCategoryError] = useState('');
   const [paymentModeError, setPaymentModeError] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [showAddPaymentMode, setShowAddPaymentMode] = useState(false);
 
   const clearErrors = () => {
     setAmountError('');
@@ -72,20 +76,16 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
       setDescriptionError('Please enter a description.');
       hasError = true;
     }
-    if (categories.length > 0) {
-      const isValidCategory = categoryId && categories.some(c => c.id === categoryId);
-      if (!isValidCategory) {
-        setCategoryError('Please select a category.');
-        hasError = true;
-      }
+    const isValidCategory = categoryId && categories.some(c => c.id === categoryId);
+    if (!isValidCategory) {
+      setCategoryError('Please select a category.');
+      hasError = true;
     }
 
-    if (paymentModes.length > 0) {
-      const isValidPaymentMode = paymentModeId && paymentModes.some(p => p.id === paymentModeId);
-      if (!isValidPaymentMode) {
-        setPaymentModeError('Please select a payment mode.');
-        hasError = true;
-      }
+    const isValidPaymentMode = paymentModeId && paymentModes.some(p => p.id === paymentModeId);
+    if (!isValidPaymentMode) {
+      setPaymentModeError('Please select a payment mode.');
+      hasError = true;
     }
 
     if (hasError) return;
@@ -134,7 +134,8 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <>
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalOverlay}>
           <KeyboardAvoidingView
@@ -191,49 +192,63 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
               </TouchableOpacity>
             </View>
 
-            {categories.length > 0 && (
-              <View style={styles.inputWrapper}>
-                <AppText style={styles.label}>Category</AppText>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-                  {categories.map((cat) => (
-                    <TouchableOpacity
-                      key={cat.id}
-                      style={[
-                        styles.categoryChip,
-                        { backgroundColor: categoryId === cat.id ? cat.color : colors.surface }
-                      ]}
-                      onPress={() => { setCategoryId(cat.id); setCategoryError(''); }}
-                    >
-                      <Ionicons name={cat.icon as any} size={16} color={categoryId === cat.id ? '#fff' : cat.color} style={{ marginRight: 6 }} />
-                      <AppText style={{ color: categoryId === cat.id ? '#fff' : colors.text, fontWeight: '600' }}>{cat.name}</AppText>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                {categoryError ? <AppText style={styles.fieldErrorText}>{categoryError}</AppText> : null}
+            <View style={styles.inputWrapper}>
+              <AppText style={styles.label}>Category</AppText>
+              <View style={[styles.categoryScroll, { flexDirection: 'row', flexWrap: 'wrap' }]}>
+                {categories.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.categoryChip,
+                      { backgroundColor: categoryId === cat.id ? cat.color : colors.surface }
+                    ]}
+                    onPress={() => { setCategoryId(cat.id); setCategoryError(''); }}
+                  >
+                    <Ionicons name={cat.icon as any} size={16} color={categoryId === cat.id ? '#fff' : cat.color} style={{ marginRight: 6 }} />
+                    <AppText style={{ color: categoryId === cat.id ? '#fff' : colors.text, fontWeight: '600' }}>{cat.name}</AppText>
+                  </TouchableOpacity>
+                ))}
+                {categories.length === 0 && (
+                  <TouchableOpacity
+                    style={[styles.categoryChip, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary, borderStyle: 'dashed' }]}
+                    onPress={() => setShowAddCategory(true)}
+                  >
+                    <Ionicons name="add" size={16} color={colors.primary} style={{ marginRight: 4 }} />
+                    <AppText style={{ color: colors.primary, fontWeight: '600' }}>Add New</AppText>
+                  </TouchableOpacity>
+                )}
               </View>
-            )}
+              {categoryError ? <AppText style={styles.fieldErrorText}>{categoryError}</AppText> : null}
+            </View>
 
-            {paymentModes.length > 0 && (
-              <View style={styles.inputWrapper}>
-                <AppText style={styles.label}>Payment Mode</AppText>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-                  {paymentModes.map((mode) => (
-                    <TouchableOpacity
-                      key={mode.id}
-                      style={[
-                        styles.categoryChip,
-                        { backgroundColor: paymentModeId === mode.id ? mode.color : colors.surface }
-                      ]}
-                      onPress={() => { setPaymentModeId(mode.id); setPaymentModeError(''); }}
-                    >
-                      <Ionicons name={mode.icon as any} size={16} color={paymentModeId === mode.id ? '#fff' : mode.color} style={{ marginRight: 6 }} />
-                      <AppText style={{ color: paymentModeId === mode.id ? '#fff' : colors.text, fontWeight: '600' }}>{mode.name}</AppText>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                {paymentModeError ? <AppText style={styles.fieldErrorText}>{paymentModeError}</AppText> : null}
+            <View style={styles.inputWrapper}>
+              <AppText style={styles.label}>Payment Mode</AppText>
+              <View style={[styles.categoryScroll, { flexDirection: 'row', flexWrap: 'wrap' }]}>
+                {paymentModes.map((mode) => (
+                  <TouchableOpacity
+                    key={mode.id}
+                    style={[
+                      styles.categoryChip,
+                      { backgroundColor: paymentModeId === mode.id ? mode.color : colors.surface }
+                    ]}
+                    onPress={() => { setPaymentModeId(mode.id); setPaymentModeError(''); }}
+                  >
+                    <Ionicons name={mode.icon as any} size={16} color={paymentModeId === mode.id ? '#fff' : mode.color} style={{ marginRight: 6 }} />
+                    <AppText style={{ color: paymentModeId === mode.id ? '#fff' : colors.text, fontWeight: '600' }}>{mode.name}</AppText>
+                  </TouchableOpacity>
+                ))}
+                {paymentModes.length === 0 && (
+                  <TouchableOpacity
+                    style={[styles.categoryChip, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary, borderStyle: 'dashed' }]}
+                    onPress={() => setShowAddPaymentMode(true)}
+                  >
+                    <Ionicons name="add" size={16} color={colors.primary} style={{ marginRight: 4 }} />
+                    <AppText style={{ color: colors.primary, fontWeight: '600' }}>Add New</AppText>
+                  </TouchableOpacity>
+                )}
               </View>
-            )}
+              {paymentModeError ? <AppText style={styles.fieldErrorText}>{paymentModeError}</AppText> : null}
+            </View>
 
             {showDatePicker && (
               <DateTimePicker
@@ -261,6 +276,9 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
         </View>
       </TouchableWithoutFeedback>
     </Modal>
+    <AddCategoryModal visible={showAddCategory} onClose={() => setShowAddCategory(false)} />
+    <AddPaymentModeModal visible={showAddPaymentMode} onClose={() => setShowAddPaymentMode(false)} />
+    </>
   );
 }
 
@@ -344,6 +362,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     marginRight: 12,
+    marginBottom: 12,
   },
   saveButton: {
     height: 52,
