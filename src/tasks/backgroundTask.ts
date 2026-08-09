@@ -11,18 +11,7 @@ export const performBackgroundTasks = async () => {
   }
   isPerformingBackgroundTasks = true;
   try {
-    const userCredentialsStr = await AsyncStorage.getItem('@app_user_credentials');
-    let userEmail = '';
-    if (userCredentialsStr) {
-      try {
-        const user = JSON.parse(userCredentialsStr);
-        if (user && user.email) {
-          userEmail = user.email;
-        }
-      } catch (_e) { }
-    }
-
-    const backupPathKey = userEmail ? `@app_backup_path_${userEmail}` : '@app_backup_path';
+    const backupPathKey = '@app_backup_path';
     const backupPathUri = await AsyncStorage.getItem(backupPathKey);
 
     let backupSkipped = false;
@@ -30,14 +19,14 @@ export const performBackgroundTasks = async () => {
       backupSkipped = true;
     }
 
-    const last9amKey = userEmail ? `@last_backup_9am_${userEmail}` : '@last_backup_9am';
-    const last9pmKey = userEmail ? `@last_backup_9pm_${userEmail}` : '@last_backup_9pm';
+    const last9amKey = '@last_backup_9am';
+    const last9pmKey = '@last_backup_9pm';
     
     const last9AM = await AsyncStorage.getItem(last9amKey);
     const last9PM = await AsyncStorage.getItem(last9pmKey);
 
-    const morningKey = userEmail ? `@app_auto_backup_time_morning_${userEmail}` : '@app_auto_backup_time_morning';
-    const eveningKey = userEmail ? `@app_auto_backup_time_evening_${userEmail}` : '@app_auto_backup_time_evening';
+    const morningKey = '@app_auto_backup_time_morning';
+    const eveningKey = '@app_auto_backup_time_evening';
     const morningTimeStr = await AsyncStorage.getItem(morningKey);
     const eveningTimeStr = await AsyncStorage.getItem(eveningKey);
     
