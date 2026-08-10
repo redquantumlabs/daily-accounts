@@ -27,6 +27,7 @@ export default function SettingsScreen({ navigation }: any) {
   const [restoreProgress, setRestoreProgress] = useState<number | null>(null);
   const [isAccentExpanded, setIsAccentExpanded] = useState(false);
   const [isTotalBalanceExpanded, setIsTotalBalanceExpanded] = useState(false);
+  const [isRemindersExpanded, setIsRemindersExpanded] = useState(false);
   const [activePicker, setActivePicker] = useState<'summary' | 'reminder' | 'backupMorning' | 'backupEvening' | null>(null);
 
   const formatPath = (uri: string | null) => {
@@ -210,73 +211,7 @@ export default function SettingsScreen({ navigation }: any) {
     });
   };
 
-  const handleTroubleshootNotifications = async () => {
-    try {
-      await notifee.requestPermission();
-      
-      const channelId = await notifee.createChannel({
-        id: 'daily_accounts',
-        name: 'Daily Accounts Channel',
-      });
 
-      await notifee.displayNotification({
-        title: 'Troubleshooting Complete \uD83D\uDEE0\uFE0F',
-        body: 'If you see this, your notifications are working correctly!',
-        android: {
-          channelId,
-          showTimestamp: true,
-          smallIcon: 'ic_notification',
-          pressAction: {
-            id: 'default',
-          },
-        },
-      });
-      Alert.alert('Success', 'A test notification has been sent. Please check your notification drawer.');
-    } catch (e: any) {
-      Alert.alert('Error', 'Failed to display notification: ' + e.message);
-    }
-  };
-
-  const handleFixBackgroundNotifications = async () => {
-    if (Platform.OS !== 'android') return;
-    try {
-      const batteryOptEnabled = await notifee.isBatteryOptimizationEnabled();
-      if (batteryOptEnabled) {
-        Alert.alert(
-          'Battery Restrictions',
-          'Your device is restricting this app from running in the background. To receive notifications and run auto-backup when the app is closed, you must select "Unrestricted" or disable battery optimization.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { 
-              text: 'Open Settings', 
-              onPress: async () => await notifee.openBatteryOptimizationSettings() 
-            }
-          ]
-        );
-        return;
-      }
-      
-      const powerManagerInfo = await notifee.getPowerManagerInfo();
-      if (powerManagerInfo.activity) {
-        Alert.alert(
-          'Autostart Required',
-          'Your device requires explicit permission for this app to start in the background. Please enable "Autostart" or allow background activity.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { 
-              text: 'Open Settings', 
-              onPress: async () => await notifee.openPowerManagerSettings() 
-            }
-          ]
-        );
-        return;
-      }
-      
-      Alert.alert('All Good', 'No battery restrictions found! Background tasks should work perfectly. If not, make sure the app is not forcefully force-stopped.');
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    }
-  };
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
@@ -522,29 +457,45 @@ export default function SettingsScreen({ navigation }: any) {
         </TouchableOpacity>
         <View style={styles.divider} />
 
-        {reminderTimes.map((rTime, index) => (
-          <View key={index} style={styles.row}>
-            <View style={styles.rowLeft}>
-              <Ionicons name="alarm-outline" size={22} color={colors.primary} style={styles.icon} />
-              <AppText style={[styles.text, { color: colors.text }]}>Daily Reminder {index + 1}</AppText>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 16 }}>
-                {rTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </AppText>
-              <TouchableOpacity onPress={() => removeReminderTime(index)}>
-                <Ionicons name="trash-outline" size={20} color="#ff4444" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-
-        <TouchableOpacity style={styles.row} onPress={() => setActivePicker('reminder')}>
+        <TouchableOpacity style={styles.row} onPress={() => setIsRemindersExpanded(!isRemindersExpanded)}>
           <View style={styles.rowLeft}>
-            <Ionicons name="add-circle-outline" size={22} color={colors.primary} style={styles.icon} />
-            <AppText style={[styles.text, { color: colors.primary, fontWeight: 'bold' }]}>Add Reminder Time</AppText>
+            <Ionicons name="alarm-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Daily Reminders</AppText>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8 }}>
+              {reminderTimes.length} active
+            </AppText>
+            <Ionicons name={isRemindersExpanded ? "chevron-down" : "chevron-forward"} size={20} color={colors.text} />
           </View>
         </TouchableOpacity>
+        
+        {isRemindersExpanded && (
+          <View style={{ backgroundColor: isDarkTheme ? '#1e293b' : '#f8fafc', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 12, marginHorizontal: 16, marginBottom: 16 }}>
+            {reminderTimes.map((rTime, index) => (
+              <View key={index} style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: index < reminderTimes.length - 1 ? 1 : 0, borderBottomColor: colors.border, marginBottom: 0 }]}>
+                <View style={styles.rowLeft}>
+                  <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Reminder {index + 1}</AppText>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 16 }}>
+                    {rTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </AppText>
+                  <TouchableOpacity onPress={() => removeReminderTime(index)}>
+                    <Ionicons name="trash-outline" size={20} color="#ff4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            <TouchableOpacity style={[styles.row, { paddingHorizontal: 0, paddingBottom: 4, paddingTop: reminderTimes.length > 0 ? 12 : 4, borderTopWidth: reminderTimes.length > 0 ? 1 : 0, borderTopColor: colors.border, marginBottom: 0 }]} onPress={() => setActivePicker('reminder')}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="add-circle-outline" size={22} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
+                <AppText style={[styles.text, { color: colors.primary, fontWeight: 'bold', fontSize: 15 }]}>Add Reminder Time</AppText>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.divider} />
 
         <TouchableOpacity style={styles.row} onPress={() => setActivePicker('backupMorning')}>
@@ -573,23 +524,7 @@ export default function SettingsScreen({ navigation }: any) {
             <Ionicons name="chevron-forward" size={20} color={colors.text} />
           </View>
         </TouchableOpacity>
-        <View style={styles.divider} />
-        
-        <TouchableOpacity style={styles.row} onPress={handleTroubleshootNotifications}>
-          <View style={styles.rowLeft}>
-            <Ionicons name="build-outline" size={22} color={colors.primary} style={styles.icon} />
-            <AppText style={[styles.text, { color: colors.text }]}>Troubleshoot Notifications</AppText>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.text} />
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity style={styles.row} onPress={handleFixBackgroundNotifications}>
-          <View style={styles.rowLeft}>
-            <Ionicons name="battery-charging-outline" size={22} color={colors.primary} style={styles.icon} />
-            <AppText style={[styles.text, { color: colors.text }]}>Fix Background Notifications</AppText>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.text} />
-        </TouchableOpacity>
+
       </View>
 
       <View style={[styles.group, { backgroundColor: colors.card }]}>
