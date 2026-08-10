@@ -237,6 +237,47 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
+  const handleFixBackgroundNotifications = async () => {
+    if (Platform.OS !== 'android') return;
+    try {
+      const batteryOptEnabled = await notifee.isBatteryOptimizationEnabled();
+      if (batteryOptEnabled) {
+        Alert.alert(
+          'Battery Restrictions',
+          'Your device is restricting this app from running in the background. To receive notifications and run auto-backup when the app is closed, you must select "Unrestricted" or disable battery optimization.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Open Settings', 
+              onPress: async () => await notifee.openBatteryOptimizationSettings() 
+            }
+          ]
+        );
+        return;
+      }
+      
+      const powerManagerInfo = await notifee.getPowerManagerInfo();
+      if (powerManagerInfo.activity) {
+        Alert.alert(
+          'Autostart Required',
+          'Your device requires explicit permission for this app to start in the background. Please enable "Autostart" or allow background activity.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Open Settings', 
+              onPress: async () => await notifee.openPowerManagerSettings() 
+            }
+          ]
+        );
+        return;
+      }
+      
+      Alert.alert('All Good', 'No battery restrictions found! Background tasks should work perfectly. If not, make sure the app is not forcefully force-stopped.');
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.group, { backgroundColor: colors.card }]}>
@@ -538,6 +579,14 @@ export default function SettingsScreen({ navigation }: any) {
           <View style={styles.rowLeft}>
             <Ionicons name="build-outline" size={22} color={colors.primary} style={styles.icon} />
             <AppText style={[styles.text, { color: colors.text }]}>Troubleshoot Notifications</AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.row} onPress={handleFixBackgroundNotifications}>
+          <View style={styles.rowLeft}>
+            <Ionicons name="battery-charging-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Fix Background Notifications</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
