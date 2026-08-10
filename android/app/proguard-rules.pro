@@ -16,8 +16,10 @@
 
 # React Native Background Fetch
 -keep class com.transistorsoft.** { *; }
+-keep class com.transistorsoft.tsbackgroundfetch.** { *; }
 -keep class com.facebook.react.HeadlessJsTaskService { *; }
 
 # Notifee
 -keep class io.invertase.notifee.** { *; }
+-keep class app.notifee.** { *; }
 
