@@ -1,5 +1,6 @@
 import { Expense } from '../context/ExpenseContext';
 import notifee, { TriggerType, TimestampTrigger } from '@notifee/react-native';
+import { BACKUP_TRIGGER_IDS } from './backupConstants';
 
 const SUMMARY_PREFIX = 'summary_';
 const REMINDER_PREFIX = 'reminder_';
@@ -7,16 +8,13 @@ const MONTHLY_PREFIX = 'monthly_';
 
 export const scheduleAllNotifications = async (expenses: Expense[], currency: string, summaryTime: Date, reminderTimes: Date[]) => {
   try {
-    // Cancel ONLY the reminder/summary triggers — NOT the backup triggers which are managed separately
-    const allTriggers = await notifee.getTriggerNotificationIds();
-    const toCancel = allTriggers.filter(id =>
-      id.startsWith(SUMMARY_PREFIX) ||
-      id.startsWith(REMINDER_PREFIX) ||
-      id.startsWith(MONTHLY_PREFIX),
+    // Cancel all trigger notifications EXCEPT the backup triggers
+    // We cancel individually by prefix to avoid wiping the backup alarms
+    const existingIds = await notifee.getTriggerNotificationIds();
+    const idsToCancel = existingIds.filter(
+      id => !BACKUP_TRIGGER_IDS.includes(id)
     );
-    if (toCancel.length > 0) {
-      await Promise.all(toCancel.map(id => notifee.cancelTriggerNotification(id)));
-    }
+    await Promise.all(idsToCancel.map(id => notifee.cancelTriggerNotification(id)));
 
     const now = new Date();
     const todayStr = now.toDateString();

@@ -7,7 +7,8 @@ import App from './App';
 import { name as appName } from './app.json';
 import notifee, { EventType } from '@notifee/react-native';
 import { performBackgroundTasks } from './src/tasks/backgroundTask';
-import { scheduleAutoBackupTriggers, BACKUP_TRIGGER_IDS } from './src/utils/autoBackupScheduler';
+import { scheduleAutoBackupTriggers } from './src/utils/autoBackupScheduler';
+import { BACKUP_TRIGGER_IDS } from './src/utils/backupConstants';
 
 /**
  * Notifee background event handler.

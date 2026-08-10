@@ -1,9 +1,10 @@
 import notifee, { TriggerType, TimestampTrigger, AndroidImportance } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BACKUP_TRIGGER_MORNING_ID, BACKUP_TRIGGER_EVENING_ID } from './backupConstants';
 
-export const BACKUP_TRIGGER_MORNING_ID = 'auto_backup_trigger_morning';
-export const BACKUP_TRIGGER_EVENING_ID = 'auto_backup_trigger_evening';
-export const BACKUP_TRIGGER_IDS = [BACKUP_TRIGGER_MORNING_ID, BACKUP_TRIGGER_EVENING_ID];
+export { BACKUP_TRIGGER_IDS } from './backupConstants';
+
+const BACKUP_SILENT_CHANNEL_ID = 'daily_accounts_backup_silent';
 
 /**
  * Schedules Notifee TriggerType.TIMESTAMP alarms for morning and evening auto-backup.
@@ -26,6 +27,15 @@ export const scheduleAutoBackupTriggers = async () => {
     if (!backupPathUri) {
       return;
     }
+
+    // Create a silent channel for backup wakeup triggers so they don't interfere
+    // with the main HIGH-importance alerts channel
+    await notifee.createChannel({
+      id: BACKUP_SILENT_CHANNEL_ID,
+      name: 'Auto Backup (Silent)',
+      importance: AndroidImportance.MIN,
+      sound: '',
+    });
 
     const morningTimeStr = await AsyncStorage.getItem('@app_auto_backup_time_morning');
     const eveningTimeStr = await AsyncStorage.getItem('@app_auto_backup_time_evening');
@@ -64,7 +74,7 @@ export const scheduleAutoBackupTriggers = async () => {
         title: 'Auto Backup',
         body: 'Running morning backup...',
         android: {
-          channelId: 'daily_accounts',
+          channelId: BACKUP_SILENT_CHANNEL_ID,
           importance: AndroidImportance.MIN,
           smallIcon: 'ic_notification',
           showTimestamp: false,
@@ -92,7 +102,7 @@ export const scheduleAutoBackupTriggers = async () => {
         title: 'Auto Backup',
         body: 'Running evening backup...',
         android: {
-          channelId: 'daily_accounts',
+          channelId: BACKUP_SILENT_CHANNEL_ID,
           importance: AndroidImportance.MIN,
           smallIcon: 'ic_notification',
           showTimestamp: false,
