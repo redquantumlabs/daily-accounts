@@ -41,13 +41,14 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
       const summaryTrigger: TimestampTrigger = {
         type: TriggerType.TIMESTAMP,
         timestamp: targetDate.getTime(),
+        alarmManager: true,
       };
 
       promises.push(notifee.createTriggerNotification({
         id: `${SUMMARY_PREFIX}${i}`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${summaryTotal}.`,
-        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
       }, summaryTrigger));
 
       // ---- Reminders ----
@@ -58,13 +59,14 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         const reminderTrigger: TimestampTrigger = {
           type: TriggerType.TIMESTAMP,
           timestamp: rTargetDate.getTime(),
+          alarmManager: true,
         };
 
         promises.push(notifee.createTriggerNotification({
           id: `${REMINDER_PREFIX}${i}_${rIndex}`,
           title: "Daily Reminder",
           body: "You haven't logged any expenses today. Don't forget to track your spending!",
-          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
+          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
         }, reminderTrigger));
       }
     }
@@ -80,12 +82,12 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
           reminderBody = `You've spent ${currency}${todayTotal} today. Don't forget to log any other expenses!`;
         }
 
-        const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: todayReminder.getTime() };
+        const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: todayReminder.getTime(), alarmManager: true };
         promises.push(notifee.createTriggerNotification({
           id: `${REMINDER_PREFIX}0_${rIndex}`,
           title: "Daily Reminder",
           body: reminderBody,
-          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
+          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
         }, trigger));
       }
     }
@@ -100,12 +102,12 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
       const yesterdayExpenses = expenses.filter(e => new Date(e.date).toDateString() === yesterdayStr);
       const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
 
-      const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: todaySummary.getTime() };
+      const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: todaySummary.getTime(), alarmManager: true };
       promises.push(notifee.createTriggerNotification({
         id: `${SUMMARY_PREFIX}0`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${yesterdayTotal}.`,
-        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
       }, trigger));
     }
 
@@ -114,12 +116,12 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const currentMonthName = monthNames[now.getMonth()];
 
-    const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: nextMonthDate.getTime() };
+    const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: nextMonthDate.getTime(), alarmManager: true };
     promises.push(notifee.createTriggerNotification({
       id: `${MONTHLY_PREFIX}`,
       title: "Monthly Summary \uD83D\uDCCA",
       body: `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`,
-      android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
+      android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
     }, trigger));
 
     await Promise.all(promises);

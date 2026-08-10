@@ -66,6 +66,7 @@ export const scheduleAutoBackupTriggers = async () => {
     const morningTrigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: morningTarget.getTime(),
+      alarmManager: true,
     };
 
     await notifee.createTriggerNotification(
@@ -94,6 +95,7 @@ export const scheduleAutoBackupTriggers = async () => {
     const eveningTrigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: eveningTarget.getTime(),
+      alarmManager: true,
     };
 
     await notifee.createTriggerNotification(
