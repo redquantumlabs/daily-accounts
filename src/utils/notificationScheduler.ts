@@ -41,7 +41,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         id: `${SUMMARY_PREFIX}${i}`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${summaryTotal}.`,
-        android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
       }, summaryTrigger));
 
       // ---- Reminders ----
@@ -58,7 +58,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
           id: `${REMINDER_PREFIX}${i}_${rIndex}`,
           title: "Daily Reminder",
           body: "You haven't logged any expenses today. Don't forget to track your spending!",
-          android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
+          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
         }, reminderTrigger));
       }
     }
@@ -79,7 +79,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
           id: `${REMINDER_PREFIX}0_${rIndex}`,
           title: "Daily Reminder",
           body: reminderBody,
-          android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
+          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
         }, trigger));
       }
     }
@@ -99,7 +99,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         id: `${SUMMARY_PREFIX}0`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${yesterdayTotal}.`,
-        android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
       }, trigger));
     }
 
@@ -113,7 +113,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
       id: `${MONTHLY_PREFIX}`,
       title: "Monthly Summary \uD83D\uDCCA",
       body: `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`,
-      android: { channelId: 'daily_accounts', smallIcon: 'ic_notification' }
+      android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
     }, trigger));
 
     await Promise.all(promises);

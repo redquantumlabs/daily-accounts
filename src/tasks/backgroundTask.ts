@@ -125,7 +125,7 @@ export const performBackgroundTasks = async () => {
     await notifee.displayNotification({
       title: "Backup Complete",
       body: `Daily auto-backup (${backupType}) was successful.`,
-      android: { channelId: 'daily_accounts' }
+      android: { channelId: 'daily_accounts', showTimestamp: true }
     });
 
     return;
@@ -133,7 +133,7 @@ export const performBackgroundTasks = async () => {
     await notifee.displayNotification({
       title: "Backup Failed",
       body: `Auto-backup encountered an error: ${err.message}`,
-      android: { channelId: 'daily_accounts' }
+      android: { channelId: 'daily_accounts', showTimestamp: true }
     });
     return;
   } finally {
