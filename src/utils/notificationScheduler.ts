@@ -1,5 +1,5 @@
 import { Expense } from '../context/ExpenseContext';
-import notifee, { TriggerType, TimestampTrigger } from '@notifee/react-native';
+import notifee, { TriggerType, TimestampTrigger, RepeatFrequency } from '@notifee/react-native';
 import { BACKUP_TRIGGER_IDS } from './backupConstants';
 
 const SUMMARY_PREFIX = 'summary_';
@@ -8,8 +8,6 @@ const MONTHLY_PREFIX = 'monthly_';
 
 export const scheduleAllNotifications = async (expenses: Expense[], currency: string, summaryTime: Date, reminderTimes: Date[]) => {
   try {
-    // Cancel all trigger notifications EXCEPT the backup triggers
-    // We cancel individually by prefix to avoid wiping the backup alarms
     const existingIds = await notifee.getTriggerNotificationIds();
     const idsToCancel = existingIds.filter(
       id => !BACKUP_TRIGGER_IDS.includes(id)
@@ -24,15 +22,20 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     }
 
     // We append a unique run ID to all new triggers so we NEVER reuse an ID.
-    // Reusing IDs immediately after cancelling them causes a race condition in Android's AlarmManager,
-    // which results in the new alarms being silently dropped by the OS.
+    // Reusing IDs immediately after cancelling them causes a race condition in Android's AlarmManager.
     const RUN_ID = Date.now();
 
     const now = new Date();
     const todayStr = now.toDateString();
+    const yesterdayDate = new Date(now);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = yesterdayDate.toDateString();
 
     const todayExpenses = expenses.filter(e => new Date(e.date).toDateString() === todayStr);
     const todayTotal = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
+
+    const yesterdayExpenses = expenses.filter(e => new Date(e.date).toDateString() === yesterdayStr);
+    const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
 
     const currentMonthExpenses = expenses.filter(e => {
       const d = new Date(e.date);
@@ -42,54 +45,17 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
 
     const promises: Promise<any>[] = [];
 
-    for (let i = 1; i <= 14; i++) {
-      const targetDate = new Date(now);
-      targetDate.setDate(targetDate.getDate() + i);
-
-      // ---- Summary ----
-      targetDate.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
-      const summaryTotal = i === 1 ? todayTotal : 0;
-      
-      const summaryTrigger: TimestampTrigger = {
-        type: TriggerType.TIMESTAMP,
-        timestamp: targetDate.getTime(),
-        alarmManager: { allowWhileIdle: true },
-      };
-
-      promises.push(
-        notifee.createTriggerNotification({
-          id: `${SUMMARY_PREFIX}${i}_${RUN_ID}`,
-          title: "Yesterday's Summary \uD83D\uDCCA",
-          body: `Your total expense for yesterday was ${currency}${summaryTotal}.`,
-          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
-        }, summaryTrigger).catch(e => console.warn(`Failed to schedule summary ${i}:`, e))
-      );
-
-      // ---- Reminders ----
-      for (let rIndex = 0; rIndex < reminderTimes.length; rIndex++) {
-        const rTime = reminderTimes[rIndex];
-        const rTargetDate = new Date(targetDate);
-        rTargetDate.setHours(rTime.getHours(), rTime.getMinutes(), 0, 0);
-        const reminderTrigger: TimestampTrigger = {
-          type: TriggerType.TIMESTAMP,
-          timestamp: rTargetDate.getTime(),
-          alarmManager: { allowWhileIdle: true },
-        };
-
-        promises.push(
-          notifee.createTriggerNotification({
-            id: `${REMINDER_PREFIX}${i}_${rIndex}_${RUN_ID}`,
-            title: "Daily Reminder",
-            body: "You haven't logged any expenses today. Don't forget to track your spending!",
-            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
-          }, reminderTrigger).catch(e => console.warn(`Failed to schedule reminder ${i}_${rIndex}:`, e))
-        );
-      }
-    }
-
+    // ==========================================
+    // 1. SCHEDULE DAILY REMINDERS
+    // ==========================================
     for (let rIndex = 0; rIndex < reminderTimes.length; rIndex++) {
       const rTime = reminderTimes[rIndex];
-      if (now.getHours() < rTime.getHours() || (now.getHours() === rTime.getHours() && now.getMinutes() < rTime.getMinutes())) {
+      
+      // Determine if today's reminder time has passed
+      const isTodayFuture = (now.getHours() < rTime.getHours() || (now.getHours() === rTime.getHours() && now.getMinutes() < rTime.getMinutes()));
+      
+      // --- A. TODAY'S ONE-OFF DYNAMIC REMINDER ---
+      if (isTodayFuture) {
         const todayReminder = new Date(now);
         todayReminder.setHours(rTime.getHours(), rTime.getMinutes(), 0, 0);
         
@@ -98,54 +64,113 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
           reminderBody = `You've spent ${currency}${todayTotal} today. Don't forget to log any other expenses!`;
         }
 
-        // Add 1000ms buffer to prevent scheduling in the absolute past if clock ticks over
-        const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: Math.max(todayReminder.getTime(), Date.now() + 1000), alarmManager: { allowWhileIdle: true } };
+        const triggerToday: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: Math.max(todayReminder.getTime(), Date.now() + 1000), alarmManager: { allowWhileIdle: true } };
         promises.push(
           notifee.createTriggerNotification({
             id: `${REMINDER_PREFIX}0_${rIndex}_${RUN_ID}`,
             title: "Daily Reminder",
             body: reminderBody,
             android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
-          }, trigger).catch(e => console.warn(`Failed to schedule today reminder ${rIndex}:`, e))
+          }, triggerToday).catch(e => console.warn(`Failed to schedule today reminder ${rIndex}:`, e))
         );
       }
+
+      // --- B. REPEATING DAILY REMINDER (Starting tomorrow) ---
+      const tomorrowReminder = new Date(now);
+      tomorrowReminder.setDate(tomorrowReminder.getDate() + 1);
+      tomorrowReminder.setHours(rTime.getHours(), rTime.getMinutes(), 0, 0);
+
+      const repeatingTrigger: TimestampTrigger = { 
+        type: TriggerType.TIMESTAMP, 
+        timestamp: tomorrowReminder.getTime(), 
+        repeatFrequency: RepeatFrequency.DAILY,
+        alarmManager: { allowWhileIdle: true } 
+      };
+
+      promises.push(
+        notifee.createTriggerNotification({
+          id: `${REMINDER_PREFIX}REPEAT_${rIndex}_${RUN_ID}`,
+          title: "Daily Reminder",
+          body: "Don't forget to log your daily expenses and track your spending!",
+          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+        }, repeatingTrigger).catch(e => console.warn(`Failed to schedule repeating reminder ${rIndex}:`, e))
+      );
     }
 
-    if (now.getHours() < summaryTime.getHours() || (now.getHours() === summaryTime.getHours() && now.getMinutes() < summaryTime.getMinutes())) {
+    // ==========================================
+    // 2. SCHEDULE DAILY SUMMARIES
+    // ==========================================
+    const isSummaryFuture = (now.getHours() < summaryTime.getHours() || (now.getHours() === summaryTime.getHours() && now.getMinutes() < summaryTime.getMinutes()));
+    
+    // --- A. TODAY'S ONE-OFF DYNAMIC SUMMARY ---
+    if (isSummaryFuture) {
       const todaySummary = new Date(now);
       todaySummary.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
       
-      const yesterdayDate = new Date(now);
-      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-      const yesterdayStr = yesterdayDate.toDateString();
-      const yesterdayExpenses = expenses.filter(e => new Date(e.date).toDateString() === yesterdayStr);
-      const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
-
-      // Add 1000ms buffer
-      const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: Math.max(todaySummary.getTime(), Date.now() + 1000), alarmManager: { allowWhileIdle: true } };
+      const triggerTodaySummary: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: Math.max(todaySummary.getTime(), Date.now() + 1000), alarmManager: { allowWhileIdle: true } };
       promises.push(
         notifee.createTriggerNotification({
           id: `${SUMMARY_PREFIX}0_${RUN_ID}`,
           title: "Yesterday's Summary \uD83D\uDCCA",
           body: `Your total expense for yesterday was ${currency}${yesterdayTotal}.`,
           android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
-        }, trigger).catch(e => console.warn(`Failed to schedule today summary:`, e))
+        }, triggerTodaySummary).catch(e => console.warn(`Failed to schedule today summary:`, e))
       );
     }
 
+    // --- B. TOMORROW'S ONE-OFF DYNAMIC SUMMARY ---
+    // (Uses today's total, because tomorrow, "yesterday" will be today)
+    const tomorrowSummary = new Date(now);
+    tomorrowSummary.setDate(tomorrowSummary.getDate() + 1);
+    tomorrowSummary.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
+    
+    const triggerTomorrowSummary: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: tomorrowSummary.getTime(), alarmManager: { allowWhileIdle: true } };
+    promises.push(
+      notifee.createTriggerNotification({
+        id: `${SUMMARY_PREFIX}1_${RUN_ID}`,
+        title: "Yesterday's Summary \uD83D\uDCCA",
+        body: `Your total expense for yesterday was ${currency}${todayTotal}.`, // Tomorrow, yesterday's total is today's total
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+      }, triggerTomorrowSummary).catch(e => console.warn(`Failed to schedule tomorrow summary:`, e))
+    );
+
+    // --- C. REPEATING DAILY SUMMARY (Starting day after tomorrow) ---
+    const dayAfterTomorrowSummary = new Date(now);
+    dayAfterTomorrowSummary.setDate(dayAfterTomorrowSummary.getDate() + 2);
+    dayAfterTomorrowSummary.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
+
+    const repeatingSummaryTrigger: TimestampTrigger = { 
+      type: TriggerType.TIMESTAMP, 
+      timestamp: dayAfterTomorrowSummary.getTime(), 
+      repeatFrequency: RepeatFrequency.DAILY,
+      alarmManager: { allowWhileIdle: true } 
+    };
+
+    promises.push(
+      notifee.createTriggerNotification({
+        id: `${SUMMARY_PREFIX}REPEAT_${RUN_ID}`,
+        title: "Daily Summary \uD83D\uDCCA",
+        body: "Your daily expense summary is ready. Open the app to view it!",
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+      }, repeatingSummaryTrigger).catch(e => console.warn(`Failed to schedule repeating summary:`, e))
+    );
+
+    // ==========================================
+    // 3. SCHEDULE MONTHLY SUMMARY
+    // ==========================================
     const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     nextMonthDate.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const currentMonthName = monthNames[now.getMonth()];
 
-    const trigger: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: nextMonthDate.getTime(), alarmManager: { allowWhileIdle: true } };
+    const triggerMonthly: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: nextMonthDate.getTime(), alarmManager: { allowWhileIdle: true } };
     promises.push(
       notifee.createTriggerNotification({
         id: `${MONTHLY_PREFIX}_${RUN_ID}`,
         title: "Monthly Summary \uD83D\uDCCA",
         body: `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`,
         android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
-      }, trigger).catch(e => console.warn(`Failed to schedule monthly summary:`, e))
+      }, triggerMonthly).catch(e => console.warn(`Failed to schedule monthly summary:`, e))
     );
 
     await Promise.all(promises);
