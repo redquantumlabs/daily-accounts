@@ -609,11 +609,17 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateAutoBackupTimeMorning = async (date: Date) => {
     setAutoBackupTimeMorning(date);
     await AsyncStorage.setItem(autoBackupTimeMorningStorageKey, date.toISOString());
+    // Reschedule Notifee triggers to reflect the new time
+    const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
+    scheduleAutoBackupTriggers().catch(console.warn);
   };
 
   const updateAutoBackupTimeEvening = async (date: Date) => {
     setAutoBackupTimeEvening(date);
     await AsyncStorage.setItem(autoBackupTimeEveningStorageKey, date.toISOString());
+    // Reschedule Notifee triggers to reflect the new time
+    const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
+    scheduleAutoBackupTriggers().catch(console.warn);
   };
 
   const getCurrentMonthTotal = () => {

@@ -7,8 +7,16 @@ const MONTHLY_PREFIX = 'monthly_';
 
 export const scheduleAllNotifications = async (expenses: Expense[], currency: string, summaryTime: Date, reminderTimes: Date[]) => {
   try {
-    // Cancel all existing scheduled notifications without clearing delivered ones
-    await notifee.cancelTriggerNotifications();
+    // Cancel ONLY the reminder/summary triggers — NOT the backup triggers which are managed separately
+    const allTriggers = await notifee.getTriggerNotificationIds();
+    const toCancel = allTriggers.filter(id =>
+      id.startsWith(SUMMARY_PREFIX) ||
+      id.startsWith(REMINDER_PREFIX) ||
+      id.startsWith(MONTHLY_PREFIX),
+    );
+    if (toCancel.length > 0) {
+      await Promise.all(toCancel.map(id => notifee.cancelTriggerNotification(id)));
+    }
 
     const now = new Date();
     const todayStr = now.toDateString();

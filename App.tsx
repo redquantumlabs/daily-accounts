@@ -8,27 +8,12 @@ import { ExpenseProvider } from './src/context/ExpenseContext';
 import { TransactionProvider } from './src/context/TransactionContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import BootSplash from 'react-native-bootsplash';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import SAF from 'react-native-saf-x';
 import { Platform, AppState } from 'react-native';
 import notifee, { AndroidImportance } from '@notifee/react-native';
-import BackgroundFetch from 'react-native-background-fetch';
+import { scheduleAutoBackupTriggers } from './src/utils/autoBackupScheduler';
 import { performBackgroundTasks } from './src/tasks/backgroundTask';
 
 
-
-async function initBackgroundFetch() {
-  await BackgroundFetch.configure({
-    minimumFetchInterval: 15,
-    stopOnTerminate: false,
-    startOnBoot: true,
-  }, async (taskId) => {
-    await performBackgroundTasks();
-    BackgroundFetch.finish(taskId);
-  }, (taskId) => {
-    BackgroundFetch.finish(taskId);
-  });
-}
 
 export default function App() {
   useEffect(() => {
@@ -44,7 +29,7 @@ export default function App() {
       }
     };
     setupNotifee().catch(console.error);
-    initBackgroundFetch().catch(console.error);
+    scheduleAutoBackupTriggers().catch(console.error);
 
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active') {
