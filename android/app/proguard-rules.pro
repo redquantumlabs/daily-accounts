@@ -13,3 +13,11 @@
 -dontwarn com.gemalto.jp2.**
 -dontwarn com.tom_roush.pdfbox.**
 -keep class com.tom_roush.pdfbox.** { *; }
+
+# React Native Background Fetch
+-keep class com.transistorsoft.** { *; }
+-keep class com.facebook.react.HeadlessJsTaskService { *; }
+
+# Notifee
+-keep class io.invertase.notifee.** { *; }
+
