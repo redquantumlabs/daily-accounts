@@ -194,7 +194,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
 
             <View style={styles.inputWrapper}>
               <AppText style={styles.label}>Category</AppText>
-              <View style={[styles.categoryScroll, { flexDirection: 'row', flexWrap: 'wrap' }]}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
                 {categories.map((cat) => (
                   <TouchableOpacity
                     key={cat.id}
@@ -217,13 +217,13 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
                     <AppText style={{ color: colors.primary, fontWeight: '600' }}>Add New</AppText>
                   </TouchableOpacity>
                 )}
-              </View>
+              </ScrollView>
               {categoryError ? <AppText style={styles.fieldErrorText}>{categoryError}</AppText> : null}
             </View>
 
             <View style={styles.inputWrapper}>
               <AppText style={styles.label}>Payment Mode</AppText>
-              <View style={[styles.categoryScroll, { flexDirection: 'row', flexWrap: 'wrap' }]}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
                 {paymentModes.map((mode) => (
                   <TouchableOpacity
                     key={mode.id}
@@ -246,7 +246,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
                     <AppText style={{ color: colors.primary, fontWeight: '600' }}>Add New</AppText>
                   </TouchableOpacity>
                 )}
-              </View>
+              </ScrollView>
               {paymentModeError ? <AppText style={styles.fieldErrorText}>{paymentModeError}</AppText> : null}
             </View>
 
@@ -362,7 +362,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     marginRight: 12,
-    marginBottom: 12,
   },
   saveButton: {
     height: 52,
