@@ -335,7 +335,10 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
   const handleDownloadPDF = async () => {
     try {
       setIsDownloading(true);
-      const html = generateAccountTransactionsPDFHTML(filteredTransactions, currency, accountFilter);
+      const html = generateAccountTransactionsPDFHTML(
+        [{ accountName: accountFilter || 'All Accounts', transactions: filteredTransactions }],
+        currency
+      );
       const options = {
         html,
         fileName: `Account_Report_${new Date().getTime()}`,

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SAF from 'react-native-saf-x';
 import { Platform } from 'react-native';
 import notifee from '@notifee/react-native';
-import { generateDashboardPDFHTML } from '../utils/pdfGenerator';
+import { generateDashboardPDFHTML, generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
 import { generatePDF } from 'react-native-html-to-pdf';
 import { parseISOYear } from '../utils/dateUtils';
 
@@ -70,6 +70,47 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
       }
     }
 
+    const accountsStr = await AsyncStorage.getItem('@app_accounts');
+    const transactionsStr = await AsyncStorage.getItem('@app_transactions');
+    
+    if (accountsStr && transactionsStr) {
+      const accountsList = JSON.parse(accountsStr);
+      const allTransactions = JSON.parse(transactionsStr);
+      
+      const accountGroups = accountsList.map((acc: string) => ({
+        accountName: acc,
+        transactions: allTransactions.filter((t: any) => t.account === acc)
+      })).filter((group: any) => group.transactions.length > 0);
+
+      if (accountGroups.length > 0) {
+        const accHtml = generateAccountTransactionsPDFHTML(accountGroups, currency);
+        const fileName = 'Transactional Accounts';
+        
+        const accOptions = {
+          html: accHtml,
+          fileName: fileName + `_${new Date().getTime()}`,
+          directory: 'Documents',
+          base64: true
+        };
+        
+        const accFile = await generatePDF(accOptions);
+        
+        if (accFile.base64) {
+          const fullFileName = `${fileName}.pdf`;
+          const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+          
+          const fileExists = await SAF.exists(fileUriString);
+          if (fileExists) {
+            await SAF.unlink(fileUriString);
+          }
+          
+          const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
+            mimeType: 'application/pdf'
+          });
+          await SAF.writeFile(fileUri.uri, accFile.base64, { encoding: 'base64' });
+        }
+      }
+    }
 
     await notifee.displayNotification({
       title: "Auto Download",

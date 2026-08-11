@@ -10,12 +10,17 @@ import { formatAmount } from '../utils/format';
 import AddTransactionModal from '../components/AddTransactionModal';
 import PremiumCardBackground from '../components/PremiumCardBackground';
 import EmptyState from '../components/EmptyState';
+import { generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
+import { generatePDF } from 'react-native-html-to-pdf';
+import SAF from 'react-native-saf-x';
+import notifee from '@notifee/react-native';
+import { Platform } from 'react-native';
 
 export default function HomeScreen({ navigation }: any) {
   const colors = useThemeColors();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats } = useTransactionContext();
-  const { currency, isAmountsVisible } = useExpenseContext();
+  const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats, transactions } = useTransactionContext();
+  const { currency, isAmountsVisible, downloadPathUri } = useExpenseContext();
 
   const [isTotalBalanceHidden, setIsTotalBalanceHidden] = React.useState(!isAmountsVisible);
   const [hiddenAccounts, setHiddenAccounts] = React.useState<Record<string, boolean>>({});
@@ -60,6 +65,61 @@ export default function HomeScreen({ navigation }: any) {
         { text: "Delete", style: "destructive", onPress: () => deleteAccount(accountName) }
       ]
     );
+  };
+
+  const handleDownloadAllAccountsPDF = async () => {
+    setActiveDropdown(null);
+    try {
+      const accountGroups = accounts.map((acc: string) => ({
+        accountName: acc,
+        transactions: transactions.filter((t: any) => t.account === acc)
+      })).filter(group => group.transactions.length > 0);
+
+      if (accountGroups.length === 0) {
+        Alert.alert('No Transactions', 'There are no transactions to download.');
+        return;
+      }
+
+      const html = generateAccountTransactionsPDFHTML(accountGroups, currency);
+      const fileName = 'Transactional Accounts';
+      
+      const options = {
+        html,
+        fileName: fileName + `_${new Date().getTime()}`,
+        directory: 'Documents',
+        base64: true
+      };
+
+      const file = await generatePDF(options);
+
+      if (file.base64 && downloadPathUri && Platform.OS === 'android') {
+        const fullFileName = `${fileName}.pdf`;
+        const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+        
+        const fileExists = await SAF.exists(fileUriString);
+        if (fileExists) {
+          await SAF.unlink(fileUriString);
+        }
+        
+        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
+          mimeType: 'application/pdf'
+        });
+        await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
+
+        if (notifee) {
+          await notifee.displayNotification({ 
+            title: "Download Complete", 
+            body: "Account report saved to your chosen downloads folder.", 
+            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } 
+          });
+        }
+        Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
+      } else {
+        throw new Error("Failed to generate PDF or download path not set.");
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate or save PDF report. ' + error);
+    }
   };
 
   const renderItem = ({ item: acc, drag, isActive }: RenderItemParams<string>) => {
@@ -161,9 +221,26 @@ export default function HomeScreen({ navigation }: any) {
             <Ionicons name="wallet" size={24} color="#fff" style={{ marginRight: 8 }} />
             <AppText style={[styles.cardTitle, { color: '#fff' }]}>Total Balance</AppText>
           </View>
-          <TouchableOpacity onPress={() => setIsTotalBalanceHidden(!isTotalBalanceHidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-            <Ionicons name={isTotalBalanceHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => setIsTotalBalanceHidden(!isTotalBalanceHidden)} style={{ padding: 4, marginRight: 8 }} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+              <Ionicons name={isTotalBalanceHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setActiveDropdown(activeDropdown === 'TOTAL_CARD' ? null : 'TOTAL_CARD')} style={{ padding: 4 }}>
+              <Ionicons name="ellipsis-vertical" size={20} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+
+            {activeDropdown === 'TOTAL_CARD' && (
+              <View style={[styles.dropdownMenu, { backgroundColor: colors.surface }]}>
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={handleDownloadAllAccountsPDF}
+                >
+                  <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                  <AppText style={{ color: colors.text }}>Download</AppText>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
         <View style={styles.cardBody}>
           <AppText style={[styles.balanceLabel, { color: 'rgba(255,255,255,0.8)' }]}>Overall Available Balance</AppText>

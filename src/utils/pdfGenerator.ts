@@ -126,47 +126,93 @@ export const generateDashboardPDFHTML = (
 };
 
 export const generateAccountTransactionsPDFHTML = (
-  transactions: AccountTransaction[],
-  currency: string,
-  accountName?: string
+  accountGroups: { accountName: string, transactions: AccountTransaction[] }[],
+  currency: string
 ) => {
-  // Sort transactions from oldest to newest to calculate running balance correctly
-  const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const contentHTML = accountGroups.map((group, index) => {
+    // Sort transactions from oldest to newest to calculate running balance correctly
+    const sortedTransactions = [...group.transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  let runningBalance = 0;
-  let totalDebits = 0;
-  let totalCredits = 0;
+    let runningBalance = 0;
+    let totalDebits = 0;
+    let totalCredits = 0;
 
-  const tableRows = sortedTransactions.map(tx => {
-    const dateObj = new Date(tx.date);
-    const dd = String(dateObj.getDate()).padStart(2, '0');
-    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const yy = String(dateObj.getFullYear()).slice(-2);
-    const dateStr = `${dd}-${mm}-${yy}`;
+    const tableRows = sortedTransactions.map(tx => {
+      const dateObj = new Date(tx.date);
+      const dd = String(dateObj.getDate()).padStart(2, '0');
+      const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const yy = String(dateObj.getFullYear()).slice(-2);
+      const dateStr = `${dd}-${mm}-${yy}`;
 
-    const isCredit = tx.type === 'Credit';
+      const isCredit = tx.type === 'Credit';
 
-    let debitStr = '0.00';
-    let creditStr = '0.00';
+      let debitStr = '0.00';
+      let creditStr = '0.00';
 
-    if (isCredit) {
-      creditStr = formatAmount(tx.amount);
-      totalCredits += tx.amount;
-      runningBalance += tx.amount;
-    } else {
-      debitStr = formatAmount(tx.amount);
-      totalDebits += tx.amount;
-      runningBalance -= tx.amount;
-    }
+      if (isCredit) {
+        creditStr = formatAmount(tx.amount);
+        totalCredits += tx.amount;
+        runningBalance += tx.amount;
+      } else {
+        debitStr = formatAmount(tx.amount);
+        totalDebits += tx.amount;
+        runningBalance -= tx.amount;
+      }
+
+      return `
+        <tr>
+          <td class="nowrap" style="width: 150px;">${dateStr}</td>
+          <td class="description-col" style="width: 500px;">${tx.description}</td>
+          <td class="amount-col debit-text" style="width: 150px;">${debitStr}</td>
+          <td class="amount-col credit-text" style="width: 150px;">${creditStr}</td>
+          <td class="amount-col" style="width: 150px;">${formatAmount(runningBalance)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const pageBreak = index > 0 ? 'page-break-before: always;' : '';
 
     return `
-      <tr>
-        <td class="nowrap" style="width: 150px;">${dateStr}</td>
-        <td class="description-col" style="width: 500px;">${tx.description}</td>
-        <td class="amount-col debit-text" style="width: 150px;">${debitStr}</td>
-        <td class="amount-col credit-text" style="width: 150px;">${creditStr}</td>
-        <td class="amount-col" style="width: 150px;">${formatAmount(runningBalance)}</td>
-      </tr>
+      <div style="${pageBreak}">
+        <table>
+          <colgroup>
+            <col style="width: 150px;" />
+            <col style="width: 500px;" />
+            <col style="width: 150px;" />
+            <col style="width: 150px;" />
+            <col style="width: 150px;" />
+          </colgroup>
+          <thead>
+            <tr style="background-color: transparent;">
+              <th colspan="5" style="border: none; background-color: transparent; text-align: left; padding: 0 0 10px 0;">
+                <div class="header-container">
+                  <span style="font-size: 18px; color: #000; font-weight: normal;">Transactional Accounts</span>
+                  <span style="font-size: 18px; color: #000; font-weight: normal;">${group.accountName}</span>
+                </div>
+              </th>
+            </tr>
+            <tr>
+              <th class="col-header" style="width: 150px;">Date</th>
+              <th class="col-header" style="width: 500px;">Description</th>
+              <th class="col-header" style="width: 150px;">Debit</th>
+              <th class="col-header" style="width: 150px;">Credit</th>
+              <th class="col-header" style="width: 150px;">Available Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="5" style="text-align: center;">No transactions found</td></tr>'}
+            ${tableRows.length > 0 ? `
+            <tr class="total-row">
+              <td class="nowrap total-label" style="width: 150px;">Total</td>
+              <td class="description-col total-dashes" style="width: 500px;">---------------------------------------------------------------------------------------------------------</td>
+              <td class="amount-col total-debit" style="width: 150px;">${formatAmount(totalDebits)}</td>
+              <td class="amount-col total-credit" style="width: 150px;">${formatAmount(totalCredits)}</td>
+              <td class="amount-col total-balance" style="width: 150px;">${formatAmount(runningBalance)}</td>
+            </tr>
+            ` : ''}
+          </tbody>
+        </table>
+      </div>
     `;
   }).join('');
 
@@ -192,8 +238,8 @@ export const generateAccountTransactionsPDFHTML = (
           .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; font-family: Arial, sans-serif; }
           
           table { width: 1100px; border-collapse: collapse; table-layout: fixed; zoom: 0.67; margin: 0 auto; }
-          th, td { border: 1px solid #000; padding: 6px; text-align: left; overflow: hidden; }
-          .col-header { background-color: #d0a060; color: #000; font-weight: bold; text-align: center; }
+          th, td { border: 1px solid #000; padding: 6px; text-align: left; overflow: hidden; font-size: 10px; }
+          .col-header { background-color: #d0a060; color: #000; font-weight: bold; text-align: center; font-size: 10px; }
           
           tr:nth-child(even) { background-color: #e6d3ba; }
           tr:nth-child(odd) { background-color: #f8f2eb; }
@@ -215,45 +261,7 @@ export const generateAccountTransactionsPDFHTML = (
         </style>
       </head>
       <body>
-        <table>
-          <colgroup>
-            <col style="width: 150px;" />
-            <col style="width: 500px;" />
-            <col style="width: 150px;" />
-            <col style="width: 150px;" />
-            <col style="width: 150px;" />
-          </colgroup>
-          <thead>
-            <tr style="background-color: transparent;">
-              <th colspan="5" style="border: none; background-color: transparent; text-align: left; padding: 0 0 10px 0;">
-                <div class="header-container">
-                  <span style="font-size: 18px; color: #000; font-weight: normal;">Transactional Accounts</span>
-                  <span style="font-size: 18px; color: #000; font-weight: normal;">${accountName || 'All Accounts'}</span>
-                </div>
-              </th>
-            </tr>
-            <tr>
-              <th class="col-header" style="width: 150px;">Date</th>
-              <th class="col-header" style="width: 500px;">Description</th>
-              <th class="col-header" style="width: 150px;">Debit</th>
-              <th class="col-header" style="width: 150px;">Credit</th>
-              <th class="col-header" style="width: 150px;">Available Balance</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="5" style="text-align: center;">No transactions found</td></tr>'}
-            ${tableRows.length > 0 ? `
-            <tr class="total-row">
-              <td class="nowrap total-label" style="width: 150px;">Total</td>
-              <td class="description-col total-dashes" style="width: 500px;">-------------------------------------------------------------------</td>
-              <td class="amount-col total-debit" style="width: 150px;">${formatAmount(totalDebits)}</td>
-              <td class="amount-col total-credit" style="width: 150px;">${formatAmount(totalCredits)}</td>
-              <td class="amount-col total-balance" style="width: 150px;">${formatAmount(runningBalance)}</td>
-            </tr>
-            ` : ''}
-          </tbody>
-        </table>
-
+        ${contentHTML}
       </body>
     </html>
   `;
