@@ -12,7 +12,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     const idsToCancel = existingIds.filter(
       id => !BACKUP_TRIGGER_IDS.includes(id)
     );
-    
+
     if (idsToCancel.length > 0) {
       try {
         await notifee.cancelTriggerNotifications(idsToCancel);
@@ -50,15 +50,15 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     // ==========================================
     for (let rIndex = 0; rIndex < reminderTimes.length; rIndex++) {
       const rTime = reminderTimes[rIndex];
-      
+
       // Determine if today's reminder time has passed
       const isTodayFuture = (now.getHours() < rTime.getHours() || (now.getHours() === rTime.getHours() && now.getMinutes() < rTime.getMinutes()));
-      
+
       // --- A. TODAY'S ONE-OFF DYNAMIC REMINDER ---
       if (isTodayFuture) {
         const todayReminder = new Date(now);
         todayReminder.setHours(rTime.getHours(), rTime.getMinutes(), 0, 0);
-        
+
         let reminderBody = "You haven't logged any expenses today. Don't forget to track your spending!";
         if (todayTotal > 0) {
           reminderBody = `You've spent ${currency}${todayTotal} today. Don't forget to log any other expenses!`;
@@ -70,7 +70,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
             id: `${REMINDER_PREFIX}0_${rIndex}_${RUN_ID}`,
             title: "Daily Reminder",
             body: reminderBody,
-            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
           }, triggerToday).catch(e => console.warn(`Failed to schedule today reminder ${rIndex}:`, e))
         );
       }
@@ -80,11 +80,11 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
       tomorrowReminder.setDate(tomorrowReminder.getDate() + 1);
       tomorrowReminder.setHours(rTime.getHours(), rTime.getMinutes(), 0, 0);
 
-      const repeatingTrigger: TimestampTrigger = { 
-        type: TriggerType.TIMESTAMP, 
-        timestamp: tomorrowReminder.getTime(), 
+      const repeatingTrigger: TimestampTrigger = {
+        type: TriggerType.TIMESTAMP,
+        timestamp: tomorrowReminder.getTime(),
         repeatFrequency: RepeatFrequency.DAILY,
-        alarmManager: { allowWhileIdle: true } 
+        alarmManager: { allowWhileIdle: true }
       };
 
       promises.push(
@@ -92,7 +92,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
           id: `${REMINDER_PREFIX}REPEAT_${rIndex}_${RUN_ID}`,
           title: "Daily Reminder",
           body: "Don't forget to log your daily expenses and track your spending!",
-          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
         }, repeatingTrigger).catch(e => console.warn(`Failed to schedule repeating reminder ${rIndex}:`, e))
       );
     }
@@ -101,19 +101,19 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     // 2. SCHEDULE DAILY SUMMARIES
     // ==========================================
     const isSummaryFuture = (now.getHours() < summaryTime.getHours() || (now.getHours() === summaryTime.getHours() && now.getMinutes() < summaryTime.getMinutes()));
-    
+
     // --- A. TODAY'S ONE-OFF DYNAMIC SUMMARY ---
     if (isSummaryFuture) {
       const todaySummary = new Date(now);
       todaySummary.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
-      
+
       const triggerTodaySummary: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: Math.max(todaySummary.getTime(), Date.now() + 1000), alarmManager: { allowWhileIdle: true } };
       promises.push(
         notifee.createTriggerNotification({
           id: `${SUMMARY_PREFIX}0_${RUN_ID}`,
           title: "Yesterday's Summary \uD83D\uDCCA",
           body: `Your total expense for yesterday was ${currency}${yesterdayTotal}.`,
-          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
         }, triggerTodaySummary).catch(e => console.warn(`Failed to schedule today summary:`, e))
       );
     }
@@ -123,14 +123,14 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     const tomorrowSummary = new Date(now);
     tomorrowSummary.setDate(tomorrowSummary.getDate() + 1);
     tomorrowSummary.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
-    
+
     const triggerTomorrowSummary: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: tomorrowSummary.getTime(), alarmManager: { allowWhileIdle: true } };
     promises.push(
       notifee.createTriggerNotification({
         id: `${SUMMARY_PREFIX}1_${RUN_ID}`,
         title: "Yesterday's Summary \uD83D\uDCCA",
         body: `Your total expense for yesterday was ${currency}${todayTotal}.`, // Tomorrow, yesterday's total is today's total
-        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
       }, triggerTomorrowSummary).catch(e => console.warn(`Failed to schedule tomorrow summary:`, e))
     );
 
@@ -139,11 +139,11 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     dayAfterTomorrowSummary.setDate(dayAfterTomorrowSummary.getDate() + 2);
     dayAfterTomorrowSummary.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
 
-    const repeatingSummaryTrigger: TimestampTrigger = { 
-      type: TriggerType.TIMESTAMP, 
-      timestamp: dayAfterTomorrowSummary.getTime(), 
+    const repeatingSummaryTrigger: TimestampTrigger = {
+      type: TriggerType.TIMESTAMP,
+      timestamp: dayAfterTomorrowSummary.getTime(),
       repeatFrequency: RepeatFrequency.DAILY,
-      alarmManager: { allowWhileIdle: true } 
+      alarmManager: { allowWhileIdle: true }
     };
 
     promises.push(
@@ -151,7 +151,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         id: `${SUMMARY_PREFIX}REPEAT_${RUN_ID}`,
         title: "Daily Summary \uD83D\uDCCA",
         body: "Your daily expense summary is ready. Open the app to view it!",
-        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
       }, repeatingSummaryTrigger).catch(e => console.warn(`Failed to schedule repeating summary:`, e))
     );
 
@@ -169,7 +169,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
         id: `${MONTHLY_PREFIX}_${RUN_ID}`,
         title: "Monthly Summary \uD83D\uDCCA",
         body: `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`,
-        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', pressAction: { id: 'default' } }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
       }, triggerMonthly).catch(e => console.warn(`Failed to schedule monthly summary:`, e))
     );
 

@@ -357,7 +357,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
 
         if (notifee) {
-          await notifee.displayNotification({ title: "Download Complete", body: "Account report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' } });
+          await notifee.displayNotification({ title: "Download Complete", body: "Account report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
         }
         Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
       } else {
