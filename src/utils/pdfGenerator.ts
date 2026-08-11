@@ -17,11 +17,11 @@ export const generateDashboardPDFHTML = (
     const monthName = d.toLocaleString('default', { month: 'long' });
     const year = d.getFullYear();
     const key = `${monthName} ${year}`;
-    if (!acc[key]) acc[key] = { expenses: [], total: 0 };
+    if (!acc[key]) acc[key] = { expenses: [], total: 0, monthName, year };
     acc[key].expenses.push(exp);
     acc[key].total += exp.amount;
     return acc;
-  }, {} as Record<string, { expenses: Expense[], total: number }>);
+  }, {} as Record<string, { expenses: Expense[], total: number, monthName: string, year: number }>);
 
   // 5. Format DD-MM-YY
   const formatDDMMYY = (dateStr: string) => {
@@ -47,7 +47,7 @@ export const generateDashboardPDFHTML = (
         return `
           <tr>
             <td class="nowrap" style="width: 150px;">${formatDDMMYY(exp.date)}</td>
-            <td class="nowrap" style="width: 150px; color: #ff0000;">${formatAmount(exp.amount)}</td>
+            <td class="nowrap amount-col debit-text" style="width: 150px;">${formatAmount(exp.amount)}</td>
             <td class="description-col" style="width: 500px;">${exp.description}</td>
             <td class="nowrap" style="width: 150px;">${cat ? cat.name : ''}</td>
             <td class="nowrap" style="width: 150px;">${mode ? mode.name : ''}</td>
@@ -57,23 +57,40 @@ export const generateDashboardPDFHTML = (
 
       return `
         <div style="${pageBreak}">
-          <!-- 3. Title left, total right -->
-          <div class="month-header">
-            <h2 style="margin: 0;">${monthYear}</h2>
-            <h2 style="margin: 0;">Total: ${currency}${formatAmount(data.total)}</h2>
-          </div>
           <table>
+            <colgroup>
+              <col style="width: 150px;" />
+              <col style="width: 150px;" />
+              <col style="width: 500px;" />
+              <col style="width: 150px;" />
+              <col style="width: 150px;" />
+            </colgroup>
             <thead>
+              <tr style="background-color: transparent;">
+                <th colspan="5" style="border: none; background-color: transparent; text-align: left; padding: 0 0 10px 0;">
+                  <div class="header-container">
+                    <span style="font-size: 18px; color: #000; font-weight: normal;">Account - ${data.year}</span>
+                    <span style="font-size: 18px; color: #000; font-weight: normal;">${data.monthName}</span>
+                  </div>
+                </th>
+              </tr>
               <tr>
-                <th style="text-align: center; width: 150px;">Date</th>
-                <th style="text-align: center; width: 150px;">Amount Spent</th>
-                <th style="text-align: center; width: 500px;">Description</th>
-                <th style="text-align: center; width: 150px;">Category</th>
-                <th style="text-align: center; width: 150px;">Payment Mode</th>
+                <th class="col-header" style="width: 150px;">Date</th>
+                <th class="col-header" style="width: 150px;">Amount Spent</th>
+                <th class="col-header" style="width: 500px;">Description</th>
+                <th class="col-header" style="width: 150px;">Category</th>
+                <th class="col-header" style="width: 150px;">Payment Mode</th>
               </tr>
             </thead>
             <tbody>
               ${rows}
+              <tr class="total-row">
+                <td class="nowrap total-label" style="width: 150px;">Total</td>
+                <td class="amount-col total-debit" style="width: 150px;">${formatAmount(data.total)}</td>
+                <td class="description-col total-dashes" style="width: 500px;">---------------------------------------------------------------------------------------------------------</td>
+                <td class="amount-col total-dashes" style="width: 150px;">-------------------------</td>
+                <td class="amount-col total-dashes" style="width: 150px;">-------------------------</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -90,7 +107,7 @@ export const generateDashboardPDFHTML = (
         <style>
           @page { 
             size: letter portrait;
-            margin: 10mm; /* Narrow margin */
+            margin: 10mm;
             @bottom-right {
               content: counter(page);
               font-family: Arial, sans-serif;
@@ -101,25 +118,32 @@ export const generateDashboardPDFHTML = (
           body { font-family: Arial, sans-serif; font-size: 10px; color: #333; margin: 0; padding: 0; }
           thead { display: table-header-group; }
           tr { page-break-inside: avoid; }
-          h1 { text-align: center; color: #2c3e50; margin-bottom: 5px; }
-          .summary { font-size: 16px; text-align: center; margin-bottom: 30px; font-weight: bold; color: #7f8c8d; }
-          .month-header { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-bottom: 20px; color: #2c3e50; }
-          table { width: 1100px; border-collapse: collapse; table-layout: fixed; zoom: 0.67; }
-          th, td { border: 1px solid #000; padding: 6px; text-align: left; overflow: hidden; }
-          th { background-color: #d0a060; color: #000; font-weight: bold; }
+          
+          .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; font-family: Arial, sans-serif; }
+          
+          table { width: 1100px; border-collapse: collapse; table-layout: fixed; zoom: 0.67; margin: 0 auto; }
+          th, td { border: 1px solid #000; padding: 6px; text-align: left; overflow: hidden; font-size: 10px; }
+          .col-header { background-color: #d0a060; color: #000; font-weight: bold; text-align: center; font-size: 10px; }
+          
           tr:nth-child(even) { background-color: #e6d3ba; }
           tr:nth-child(odd) { background-color: #f8f2eb; }
+          
           .nowrap { white-space: nowrap; }
           .description-col { width: 100%; }
-          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #888; }
+          .amount-col { text-align: left; }
+          
+          .debit-text { color: #ff0000; }
+          .credit-text { color: #6aa84f; }
+          
+          .total-row { font-weight: bold; background-color: #d0a060 !important; }
+          .total-row td { border-top: 1px solid #000; }
+          .total-row .total-label { background-color: #d0a060 !important; color: #000 !important; }
+          .total-row .total-dashes { background-color: #d0a060 !important; color: #000 !important; text-align: center; }
+          .total-debit { background-color: #e06666 !important; color: #990000 !important; }
         </style>
       </head>
       <body>
-        <h1>Expense Report</h1>
-        <div class="summary">Grand Total: ${currency}${formatAmount(grandTotal)} (${sortedExpenses.length} records)</div>
-        
         ${contentHTML}
-
       </body>
     </html>
   `;
@@ -219,7 +243,7 @@ export const generateAccountTransactionsPDFHTML = (
   return `
     <html>
       <head>
-        <meta name="viewport" content="width=1300" />
+        <meta name="viewport" content="width=1350" />
         <style>
           @page { 
             size: letter portrait;
