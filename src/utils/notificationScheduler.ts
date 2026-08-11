@@ -1,6 +1,6 @@
 import { Expense } from '../context/ExpenseContext';
 import notifee, { TriggerType, TimestampTrigger, RepeatFrequency } from '@notifee/react-native';
-import { BACKUP_TRIGGER_IDS } from './backupConstants';
+import { BACKUP_TRIGGER_PREFIX } from './backupConstants';
 
 const SUMMARY_PREFIX = 'summary_';
 const REMINDER_PREFIX = 'reminder_';
@@ -10,7 +10,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
   try {
     const existingIds = await notifee.getTriggerNotificationIds();
     const idsToCancel = existingIds.filter(
-      id => !BACKUP_TRIGGER_IDS.includes(id)
+      id => !id.startsWith(BACKUP_TRIGGER_PREFIX)
     );
 
     if (idsToCancel.length > 0) {

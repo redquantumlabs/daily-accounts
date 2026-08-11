@@ -84,7 +84,7 @@ export default function HomeScreen({ navigation }: any) {
 
       const html = generateAccountTransactionsPDFHTML(accountGroups, currency);
       const fileName = 'Transactional Accounts';
-      
+
       const options = {
         html,
         fileName: fileName + `_${new Date().getTime()}`,
@@ -97,25 +97,25 @@ export default function HomeScreen({ navigation }: any) {
       if (file.base64 && downloadPathUri && Platform.OS === 'android') {
         const fullFileName = `${fileName}.pdf`;
         const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
-        
+
         const fileExists = await SAF.exists(fileUriString);
         if (fileExists) {
           await SAF.unlink(fileUriString);
         }
-        
+
         const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
           mimeType: 'application/pdf'
         });
         await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
 
         if (notifee) {
-          await notifee.displayNotification({ 
-            title: "Download Complete", 
-            body: "Account report saved to your chosen downloads folder.", 
-            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } 
+          await notifee.displayNotification({
+            title: "Download Complete",
+            body: "Account report saved.",
+            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
           });
         }
-        showAlert('Success', 'PDF saved automatically to your chosen download folder.');
+        showAlert('Success', 'PDF saved successfully.');
       } else {
         throw new Error("Failed to generate PDF or download path not set.");
       }
@@ -140,7 +140,7 @@ export default function HomeScreen({ navigation }: any) {
 
       const html = generateAccountTransactionsPDFHTML(accountGroups, currency);
       const fileName = `Account_${accountName}`;
-      
+
       const options = {
         html,
         fileName: fileName + `_${new Date().getTime()}`,
@@ -153,25 +153,25 @@ export default function HomeScreen({ navigation }: any) {
       if (file.base64 && downloadPathUri && Platform.OS === 'android') {
         const fullFileName = `${fileName}.pdf`;
         const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
-        
+
         const fileExists = await SAF.exists(fileUriString);
         if (fileExists) {
           await SAF.unlink(fileUriString);
         }
-        
+
         const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
           mimeType: 'application/pdf'
         });
         await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
 
         if (notifee) {
-          await notifee.displayNotification({ 
-            title: "Download Complete", 
-            body: `${accountName} report saved to your chosen downloads folder.`, 
-            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } 
+          await notifee.displayNotification({
+            title: "Download Complete",
+            body: `${accountName} report saved.`,
+            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
           });
         }
-        showAlert('Success', `PDF saved automatically to your chosen download folder.`);
+        showAlert('Success', 'PDF saved successfully.');
       } else {
         throw new Error("Failed to generate PDF or download path not set.");
       }
@@ -204,7 +204,7 @@ export default function HomeScreen({ navigation }: any) {
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TouchableOpacity onPress={() => toggleAccountHidden(acc)} style={{ padding: 4, marginRight: 8 }} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                <TouchableOpacity onPress={() => toggleAccountHidden(acc)} style={{ padding: 4, marginRight: 8 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                   <Ionicons name={(hiddenAccounts[acc] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -290,7 +290,7 @@ export default function HomeScreen({ navigation }: any) {
             <AppText style={[styles.cardTitle, { color: '#fff' }]}>Total Balance</AppText>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => setIsTotalBalanceHidden(!isTotalBalanceHidden)} style={{ padding: 4, marginRight: 8 }} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+            <TouchableOpacity onPress={() => setIsTotalBalanceHidden(!isTotalBalanceHidden)} style={{ padding: 4, marginRight: 8 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name={isTotalBalanceHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setActiveDropdown(activeDropdown === 'TOTAL_CARD' ? null : 'TOTAL_CARD')} style={{ padding: 4 }}>

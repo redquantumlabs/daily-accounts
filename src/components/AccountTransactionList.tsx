@@ -34,9 +34,10 @@ interface TransactionListItemProps {
   draggedItemDateRef: React.MutableRefObject<string | null>;
   onDelete: (id: string) => void;
   isAmountsVisible: boolean;
+  showAlert: any;
 }
 
-const RightSwipeAction = ({ dragX, tx, onDelete }: { dragX: SharedValue<number>, tx: AccountTransaction, onDelete: (id: string) => void }) => {
+const RightSwipeAction = ({ dragX, tx, onDelete, showAlert }: { dragX: SharedValue<number>, tx: AccountTransaction, onDelete: (id: string) => void, showAlert: any }) => {
   const rStyle = useAnimatedStyle(() => {
     const scale = interpolate(dragX.value, [-80, 0], [1, 0], Extrapolation.CLAMP);
     return { transform: [{ scale }] };
@@ -94,11 +95,12 @@ const TransactionListItem = React.memo(({
   draggedItemDateRef,
   onDelete,
   isAmountsVisible,
+  showAlert,
 }: TransactionListItemProps) => {
   const isCredit = tx.type === 'Credit';
 
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>) => {
-    return <RightSwipeAction dragX={dragX} tx={tx} onDelete={onDelete} />;
+    return <RightSwipeAction dragX={dragX} tx={tx} onDelete={onDelete} showAlert={showAlert} />;
   };
 
   const renderLeftActions = (progress: SharedValue<number>, dragX: SharedValue<number>) => {
@@ -370,9 +372,9 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
 
         if (notifee) {
-          await notifee.displayNotification({ title: "Download Complete", body: `${accountFilter} saved to your chosen downloads folder.`, android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
+          await notifee.displayNotification({ title: "Download Complete", body: `${accountFilter} saved.`, android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
         }
-        showAlert('Success', 'PDF saved automatically to your chosen download folder.');
+        showAlert('Success', 'PDF saved successfully.');
       } else {
         await Share.open({
           url: "file://${file.filePath}",
@@ -402,6 +404,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         draggedItemDateRef={draggedItemDateRef}
         onDelete={(id) => bulkDeleteTransactions([id])}
         isAmountsVisible={isAmountsVisible}
+        showAlert={showAlert}
       />
     );
   }, [selectedIds, isSelectMode, colors, currency, accountFilter, handleRowPress, bulkDeleteTransactions, isAmountsVisible]);

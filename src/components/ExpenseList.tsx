@@ -256,7 +256,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
       for (const year of uniqueYears) {
         const yearExpenses = filteredExpenses.filter((exp: any) => parseISOYear(exp.date) === year);
         const html = generateDashboardPDFHTML(yearExpenses, categories, paymentModes, currency);
-        
+
         const fileName = `Account - ${year}`;
         const options = {
           html,
@@ -274,7 +274,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
         if (downloadPathUri && Platform.OS === 'android') {
           const fullFileName = `${fileName}.pdf`;
           const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
-          
+
           const fileExists = await SAF.exists(fileUriString);
           if (fileExists) {
             await SAF.unlink(fileUriString);
@@ -296,8 +296,8 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
       }
 
       if (downloadPathUri && Platform.OS === 'android' && notifee) {
-        await notifee.displayNotification({ title: "Download Complete", body: "Expense reports saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
-        showAlert('Success', 'PDFs saved automatically to your chosen download folder.');
+        await notifee.displayNotification({ title: "Download Complete", body: "Expense reports saved.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
+        showAlert('Success', 'PDFs saved successfully.');
       }
     } catch (error) {
       if (notifee) {

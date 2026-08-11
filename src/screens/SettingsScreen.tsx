@@ -121,10 +121,10 @@ export default function SettingsScreen({ navigation }: any) {
 
         await notifee.displayNotification({
           title: "Auto Backup",
-          body: "Manual backup saved successfully to your chosen folder.",
+          body: "Manual backup saved successfully.",
           android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
         });
-        showAlert('Success', 'Backup saved successfully to your chosen folder.');
+        showAlert('Success', 'Backup saved successfully.');
       } else {
         const timestamp = new Date().getTime();
         const fileUri = RNFS.DocumentDirectoryPath + `/DailyAccountsBackup_${timestamp}.json`;
