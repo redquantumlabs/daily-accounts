@@ -58,14 +58,14 @@ export const performBackgroundTasks = async (backupLabel: string = 'Auto') => {
 
     await notifee.displayNotification({
       title: "Backup Complete",
-      body: `Auto-backup (${backupLabel}) was successful.`,
+      body: `${backupLabel} was successful.`,
       android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
     });
 
   } catch (err: any) {
     await notifee.displayNotification({
       title: "Backup Failed",
-      body: `Auto-backup encountered an error: ${err.message}`,
+      body: `Auto Backup encountered an error: ${err.message}`,
       android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
     });
   } finally {

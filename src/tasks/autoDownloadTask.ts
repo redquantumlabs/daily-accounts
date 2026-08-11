@@ -22,7 +22,7 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
     const categoriesStr = await AsyncStorage.getItem('@app_categories');
     const paymentModesStr = await AsyncStorage.getItem('@app_payment_modes');
     const currency = (await AsyncStorage.getItem('@app_currency')) || '$';
-    
+
     const chartType = (await AsyncStorage.getItem('@app_analytics_chart_type')) as any || 'Pie';
     const chartStyle = (await AsyncStorage.getItem('@app_chart_style')) as any || 'Classic';
 
@@ -102,7 +102,7 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
     }).sort((a, b) => b.amount - a.amount);
 
     const analyticsHtml = generateAnalyticsPDFHTML('This Month', totalSpent, categoryData, paymentModeData, currency, chartType, chartStyle);
-    
+
     const analyticsOptions = {
       html: analyticsHtml,
       fileName: `Auto_Analytics_Report_${downloadLabel.replace(/\s+/g, '_')}_${new Date().getTime()}`,
@@ -121,14 +121,14 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
 
     await notifee.displayNotification({
       title: "Auto Download Complete",
-      body: `Daily auto-download (${downloadLabel}) generated successfully.`,
+      body: `${downloadLabel} generated successfully.`,
       android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
     });
 
   } catch (err: any) {
     await notifee.displayNotification({
       title: "Auto Download Failed",
-      body: `Auto-download encountered an error: ${err.message}`,
+      body: `Auto Download encountered an error: ${err.message}`,
       android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
     });
   } finally {
