@@ -120,7 +120,7 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
     }
 
     await notifee.displayNotification({
-      title: "Auto Download Complete",
+      title: "Auto Download",
       body: `${downloadLabel} generated successfully.`,
       android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
     });

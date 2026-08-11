@@ -5,7 +5,7 @@ import notifee from '@notifee/react-native';
 
 let isPerformingBackgroundTasks = false;
 
-export const performBackgroundTasks = async (backupLabel: string = 'Auto') => {
+export const performBackgroundTasks = async (backupLabel: string = 'Auto Backup') => {
   if (isPerformingBackgroundTasks) {
     return;
   }
@@ -57,7 +57,7 @@ export const performBackgroundTasks = async (backupLabel: string = 'Auto') => {
     }
 
     await notifee.displayNotification({
-      title: "Backup Complete",
+      title: "Auto Backup",
       body: `${backupLabel} was successful.`,
       android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
     });
