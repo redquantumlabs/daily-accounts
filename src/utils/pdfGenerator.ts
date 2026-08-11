@@ -130,31 +130,54 @@ export const generateAccountTransactionsPDFHTML = (
   currency: string,
   accountName?: string
 ) => {
-  const tableRows = transactions.map(tx => {
+  // Sort transactions from oldest to newest to calculate running balance correctly
+  const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  let runningBalance = 0;
+  let totalDebits = 0;
+  let totalCredits = 0;
+
+  const tableRows = sortedTransactions.map(tx => {
+    const dateObj = new Date(tx.date);
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const yy = String(dateObj.getFullYear()).slice(-2);
+    const dateStr = `${dd}-${mm}-${yy}`;
+
     const isCredit = tx.type === 'Credit';
-    const amountColor = isCredit ? '#00C851' : '#ff4444';
-    const amountPrefix = isCredit ? '+' : '-';
+
+    let debitStr = '0.00';
+    let creditStr = '0.00';
+
+    if (isCredit) {
+      creditStr = formatAmount(tx.amount);
+      totalCredits += tx.amount;
+      runningBalance += tx.amount;
+    } else {
+      debitStr = formatAmount(tx.amount);
+      totalDebits += tx.amount;
+      runningBalance -= tx.amount;
+    }
+
     return `
       <tr>
-        <td class="nowrap">${new Date(tx.date).toLocaleDateString()}</td>
-        <td class="description-col">${tx.description}</td>
-        <td class="nowrap">${tx.type}</td>
-        <td class="nowrap" style="text-align: right; color: ${amountColor};">${amountPrefix}${formatAmount(tx.amount)}</td>
+        <td class="nowrap" style="width: 150px;">${dateStr}</td>
+        <td class="description-col" style="width: 500px;">${tx.description}</td>
+        <td class="amount-col debit-text" style="width: 150px;">${debitStr}</td>
+        <td class="amount-col credit-text" style="width: 150px;">${creditStr}</td>
+        <td class="amount-col" style="width: 150px;">${formatAmount(runningBalance)}</td>
       </tr>
     `;
   }).join('');
 
-  const totalCredits = transactions.filter(t => t.type === 'Credit').reduce((sum, e) => sum + e.amount, 0);
-  const totalDebits = transactions.filter(t => t.type === 'Debit').reduce((sum, e) => sum + e.amount, 0);
-
   return `
     <html>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+        <meta name="viewport" content="width=1300" />
         <style>
           @page { 
             size: letter portrait;
-            margin: 10mm; /* Narrow margin */
+            margin: 10mm;
             @bottom-right {
               content: counter(page);
               font-family: Arial, sans-serif;
@@ -165,39 +188,69 @@ export const generateAccountTransactionsPDFHTML = (
           body { font-family: Arial, sans-serif; font-size: 10px; color: #333; margin: 0; padding: 0; }
           thead { display: table-header-group; }
           tr { page-break-inside: avoid; }
-          h1 { text-align: center; color: #2c3e50; margin-bottom: 5px; }
-          h2 { text-align: center; color: #7f8c8d; font-size: 16px; margin-top: 0; margin-bottom: 20px; }
-          .summary-container { display: flex; justify-content: space-around; margin-bottom: 20px; font-weight: bold; }
-          .summary-item { padding: 10px; border-radius: 8px; background: #f8f9fa; border: 1px solid #ddd; }
-          .credit { color: #00C851; }
-          .debit { color: #ff4444; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-          th { background-color: #f8f9fa; color: #2c3e50; }
-          tr:nth-child(even) { background-color: #f2f2f2; }
+          
+          .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; font-family: Arial, sans-serif; }
+          
+          table { width: 1100px; border-collapse: collapse; table-layout: fixed; zoom: 0.67; margin: 0 auto; }
+          th, td { border: 1px solid #000; padding: 6px; text-align: left; overflow: hidden; }
+          .col-header { background-color: #d0a060; color: #000; font-weight: bold; text-align: center; }
+          
+          tr:nth-child(even) { background-color: #e6d3ba; }
+          tr:nth-child(odd) { background-color: #f8f2eb; }
+          
           .nowrap { white-space: nowrap; }
           .description-col { width: 100%; }
-          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #888; }
+          .amount-col { text-align: left; }
+          
+          .debit-text { color: #ff0000; }
+          .credit-text { color: #008000; }
+          
+          .total-row { font-weight: bold; background-color: #d0a060 !important; }
+          .total-row td { border-top: 1px solid #000; }
+          .total-row .total-label { background-color: #d0a060 !important; color: #000 !important; text-align: center; }
+          .total-row .total-dashes { background-color: #d0a060 !important; color: #000 !important; text-align: center; }
+          .total-debit { background-color: #e57373 !important; color: #cc0000 !important; }
+          .total-credit { background-color: #81c784 !important; color: #008000 !important; }
+          .total-balance { background-color: #d0a060 !important; color: #000 !important; }
         </style>
       </head>
       <body>
-        <h1>${accountName ? `${accountName} Transactions Report` : 'All Transactions Report'}</h1>
-        <div class="summary-container">
-          <div class="summary-item">Total Records: ${transactions.length}</div>
-          <div class="summary-item credit">Total Credits: +${currency}${formatAmount(totalCredits)}</div>
-          <div class="summary-item debit">Total Debits: -${currency}${formatAmount(totalDebits)}</div>
-        </div>
         <table>
+          <colgroup>
+            <col style="width: 150px;" />
+            <col style="width: 500px;" />
+            <col style="width: 150px;" />
+            <col style="width: 150px;" />
+            <col style="width: 150px;" />
+          </colgroup>
           <thead>
+            <tr style="background-color: transparent;">
+              <th colspan="5" style="border: none; background-color: transparent; text-align: left; padding: 0 0 10px 0;">
+                <div class="header-container">
+                  <span style="font-size: 18px; color: #000; font-weight: normal;">Transactional Accounts</span>
+                  <span style="font-size: 18px; color: #000; font-weight: normal;">${accountName || 'All Accounts'}</span>
+                </div>
+              </th>
+            </tr>
             <tr>
-              <th style="text-align: center;">Date</th>
-              <th style="text-align: center;">Description</th>
-              <th style="text-align: center;">Type</th>
-              <th style="text-align: center;">Amount (${currency})</th>
+              <th class="col-header" style="width: 150px;">Date</th>
+              <th class="col-header" style="width: 500px;">Description</th>
+              <th class="col-header" style="width: 150px;">Debit</th>
+              <th class="col-header" style="width: 150px;">Credit</th>
+              <th class="col-header" style="width: 150px;">Available Balance</th>
             </tr>
           </thead>
           <tbody>
-            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="4" style="text-align: center;">No transactions found</td></tr>'}
+            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="5" style="text-align: center;">No transactions found</td></tr>'}
+            ${tableRows.length > 0 ? `
+            <tr class="total-row">
+              <td class="nowrap total-label" style="width: 150px;">Total</td>
+              <td class="description-col total-dashes" style="width: 500px;">---------------------------------------------------------------------------------------------------------</td>
+              <td class="amount-col total-debit" style="width: 150px;">${formatAmount(totalDebits)}</td>
+              <td class="amount-col total-credit" style="width: 150px;">${formatAmount(totalCredits)}</td>
+              <td class="amount-col total-balance" style="width: 150px;">${formatAmount(runningBalance)}</td>
+            </tr>
+            ` : ''}
           </tbody>
         </table>
 
