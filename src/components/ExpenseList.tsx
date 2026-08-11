@@ -243,36 +243,59 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
   const handleDownloadPDF = async () => {
     try {
       setIsDownloading(true);
-      const html = generateDashboardPDFHTML(filteredExpenses, categories, paymentModes, currency);
-      const options = {
-        html,
-        fileName: `Expenses_Report_${new Date().getTime()}`,
-        directory: 'Documents',
-        base64: true
-      };
 
-      const file = await generatePDF(options);
+      const uniqueYears = Array.from(new Set(filteredExpenses.map((exp: any) => parseISOYear(exp.date)))).sort((a: any, b: any) => (b as number) - (a as number));
 
-      if (!file.filePath || !file.base64) {
-        throw new Error("Failed to generate PDF");
+      if (uniqueYears.length === 0) {
+        setIsDownloading(false);
+        return;
       }
 
-      if (downloadPathUri && Platform.OS === 'android') {
-        const fileName = `Expenses_Report_${new Date().getTime()}.pdf`;
-        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fileName), {
-          mimeType: 'application/pdf'
-        });
-        await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
-        if (notifee) {
-          await notifee.displayNotification({ title: "Download Complete", body: "Expense report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
+      for (const year of uniqueYears) {
+        const yearExpenses = filteredExpenses.filter((exp: any) => parseISOYear(exp.date) === year);
+        const html = generateDashboardPDFHTML(yearExpenses, categories, paymentModes, currency);
+        
+        const fileName = `Account - ${year}`;
+        const options = {
+          html,
+          fileName: fileName + `_${new Date().getTime()}`, // temp internal name
+          directory: 'Documents',
+          base64: true
+        };
+
+        const file = await generatePDF(options);
+
+        if (!file.filePath || !file.base64) {
+          continue;
         }
-        Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
-      } else {
-        await Share.open({
-          url: "file://${file.filePath}",
-          type: 'application/pdf',
-          title: 'Share PDF'
-        });
+
+        if (downloadPathUri && Platform.OS === 'android') {
+          const fullFileName = `${fileName}.pdf`;
+          const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+          
+          const fileExists = await SAF.exists(fileUriString);
+          if (fileExists) {
+            await SAF.unlink(fileUriString);
+          }
+
+          const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
+            mimeType: 'application/pdf'
+          });
+          await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
+        } else {
+          // Fallback if SAF download path isn't set
+          const shareOptions = {
+            title: 'Share Expense Report',
+            url: `file://${file.filePath}`,
+            type: 'application/pdf',
+          };
+          await Share.open(shareOptions);
+        }
+      }
+
+      if (downloadPathUri && Platform.OS === 'android' && notifee) {
+        await notifee.displayNotification({ title: "Download Complete", body: "Expense reports saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
+        Alert.alert('Success', 'PDFs saved automatically to your chosen download folder.');
       }
     } catch (error) {
       if (notifee) {

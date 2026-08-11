@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import notifee from '@notifee/react-native';
 import { generateDashboardPDFHTML } from '../utils/pdfGenerator';
 import { generatePDF } from 'react-native-html-to-pdf';
+import { parseISOYear } from '../utils/dateUtils';
 
 let isPerformingAutoDownload = false;
 
@@ -29,22 +30,44 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
     const categories = categoriesStr ? JSON.parse(categoriesStr) : [];
     const paymentModes = paymentModesStr ? JSON.parse(paymentModesStr) : [];
 
-    // 1. Generate Expense Report (Dashboard)
-    const expenseHtml = generateDashboardPDFHTML(expenses, categories, paymentModes, currency);
-    const expenseOptions = {
-      html: expenseHtml,
-      fileName: `Auto_Expense_Report_${downloadLabel.replace(/\s+/g, '_')}_${new Date().getTime()}`,
-      directory: 'Documents',
-      base64: true
-    };
-    const expenseFile = await generatePDF(expenseOptions);
+    // Extract unique years
+    const uniqueYears = Array.from(new Set(expenses.map((exp: any) => parseISOYear(exp.date)))).sort((a: any, b: any) => (b as number) - (a as number));
 
-    if (expenseFile.base64) {
-      const fileName = `Auto_Expense_Report_${downloadLabel.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
-      const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fileName), {
-        mimeType: 'application/pdf'
-      });
-      await SAF.writeFile(fileUri.uri, expenseFile.base64, { encoding: 'base64' });
+    if (uniqueYears.length === 0) {
+      isPerformingAutoDownload = false;
+      return;
+    }
+
+    for (const year of uniqueYears) {
+      const yearExpenses = expenses.filter((exp: any) => parseISOYear(exp.date) === year);
+      
+      // 1. Generate Expense Report (Dashboard) for this specific year
+      const expenseHtml = generateDashboardPDFHTML(yearExpenses, categories, paymentModes, currency);
+      const fileName = `Account - ${year}`;
+      const expenseOptions = {
+        html: expenseHtml,
+        fileName: fileName + `_${new Date().getTime()}`, // temp internal name
+        directory: 'Documents',
+        base64: true
+      };
+      
+      const expenseFile = await generatePDF(expenseOptions);
+
+      if (expenseFile.base64) {
+        const fullFileName = `${fileName}.pdf`;
+        const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+        
+        // Overwrite if exists
+        const fileExists = await SAF.exists(fileUriString);
+        if (fileExists) {
+          await SAF.unlink(fileUriString);
+        }
+
+        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
+          mimeType: 'application/pdf'
+        });
+        await SAF.writeFile(fileUri.uri, expenseFile.base64, { encoding: 'base64' });
+      }
     }
 
 
