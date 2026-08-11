@@ -34,9 +34,7 @@ export default function App() {
     scheduleAutoDownloadTriggers().catch(console.error);
 
     const subscription = AppState.addEventListener('change', nextAppState => {
-      if (nextAppState === 'active') {
-        performBackgroundTasks().catch(console.error);
-      }
+      // Background checks or syncing can be added here if needed
     });
 
     // Hide BootSplash
