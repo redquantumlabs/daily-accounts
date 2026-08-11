@@ -339,9 +339,10 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         [{ accountName: accountFilter || 'All Accounts', transactions: filteredTransactions }],
         currency
       );
+      const baseFileName = `Account_${accountFilter || 'All Accounts'}`;
       const options = {
         html,
-        fileName: `Account_Report_${new Date().getTime()}`,
+        fileName: baseFileName,
         directory: 'Documents',
         base64: true
       };
@@ -353,14 +354,21 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
       }
 
       if (downloadPathUri && Platform.OS === 'android') {
-        const fileName = `Account_Report_${new Date().getTime()}.pdf`;
-        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fileName), {
+        const fullFileName = `${baseFileName}.pdf`;
+        const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+
+        const fileExists = await SAF.exists(fileUriString);
+        if (fileExists) {
+          await SAF.unlink(fileUriString);
+        }
+
+        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
           mimeType: 'application/pdf'
         });
         await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
 
         if (notifee) {
-          await notifee.displayNotification({ title: "Download Complete", body: "Account report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
+          await notifee.displayNotification({ title: "Download Complete", body: `${accountFilter} saved to your chosen downloads folder.`, android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
         }
         Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
       } else {

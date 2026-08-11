@@ -122,6 +122,62 @@ export default function HomeScreen({ navigation }: any) {
     }
   };
 
+  const handleDownloadSingleAccountPDF = async (accountName: string) => {
+    setActiveDropdown(null);
+    try {
+      const accountTransactions = transactions.filter((t: any) => t.account === accountName);
+      if (accountTransactions.length === 0) {
+        Alert.alert('No Transactions', `There are no transactions in ${accountName} to download.`);
+        return;
+      }
+
+      const accountGroups = [{
+        accountName,
+        transactions: accountTransactions
+      }];
+
+      const html = generateAccountTransactionsPDFHTML(accountGroups, currency);
+      const fileName = `Account_${accountName}`;
+      
+      const options = {
+        html,
+        fileName: fileName + `_${new Date().getTime()}`,
+        directory: 'Documents',
+        base64: true
+      };
+
+      const file = await generatePDF(options);
+
+      if (file.base64 && downloadPathUri && Platform.OS === 'android') {
+        const fullFileName = `${fileName}.pdf`;
+        const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+        
+        const fileExists = await SAF.exists(fileUriString);
+        if (fileExists) {
+          await SAF.unlink(fileUriString);
+        }
+        
+        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
+          mimeType: 'application/pdf'
+        });
+        await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
+
+        if (notifee) {
+          await notifee.displayNotification({ 
+            title: "Download Complete", 
+            body: `${accountName} report saved to your chosen downloads folder.`, 
+            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } 
+          });
+        }
+        Alert.alert('Success', `PDF saved automatically to your chosen download folder.`);
+      } else {
+        throw new Error("Failed to generate PDF or download path not set.");
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate or save PDF report. ' + error);
+    }
+  };
+
   const renderItem = ({ item: acc, drag, isActive }: RenderItemParams<string>) => {
     const stats = getAccountStats(acc);
     return (
@@ -167,6 +223,16 @@ export default function HomeScreen({ navigation }: any) {
                     >
                       <Ionicons name="eye-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
                       <AppText style={{ color: colors.text }}>View</AppText>
+                    </TouchableOpacity>
+
+                    <View style={{ height: 1, backgroundColor: colors.border }} />
+
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => handleDownloadSingleAccountPDF(acc)}
+                    >
+                      <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                      <AppText style={{ color: colors.text }}>Download</AppText>
                     </TouchableOpacity>
 
                     <View style={{ height: 1, backgroundColor: colors.border }} />
