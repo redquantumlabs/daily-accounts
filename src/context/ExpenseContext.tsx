@@ -51,10 +51,12 @@ interface ExpenseContextType {
   addCategory: (name: string, icon: string, color: string) => Promise<void>;
   updateCategory: (id: string, name: string, icon: string, color: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  bulkDeleteCategories: (ids: string[]) => Promise<void>;
 
   addPaymentMode: (name: string, icon: string, color: string) => Promise<void>;
   updatePaymentMode: (id: string, name: string, icon: string, color: string) => Promise<void>;
   deletePaymentMode: (id: string) => Promise<void>;
+  bulkDeletePaymentModes: (ids: string[]) => Promise<void>;
 
   bulkImport: (newExpenses: Expense[], newCategories: Category[], newPaymentModes: PaymentMode[]) => Promise<void>;
 
@@ -112,9 +114,11 @@ const ExpenseContext = createContext<ExpenseContextType>({
   addCategory: async () => {},
   updateCategory: async () => {},
   deleteCategory: async () => {},
+  bulkDeleteCategories: async () => {},
   addPaymentMode: async () => {},
   updatePaymentMode: async () => {},
   deletePaymentMode: async () => {},
+  bulkDeletePaymentModes: async () => {},
   bulkImport: async () => {},
   updateCurrency: async () => {},
   updateBudgets: async () => {},
@@ -492,6 +496,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(categoriesStorageKey, JSON.stringify(updated));
   };
 
+  const bulkDeleteCategories = async (ids: string[]) => {
+    const updated = categories.filter(cat => !ids.includes(cat.id));
+    setCategories(updated);
+    await AsyncStorage.setItem(categoriesStorageKey, JSON.stringify(updated));
+  };
+
   const addPaymentMode = async (name: string, icon: string, color: string) => {
     const newMode: PaymentMode = { id: Date.now().toString(), name, icon, color };
     const updated = [...paymentModes, newMode].sort((a, b) => a.name.localeCompare(b.name));
@@ -507,6 +517,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const deletePaymentMode = async (id: string) => {
     const updated = paymentModes.filter(mode => mode.id !== id);
+    setPaymentModes(updated);
+    await AsyncStorage.setItem(paymentModesStorageKey, JSON.stringify(updated));
+  };
+
+  const bulkDeletePaymentModes = async (ids: string[]) => {
+    const updated = paymentModes.filter(mode => !ids.includes(mode.id));
     setPaymentModes(updated);
     await AsyncStorage.setItem(paymentModesStorageKey, JSON.stringify(updated));
   };
@@ -732,8 +748,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       monthlyIncomes,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses, reorderExpensesByDate,
       updateMonthlyIncome,
-      addCategory, updateCategory, deleteCategory,
-      addPaymentMode, updatePaymentMode, deletePaymentMode,
+      addCategory, updateCategory, deleteCategory, bulkDeleteCategories,
+      addPaymentMode, updatePaymentMode, deletePaymentMode, bulkDeletePaymentModes,
       bulkImport,
       updateCurrency, updateBudgets, toggleShowMonthlyBudget, toggleAmountsVisibility, toggleShowYearlyBudget, toggleShowYearCard, updateAnalyticsChartType, updateChartStyle,
       getCurrentMonthTotal, getPreviousMonthTotal, 

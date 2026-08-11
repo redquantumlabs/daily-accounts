@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, PaymentMode } from '../context/ExpenseContext';
@@ -14,6 +14,8 @@ export default function PaymentModesScreen() {
   
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedMode, setSelectedMode] = useState<PaymentMode | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const handleOpenAddModal = () => {
     setSelectedMode(null);
@@ -21,8 +23,53 @@ export default function PaymentModesScreen() {
   };
 
   const handleEditMode = (mode: PaymentMode) => {
+    if (isSelectionMode) {
+      toggleSelection(mode.id);
+      return;
+    }
     setSelectedMode(mode);
     setIsModalVisible(true);
+  };
+
+  const handleLongPress = (id: string) => {
+    if (!isSelectionMode) {
+      setIsSelectionMode(true);
+      setSelectedIds([id]);
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    let newSelected = [...selectedIds];
+    if (newSelected.includes(id)) {
+      newSelected = newSelected.filter((selectedId) => selectedId !== id);
+      if (newSelected.length === 0) {
+        setIsSelectionMode(false);
+      }
+    } else {
+      newSelected.push(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const { bulkDeletePaymentModes } = useExpenseContext();
+
+  const handleBulkDelete = () => {
+    Alert.alert(
+      'Delete Payment Modes',
+      `Are you sure you want to delete ${selectedIds.length} payment modes?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            bulkDeletePaymentModes(selectedIds);
+            setIsSelectionMode(false);
+            setSelectedIds([]);
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -31,7 +78,9 @@ export default function PaymentModesScreen() {
         
         <View style={styles.header}>
           <AppText style={[styles.title, { color: colors.text }]}>Payment Modes</AppText>
-          <AppText style={styles.subtitle}>Manage how you pay for expenses.</AppText>
+          <AppText style={styles.subtitle}>
+            {isSelectionMode ? `${selectedIds.length} selected` : 'Manage how you pay for expenses.'}
+          </AppText>
         </View>
 
         {paymentModes.length === 0 ? (
@@ -40,29 +89,60 @@ export default function PaymentModesScreen() {
           </View>
         ) : (
           <View style={styles.grid}>
-            {paymentModes.map((mode) => (
-              <TouchableOpacity 
-                key={mode.id} 
-                style={[styles.modeCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
-                onPress={() => handleEditMode(mode)}
-              >
-                <View style={[styles.iconContainer, { backgroundColor: mode.color }]}>
-                  <Ionicons name={mode.icon as any} size={28} color="#fff" />
-                </View>
-                <AppText style={[styles.modeName, { color: colors.text }]} numberOfLines={1}>{mode.name}</AppText>
-              </TouchableOpacity>
-            ))}
+            {paymentModes.map((mode) => {
+              const isSelected = selectedIds.includes(mode.id);
+              return (
+                <TouchableOpacity 
+                  key={mode.id} 
+                  style={[
+                    styles.modeCard, 
+                    { backgroundColor: colors.card, shadowColor: colors.shadow },
+                    isSelected && { borderColor: colors.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => handleEditMode(mode)}
+                  onLongPress={() => handleLongPress(mode.id)}
+                >
+                  <View style={[styles.iconContainer, { backgroundColor: mode.color }]}>
+                    <Ionicons name={mode.icon as any} size={28} color="#fff" />
+                    {isSelected && (
+                      <View style={[styles.checkContainer, { backgroundColor: colors.primary }]}>
+                        <Ionicons name="checkmark" size={16} color="#fff" />
+                      </View>
+                    )}
+                  </View>
+                  <AppText style={[styles.modeName, { color: colors.text }]} numberOfLines={1}>{mode.name}</AppText>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
       </ScrollView>
 
-      {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
-        onPress={handleOpenAddModal}
-      >
-        <Ionicons name="add" size={32} color="#fff" />
-      </TouchableOpacity>
+      {/* Floating Action Button or Action Bar */}
+      {isSelectionMode ? (
+        <View style={[styles.actionRow, { backgroundColor: colors.background }]}>
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: colors.card }]}
+            onPress={() => { setIsSelectionMode(false); setSelectedIds([]); }}
+          >
+            <AppText style={{ color: colors.text, fontWeight: 'bold' }}>Cancel</AppText>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: '#FF3B30' }]}
+            onPress={handleBulkDelete}
+          >
+            <Ionicons name="trash" size={20} color="#fff" />
+            <AppText style={{ color: '#fff', fontWeight: 'bold', marginLeft: 8 }}>Delete</AppText>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity 
+          style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
+          onPress={handleOpenAddModal}
+        >
+          <Ionicons name="add" size={32} color="#fff" />
+        </TouchableOpacity>
+      )}
 
       <AddPaymentModeModal 
         visible={isModalVisible}
@@ -142,6 +222,43 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+  },
+  checkContainer: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  actionRow: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 20,
+    paddingBottom: 34,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 8,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
 });
 
