@@ -16,6 +16,7 @@ import RNFS from 'react-native-fs';
 import SAF from 'react-native-saf-x';
 import { generateAnalyticsPDFHTML } from '../utils/pdfGenerator';
 import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
+import DownloadProgressModal from '../components/DownloadProgressModal';
 const isExpoGo = false;
 
 
@@ -302,6 +303,7 @@ export default function AnalyticsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <DownloadProgressModal visible={isDownloading} message="Generating analytics report…" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
         {/* Filter Pills */}

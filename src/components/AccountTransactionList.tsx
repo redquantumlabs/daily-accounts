@@ -20,6 +20,7 @@ import SAF from 'react-native-saf-x';
 import notifee from '@notifee/react-native';
 import { generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
 import { useAlert } from '../context/AlertContext';
+import DownloadProgressModal from '../components/DownloadProgressModal';
 
 interface TransactionListItemProps {
   tx: AccountTransaction;
@@ -508,6 +509,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <DownloadProgressModal visible={isDownloading} message="Generating account PDF report…" />
       <DraggableFlatList
         data={flatDataState}
         keyExtractor={item => item.id}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import AppText from '../components/AppText';
 import { useTransactionContext } from '../context/TransactionContext';
@@ -16,11 +16,13 @@ import SAF from 'react-native-saf-x';
 import notifee from '@notifee/react-native';
 import { Platform } from 'react-native';
 import { useAlert } from '../context/AlertContext';
+import DownloadProgressModal from '../components/DownloadProgressModal';
 
 export default function HomeScreen({ navigation }: any) {
   const { showAlert } = useAlert();
   const colors = useThemeColors();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats, transactions } = useTransactionContext();
   const { currency, isAmountsVisible, downloadPathUri } = useExpenseContext();
 
@@ -71,6 +73,7 @@ export default function HomeScreen({ navigation }: any) {
 
   const handleDownloadAllAccountsPDF = async () => {
     setActiveDropdown(null);
+    setIsDownloading(true);
     try {
       const accountGroups = accounts.map((acc: string) => ({
         accountName: acc,
@@ -121,11 +124,14 @@ export default function HomeScreen({ navigation }: any) {
       }
     } catch (error) {
       showAlert('Error', 'Failed to generate or save PDF report. ' + error);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
   const handleDownloadSingleAccountPDF = async (accountName: string) => {
     setActiveDropdown(null);
+    setIsDownloading(true);
     try {
       const accountTransactions = transactions.filter((t: any) => t.account === accountName);
       if (accountTransactions.length === 0) {
@@ -177,6 +183,8 @@ export default function HomeScreen({ navigation }: any) {
       }
     } catch (error) {
       showAlert('Error', 'Failed to generate or save PDF report. ' + error);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -232,8 +240,13 @@ export default function HomeScreen({ navigation }: any) {
                     <TouchableOpacity
                       style={styles.dropdownItem}
                       onPress={() => handleDownloadSingleAccountPDF(acc)}
+                      disabled={isDownloading}
                     >
-                      <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                      {isDownloading ? (
+                        <ActivityIndicator size="small" color={colors.text} style={{ marginRight: 8 }} />
+                      ) : (
+                        <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                      )}
                       <AppText style={{ color: colors.text }}>Download</AppText>
                     </TouchableOpacity>
 
@@ -302,8 +315,13 @@ export default function HomeScreen({ navigation }: any) {
                 <TouchableOpacity
                   style={styles.dropdownItem}
                   onPress={handleDownloadAllAccountsPDF}
+                  disabled={isDownloading}
                 >
-                  <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                  {isDownloading ? (
+                    <ActivityIndicator size="small" color={colors.text} style={{ marginRight: 8 }} />
+                  ) : (
+                    <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                  )}
                   <AppText style={{ color: colors.text }}>Download</AppText>
                 </TouchableOpacity>
               </View>
@@ -342,6 +360,7 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
 
       <DraggableFlatList
         data={accounts}

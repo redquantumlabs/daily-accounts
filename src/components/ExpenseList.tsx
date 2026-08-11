@@ -23,6 +23,7 @@ import { generateDashboardPDFHTML } from '../utils/pdfGenerator';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { parseISOYear, parseISOMonth, getMonthYearString } from '../utils/dateUtils';
 import { useAlert } from '../context/AlertContext';
+import DownloadProgressModal from '../components/DownloadProgressModal';
 const isExpoGo = false;
 
 
@@ -669,6 +670,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <DownloadProgressModal visible={isDownloading} message="Generating PDF reports…" />
       {isExpensesScreen && (
         <View style={{ paddingHorizontal: 20, paddingTop: 20, zIndex: 10 }}>
           {actionBars}
