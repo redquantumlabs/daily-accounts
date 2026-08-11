@@ -12,6 +12,7 @@ import { Platform, AppState } from 'react-native';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { scheduleAutoBackupTriggers } from './src/utils/autoBackupScheduler';
 import { performBackgroundTasks } from './src/tasks/backgroundTask';
+import { scheduleAutoDownloadTriggers } from './src/utils/autoDownloadScheduler';
 
 
 
@@ -30,6 +31,7 @@ export default function App() {
     };
     setupNotifee().catch(console.error);
     scheduleAutoBackupTriggers().catch(console.error);
+    scheduleAutoDownloadTriggers().catch(console.error);
 
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active') {

@@ -1,41 +1,41 @@
 import notifee, { TriggerType, TimestampTrigger, AndroidImportance } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BACKUP_TRIGGER_PREFIX } from './backupConstants';
+import { DOWNLOAD_TRIGGER_PREFIX } from './autoDownloadConstants';
 
-export { BACKUP_TRIGGER_PREFIX } from './backupConstants';
+export { DOWNLOAD_TRIGGER_PREFIX } from './autoDownloadConstants';
 
-const BACKUP_SILENT_CHANNEL_ID = 'daily_accounts_backup_silent';
+const DOWNLOAD_SILENT_CHANNEL_ID = 'daily_accounts_download_silent';
 
-export const scheduleAutoBackupTriggers = async () => {
+export const scheduleAutoDownloadTriggers = async () => {
   try {
-    const backupPathUri = await AsyncStorage.getItem('@app_backup_path');
+    const downloadPathUri = await AsyncStorage.getItem('@app_download_path');
 
-    // Fetch all current triggers and cancel backup ones
+    // Fetch all current triggers and cancel download ones
     const triggerIds = await notifee.getTriggerNotificationIds();
-    const backupTriggers = triggerIds.filter(id => id.startsWith(BACKUP_TRIGGER_PREFIX));
-    for (const id of backupTriggers) {
+    const downloadTriggers = triggerIds.filter(id => id.startsWith(DOWNLOAD_TRIGGER_PREFIX));
+    for (const id of downloadTriggers) {
       await notifee.cancelTriggerNotification(id);
     }
 
-    if (!backupPathUri) return;
+    if (!downloadPathUri) return;
 
     await notifee.createChannel({
-      id: BACKUP_SILENT_CHANNEL_ID,
-      name: 'Auto Backup (Silent)',
+      id: DOWNLOAD_SILENT_CHANNEL_ID,
+      name: 'Auto Download (Silent)',
       importance: AndroidImportance.MIN,
       sound: '',
     });
 
-    const timesStr = await AsyncStorage.getItem('@app_auto_backup_times');
+    const timesStr = await AsyncStorage.getItem('@app_auto_download_times');
     let times: Date[] = [];
     if (timesStr) {
       try {
         times = JSON.parse(timesStr).map((d: string) => new Date(d));
       } catch (e) {
-        times = [new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))];
+        times = [new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))];
       }
     } else {
-      times = [new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))];
+      times = [new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))];
     }
 
     const now = new Date();
@@ -56,11 +56,11 @@ export const scheduleAutoBackupTriggers = async () => {
 
       await notifee.createTriggerNotification(
         {
-          id: `${BACKUP_TRIGGER_PREFIX}${i}`,
-          title: 'Auto Backup',
-          body: `Running backup...`,
+          id: `${DOWNLOAD_TRIGGER_PREFIX}${i}`,
+          title: 'Auto Download',
+          body: `Running report generation...`,
           android: {
-            channelId: BACKUP_SILENT_CHANNEL_ID,
+            channelId: DOWNLOAD_SILENT_CHANNEL_ID,
             importance: AndroidImportance.MIN,
             smallIcon: 'ic_notification',
             largeIcon: 'ic_launcher',
@@ -73,6 +73,6 @@ export const scheduleAutoBackupTriggers = async () => {
       );
     }
   } catch (err) {
-    console.warn('[AutoBackupScheduler] Failed to schedule triggers:', err);
+    console.warn('[AutoDownloadScheduler] Failed to schedule triggers:', err);
   }
 };

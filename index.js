@@ -8,7 +8,10 @@ import { name as appName } from './app.json';
 import notifee, { EventType } from '@notifee/react-native';
 import { performBackgroundTasks } from './src/tasks/backgroundTask';
 import { scheduleAutoBackupTriggers } from './src/utils/autoBackupScheduler';
-import { BACKUP_TRIGGER_IDS } from './src/utils/backupConstants';
+import { BACKUP_TRIGGER_PREFIX } from './src/utils/backupConstants';
+import { performAutoDownloadTask } from './src/tasks/autoDownloadTask';
+import { scheduleAutoDownloadTriggers } from './src/utils/autoDownloadScheduler';
+import { DOWNLOAD_TRIGGER_PREFIX } from './src/utils/autoDownloadConstants';
 
 /**
  * Notifee background event handler.
@@ -27,15 +30,18 @@ import { BACKUP_TRIGGER_IDS } from './src/utils/backupConstants';
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const notificationId = detail.notification?.id;
 
-  if (type === EventType.DELIVERED && notificationId && BACKUP_TRIGGER_IDS.includes(notificationId)) {
-    // 1. Run the backup (shows its own "Backup Complete" notification on success)
-    await performBackgroundTasks();
-
-    // 2. Dismiss the trigger notification so users don't see "Running backup..."
+  if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(BACKUP_TRIGGER_PREFIX)) {
+    const triggerIndex = notificationId.replace(BACKUP_TRIGGER_PREFIX, '');
+    const label = `Auto Backup ${parseInt(triggerIndex, 10) + 1}`;
+    await performBackgroundTasks(label);
     await notifee.cancelNotification(notificationId);
-
-    // 3. Reschedule triggers for the next day
     await scheduleAutoBackupTriggers();
+  } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(DOWNLOAD_TRIGGER_PREFIX)) {
+    const triggerIndex = notificationId.replace(DOWNLOAD_TRIGGER_PREFIX, '');
+    const label = `Auto Download ${parseInt(triggerIndex, 10) + 1}`;
+    await performAutoDownloadTask(label);
+    await notifee.cancelNotification(notificationId);
+    await scheduleAutoDownloadTriggers();
   }
 });
 

@@ -28,7 +28,9 @@ export default function SettingsScreen({ navigation }: any) {
   const [isAccentExpanded, setIsAccentExpanded] = useState(false);
   const [isTotalBalanceExpanded, setIsTotalBalanceExpanded] = useState(false);
   const [isRemindersExpanded, setIsRemindersExpanded] = useState(false);
-  const [activePicker, setActivePicker] = useState<'summary' | 'reminder' | 'backupMorning' | 'backupEvening' | null>(null);
+  const [isAutoBackupExpanded, setIsAutoBackupExpanded] = useState(false);
+  const [isAutoDownloadExpanded, setIsAutoDownloadExpanded] = useState(false);
+  const [activePicker, setActivePicker] = useState<'summary' | 'reminder' | 'backup' | 'download' | null>(null);
 
   const formatPath = (uri: string | null) => {
     if (!uri) return 'Not Set';
@@ -202,7 +204,7 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
-  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimeMorning, updateAutoBackupTimeMorning, autoBackupTimeEvening, updateAutoBackupTimeEvening, isAmountsVisible, toggleAmountsVisibility } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility } = useExpenseContext();
   const { accounts, excludedFromTotal, toggleAccountInTotal, refreshTransactionData, showCardStats, toggleShowCardStats } = useTransactionContext();
 
   const handleNav = (screen: string) => {
@@ -497,33 +499,86 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
         )}
         <View style={styles.divider} />
-
-        <TouchableOpacity style={styles.row} onPress={() => setActivePicker('backupMorning')}>
+        <TouchableOpacity style={styles.row} onPress={() => setIsAutoBackupExpanded(!isAutoBackupExpanded)}>
           <View style={styles.rowLeft}>
             <Ionicons name="cloud-upload-outline" size={22} color={colors.primary} style={styles.icon} />
-            <AppText style={[styles.text, { color: colors.text }]}>Morning Auto Backup</AppText>
+            <AppText style={[styles.text, { color: colors.text }]}>Auto Backup</AppText>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
-              {autoBackupTimeMorning.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8 }}>
+              {autoBackupTimes.length} active
             </AppText>
-            <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            <Ionicons name={isAutoBackupExpanded ? "chevron-down" : "chevron-forward"} size={20} color={colors.text} />
           </View>
         </TouchableOpacity>
+
+        {isAutoBackupExpanded && (
+          <View style={{ backgroundColor: isDarkTheme ? '#1e293b' : '#f8fafc', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 12, marginHorizontal: 16, marginBottom: 16 }}>
+            {autoBackupTimes.map((rTime, index) => (
+              <View key={index} style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: index < autoBackupTimes.length - 1 ? 1 : 0, borderBottomColor: colors.border, marginBottom: 0 }]}>
+                <View style={styles.rowLeft}>
+                  <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Backup {index + 1}</AppText>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 16 }}>
+                    {rTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </AppText>
+                  <TouchableOpacity onPress={() => removeAutoBackupTime(index)}>
+                    <Ionicons name="trash-outline" size={20} color="#ff4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            <TouchableOpacity style={[styles.row, { paddingHorizontal: 0, paddingBottom: 4, paddingTop: autoBackupTimes.length > 0 ? 12 : 4, borderTopWidth: autoBackupTimes.length > 0 ? 1 : 0, borderTopColor: colors.border, marginBottom: 0 }]} onPress={() => setActivePicker('backup')}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="add-circle-outline" size={22} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
+                <AppText style={[styles.text, { color: colors.primary, fontWeight: 'bold', fontSize: 15 }]}>Add Backup Time</AppText>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.row} onPress={() => setActivePicker('backupEvening')}>
+        <TouchableOpacity style={styles.row} onPress={() => setIsAutoDownloadExpanded(!isAutoDownloadExpanded)}>
           <View style={styles.rowLeft}>
-            <Ionicons name="cloud-upload-outline" size={22} color={colors.primary} style={styles.icon} />
-            <AppText style={[styles.text, { color: colors.text }]}>Evening Auto Backup</AppText>
+            <Ionicons name="download-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Auto Download</AppText>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
-              {autoBackupTimeEvening.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8 }}>
+              {autoDownloadTimes.length} active
             </AppText>
-            <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            <Ionicons name={isAutoDownloadExpanded ? "chevron-down" : "chevron-forward"} size={20} color={colors.text} />
           </View>
         </TouchableOpacity>
+
+        {isAutoDownloadExpanded && (
+          <View style={{ backgroundColor: isDarkTheme ? '#1e293b' : '#f8fafc', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 12, marginHorizontal: 16, marginBottom: 16 }}>
+            {autoDownloadTimes.map((rTime, index) => (
+              <View key={index} style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: index < autoDownloadTimes.length - 1 ? 1 : 0, borderBottomColor: colors.border, marginBottom: 0 }]}>
+                <View style={styles.rowLeft}>
+                  <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Download {index + 1}</AppText>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 16 }}>
+                    {rTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </AppText>
+                  <TouchableOpacity onPress={() => removeAutoDownloadTime(index)}>
+                    <Ionicons name="trash-outline" size={20} color="#ff4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            <TouchableOpacity style={[styles.row, { paddingHorizontal: 0, paddingBottom: 4, paddingTop: autoDownloadTimes.length > 0 ? 12 : 4, borderTopWidth: autoDownloadTimes.length > 0 ? 1 : 0, borderTopColor: colors.border, marginBottom: 0 }]} onPress={() => setActivePicker('download')}>
+              <View style={styles.rowLeft}>
+                <Ionicons name="add-circle-outline" size={22} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
+                <AppText style={[styles.text, { color: colors.primary, fontWeight: 'bold', fontSize: 15 }]}>Add Download Time</AppText>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
 
       </View>
 
@@ -656,12 +711,7 @@ export default function SettingsScreen({ navigation }: any) {
 
       {activePicker && (
         <DateTimePicker
-          value={
-            activePicker === 'summary' ? summaryTime :
-              activePicker === 'reminder' ? new Date() :
-                activePicker === 'backupMorning' ? autoBackupTimeMorning :
-                  autoBackupTimeEvening
-          }
+          value={new Date()}
           mode="time"
           is24Hour={false}
           display="default"
@@ -671,8 +721,8 @@ export default function SettingsScreen({ navigation }: any) {
             if (selectedDate && event.type !== 'dismissed') {
               if (currentPicker === 'summary') updateSummaryTime(selectedDate);
               else if (currentPicker === 'reminder') addReminderTime(selectedDate);
-              else if (currentPicker === 'backupMorning') updateAutoBackupTimeMorning(selectedDate);
-              else if (currentPicker === 'backupEvening') updateAutoBackupTimeEvening(selectedDate);
+              else if (currentPicker === 'backup') addAutoBackupTime(selectedDate);
+              else if (currentPicker === 'download') addAutoDownloadTime(selectedDate);
             }
           }}
         />

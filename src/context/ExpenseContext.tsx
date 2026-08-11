@@ -78,13 +78,15 @@ interface ExpenseContextType {
   migrateUserEmail: (oldEmail: string, newEmail: string) => Promise<void>;
   summaryTime: Date;
   reminderTimes: Date[];
-  autoBackupTimeMorning: Date;
-  autoBackupTimeEvening: Date;
+  autoBackupTimes: Date[];
+  autoDownloadTimes: Date[];
   updateSummaryTime: (date: Date) => Promise<void>;
   addReminderTime: (date: Date) => Promise<void>;
   removeReminderTime: (index: number) => Promise<void>;
-  updateAutoBackupTimeMorning: (date: Date) => Promise<void>;
-  updateAutoBackupTimeEvening: (date: Date) => Promise<void>;
+  addAutoBackupTime: (date: Date) => Promise<void>;
+  removeAutoBackupTime: (index: number) => Promise<void>;
+  addAutoDownloadTime: (date: Date) => Promise<void>;
+  removeAutoDownloadTime: (index: number) => Promise<void>;
 }
 
 const ExpenseContext = createContext<ExpenseContextType>({
@@ -133,13 +135,15 @@ const ExpenseContext = createContext<ExpenseContextType>({
   migrateUserEmail: async () => {},
   summaryTime: new Date(new Date().setHours(8, 0, 0, 0)),
   reminderTimes: [new Date(new Date().setHours(18, 0, 0, 0))],
-  autoBackupTimeMorning: new Date(new Date().setHours(9, 0, 0, 0)),
-  autoBackupTimeEvening: new Date(new Date().setHours(21, 0, 0, 0)),
+  autoBackupTimes: [new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))],
+  autoDownloadTimes: [new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))],
   updateSummaryTime: async () => {},
   addReminderTime: async () => {},
   removeReminderTime: async () => {},
-  updateAutoBackupTimeMorning: async () => {},
-  updateAutoBackupTimeEvening: async () => {},
+  addAutoBackupTime: async () => {},
+  removeAutoBackupTime: async () => {},
+  addAutoDownloadTime: async () => {},
+  removeAutoDownloadTime: async () => {},
 });
 
 export const useExpenseContext = () => useContext(ExpenseContext);
@@ -159,8 +163,8 @@ const DOWNLOAD_PATH_KEY = '@app_download_path';
 const BACKUP_PATH_KEY = '@app_backup_path';
 const SUMMARY_TIME_KEY = '@app_summary_time';
 const REMINDER_TIME_KEY = '@app_reminder_time';
-const AUTO_BACKUP_TIME_MORNING_KEY = '@app_auto_backup_time_morning';
-const AUTO_BACKUP_TIME_EVENING_KEY = '@app_auto_backup_time_evening';
+const AUTO_BACKUP_TIMES_KEY = '@app_auto_backup_times';
+const AUTO_DOWNLOAD_TIMES_KEY = '@app_auto_download_times';
 
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -181,8 +185,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState(true);
   const [summaryTime, setSummaryTime] = useState<Date>(new Date(new Date().setHours(8, 0, 0, 0)));
   const [reminderTimes, setReminderTimes] = useState<Date[]>([new Date(new Date().setHours(18, 0, 0, 0))]);
-  const [autoBackupTimeMorning, setAutoBackupTimeMorning] = useState<Date>(new Date(new Date().setHours(9, 0, 0, 0)));
-  const [autoBackupTimeEvening, setAutoBackupTimeEvening] = useState<Date>(new Date(new Date().setHours(21, 0, 0, 0)));
+  const [autoBackupTimes, setAutoBackupTimes] = useState<Date[]>([new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))]);
+  const [autoDownloadTimes, setAutoDownloadTimes] = useState<Date[]>([new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))]);
   const { user } = useAuthContext();
 
   const storageKey = EXPENSES_KEY;
@@ -202,13 +206,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
   const summaryTimeStorageKey = SUMMARY_TIME_KEY;
   const reminderTimeStorageKey = REMINDER_TIME_KEY;
-  const autoBackupTimeMorningStorageKey = AUTO_BACKUP_TIME_MORNING_KEY;
-  const autoBackupTimeEveningStorageKey = AUTO_BACKUP_TIME_EVENING_KEY;
+  const autoBackupTimesStorageKey = AUTO_BACKUP_TIMES_KEY;
+  const autoDownloadTimesStorageKey = AUTO_DOWNLOAD_TIMES_KEY;
 
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const keys = [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimeMorningStorageKey, autoBackupTimeEveningStorageKey];
+      const keys = [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
       const data = await AsyncStorage.getMany(keys);
       const storedExpenses = data[storageKey];
       if (storedExpenses) {
@@ -335,13 +339,43 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setReminderTimes([new Date(new Date().setHours(18, 0, 0, 0))]);
       }
 
-      const storedAutoBackupMorning = data[autoBackupTimeMorningStorageKey];
-      if (storedAutoBackupMorning) setAutoBackupTimeMorning(new Date(storedAutoBackupMorning));
-      else setAutoBackupTimeMorning(new Date(new Date().setHours(9, 0, 0, 0)));
+      const storedBackupTimes = data[autoBackupTimesStorageKey];
+      if (storedBackupTimes) {
+        try {
+          const parsed = JSON.parse(storedBackupTimes);
+          setAutoBackupTimes(parsed.map((d: string) => new Date(d)));
+        } catch(e) {
+          setAutoBackupTimes([new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))]);
+        }
+      } else {
+        const oldMorning = data['@app_auto_backup_time_morning'];
+        const oldEvening = data['@app_auto_backup_time_evening'];
+        if (oldMorning || oldEvening) {
+          const newTimes: Date[] = [];
+          if (oldMorning) newTimes.push(new Date(oldMorning));
+          else newTimes.push(new Date(new Date().setHours(9, 0, 0, 0)));
+          if (oldEvening) newTimes.push(new Date(oldEvening));
+          else newTimes.push(new Date(new Date().setHours(21, 0, 0, 0)));
+          setAutoBackupTimes(newTimes);
+          await AsyncStorage.setItem(autoBackupTimesStorageKey, JSON.stringify(newTimes.map(d => d.toISOString())));
+          await AsyncStorage.removeItem('@app_auto_backup_time_morning');
+          await AsyncStorage.removeItem('@app_auto_backup_time_evening');
+        } else {
+          setAutoBackupTimes([new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))]);
+        }
+      }
 
-      const storedAutoBackupEvening = data[autoBackupTimeEveningStorageKey];
-      if (storedAutoBackupEvening) setAutoBackupTimeEvening(new Date(storedAutoBackupEvening));
-      else setAutoBackupTimeEvening(new Date(new Date().setHours(21, 0, 0, 0)));
+      const storedDownloadTimes = data[autoDownloadTimesStorageKey];
+      if (storedDownloadTimes) {
+        try {
+          const parsed = JSON.parse(storedDownloadTimes);
+          setAutoDownloadTimes(parsed.map((d: string) => new Date(d)));
+        } catch(e) {
+          setAutoDownloadTimes([new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))]);
+        }
+      } else {
+        setAutoDownloadTimes([new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))]);
+      }
 
     } catch (e) {
       console.error('Failed to load data', e);
@@ -352,7 +386,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     loadData();
-  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimeMorningStorageKey, autoBackupTimeEveningStorageKey, amountsVisibleStorageKey]);
+  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, amountsVisibleStorageKey]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -606,20 +640,44 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(reminderTimeStorageKey, JSON.stringify(newTimes.map(d => d.toISOString())));
   };
 
-  const updateAutoBackupTimeMorning = async (date: Date) => {
-    setAutoBackupTimeMorning(date);
-    await AsyncStorage.setItem(autoBackupTimeMorningStorageKey, date.toISOString());
-    // Reschedule Notifee triggers to reflect the new time
+  const addAutoBackupTime = async (date: Date) => {
+    const newTimes = [...autoBackupTimes, date];
+    newTimes.sort((a, b) => {
+      if (a.getHours() !== b.getHours()) return a.getHours() - b.getHours();
+      return a.getMinutes() - b.getMinutes();
+    });
+    setAutoBackupTimes(newTimes);
+    await AsyncStorage.setItem(autoBackupTimesStorageKey, JSON.stringify(newTimes.map(d => d.toISOString())));
     const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
     scheduleAutoBackupTriggers().catch(console.warn);
   };
 
-  const updateAutoBackupTimeEvening = async (date: Date) => {
-    setAutoBackupTimeEvening(date);
-    await AsyncStorage.setItem(autoBackupTimeEveningStorageKey, date.toISOString());
-    // Reschedule Notifee triggers to reflect the new time
+  const removeAutoBackupTime = async (index: number) => {
+    const newTimes = autoBackupTimes.filter((_, i) => i !== index);
+    setAutoBackupTimes(newTimes);
+    await AsyncStorage.setItem(autoBackupTimesStorageKey, JSON.stringify(newTimes.map(d => d.toISOString())));
     const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
     scheduleAutoBackupTriggers().catch(console.warn);
+  };
+
+  const addAutoDownloadTime = async (date: Date) => {
+    const newTimes = [...autoDownloadTimes, date];
+    newTimes.sort((a, b) => {
+      if (a.getHours() !== b.getHours()) return a.getHours() - b.getHours();
+      return a.getMinutes() - b.getMinutes();
+    });
+    setAutoDownloadTimes(newTimes);
+    await AsyncStorage.setItem(autoDownloadTimesStorageKey, JSON.stringify(newTimes.map(d => d.toISOString())));
+    const { scheduleAutoDownloadTriggers } = require('../utils/autoDownloadScheduler');
+    scheduleAutoDownloadTriggers().catch(console.warn);
+  };
+
+  const removeAutoDownloadTime = async (index: number) => {
+    const newTimes = autoDownloadTimes.filter((_, i) => i !== index);
+    setAutoDownloadTimes(newTimes);
+    await AsyncStorage.setItem(autoDownloadTimesStorageKey, JSON.stringify(newTimes.map(d => d.toISOString())));
+    const { scheduleAutoDownloadTriggers } = require('../utils/autoDownloadScheduler');
+    scheduleAutoDownloadTriggers().catch(console.warn);
   };
 
   const getCurrentMonthTotal = () => {
@@ -652,7 +710,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       EXPENSES_KEY, CATEGORIES_KEY, PAYMENT_MODES_KEY, CURRENCY_KEY,
       BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY, SHOW_YEAR_CARD_KEY,
       ANALYTICS_CHART_TYPE_KEY, CHART_STYLE_KEY, DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY,
-      SUMMARY_TIME_KEY, REMINDER_TIME_KEY, AUTO_BACKUP_TIME_MORNING_KEY, AUTO_BACKUP_TIME_EVENING_KEY,
+      SUMMARY_TIME_KEY, REMINDER_TIME_KEY, AUTO_BACKUP_TIMES_KEY, AUTO_DOWNLOAD_TIMES_KEY,
       AMOUNTS_VISIBLE_KEY
     ];
 
@@ -683,8 +741,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       downloadPathUri, updateDownloadPath,
       backupPathUri, updateBackupPath,
       migrateUserEmail,
-      summaryTime, reminderTimes, autoBackupTimeMorning, autoBackupTimeEvening,
-      updateSummaryTime, addReminderTime, removeReminderTime, updateAutoBackupTimeMorning, updateAutoBackupTimeEvening
+      summaryTime, reminderTimes, autoBackupTimes, autoDownloadTimes,
+      updateSummaryTime, addReminderTime, removeReminderTime, addAutoBackupTime, removeAutoBackupTime, addAutoDownloadTime, removeAutoDownloadTime
     }}>
       {children}
     </ExpenseContext.Provider>

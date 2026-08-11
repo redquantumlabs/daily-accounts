@@ -5,7 +5,7 @@ import notifee from '@notifee/react-native';
 
 let isPerformingBackgroundTasks = false;
 
-export const performBackgroundTasks = async () => {
+export const performBackgroundTasks = async (backupLabel: string = 'Auto') => {
   if (isPerformingBackgroundTasks) {
     return;
   }
@@ -14,65 +14,7 @@ export const performBackgroundTasks = async () => {
     const backupPathKey = '@app_backup_path';
     const backupPathUri = await AsyncStorage.getItem(backupPathKey);
 
-    let backupSkipped = false;
     if (!backupPathUri || Platform.OS !== 'android') {
-      backupSkipped = true;
-    }
-
-    const last9amKey = '@last_backup_9am';
-    const last9pmKey = '@last_backup_9pm';
-
-    const last9AM = await AsyncStorage.getItem(last9amKey);
-    const last9PM = await AsyncStorage.getItem(last9pmKey);
-
-    const morningKey = '@app_auto_backup_time_morning';
-    const eveningKey = '@app_auto_backup_time_evening';
-    const morningTimeStr = await AsyncStorage.getItem(morningKey);
-    const eveningTimeStr = await AsyncStorage.getItem(eveningKey);
-
-    let morningTime = new Date();
-    morningTime.setHours(9, 0, 0, 0);
-    if (morningTimeStr) morningTime = new Date(morningTimeStr);
-
-    let eveningTime = new Date();
-    eveningTime.setHours(21, 0, 0, 0);
-    if (eveningTimeStr) eveningTime = new Date(eveningTimeStr);
-
-    const now = new Date();
-    const todayStr = now.toDateString();
-
-    const isPast = (target: Date) => now.getHours() > target.getHours() || (now.getHours() === target.getHours() && now.getMinutes() >= target.getMinutes());
-
-    let shouldBackup = false;
-    let backupType = '';
-    let backupTypeKey = '';
-
-    if (!backupSkipped) {
-      if (isPast(morningTime) && !isPast(eveningTime)) {
-        if (last9AM !== todayStr) {
-          shouldBackup = true;
-          backupType = 'Morning';
-          backupTypeKey = last9amKey;
-        }
-      } else if (isPast(eveningTime)) {
-        if (last9PM !== todayStr) {
-          shouldBackup = true;
-          backupType = 'Evening';
-          backupTypeKey = last9pmKey;
-        }
-      } else if (!isPast(morningTime)) {
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toDateString();
-        if (last9PM !== yesterdayStr) {
-          shouldBackup = true;
-          backupType = 'Evening';
-          backupTypeKey = last9pmKey;
-        }
-      }
-    }
-
-    if (!shouldBackup) {
       return;
     }
 
@@ -114,28 +56,18 @@ export const performBackgroundTasks = async () => {
       }
     }
 
-    if (backupType === 'Evening' && !isPast(morningTime)) {
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      await AsyncStorage.setItem(backupTypeKey, yesterday.toDateString());
-    } else {
-      await AsyncStorage.setItem(backupTypeKey, todayStr);
-    }
-
     await notifee.displayNotification({
       title: "Backup Complete",
-      body: `Daily auto-backup (${backupType}) was successful.`,
+      body: `Auto-backup (${backupLabel}) was successful.`,
       android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
     });
 
-    return;
   } catch (err: any) {
     await notifee.displayNotification({
       title: "Backup Failed",
       body: `Auto-backup encountered an error: ${err.message}`,
       android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
     });
-    return;
   } finally {
     isPerformingBackgroundTasks = false;
   }
