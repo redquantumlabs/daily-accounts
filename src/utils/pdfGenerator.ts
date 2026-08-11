@@ -92,7 +92,7 @@ export const generateDashboardPDFHTML = (
             size: letter portrait;
             margin: 10mm; /* Narrow margin */
             @bottom-right {
-              content: "Page " counter(page);
+              content: counter(page);
               font-family: Arial, sans-serif;
               font-size: 10px;
               color: #888;
@@ -156,7 +156,7 @@ export const generateAccountTransactionsPDFHTML = (
             size: letter portrait;
             margin: 10mm; /* Narrow margin */
             @bottom-right {
-              content: "Page " counter(page);
+              content: counter(page);
               font-family: Arial, sans-serif;
               font-size: 10px;
               color: #888;
@@ -363,7 +363,7 @@ export const generateAnalyticsPDFHTML = (
             size: letter portrait;
             margin: 10mm; /* Narrow margin */
             @bottom-right {
-              content: "Page " counter(page);
+              content: counter(page);
               font-family: Arial, sans-serif;
               font-size: 10px;
               color: #888;
