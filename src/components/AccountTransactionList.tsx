@@ -105,11 +105,11 @@ const TransactionListItem = React.memo(({
   };
   return (
     <ScaleDecorator>
-        <Swipeable
-          renderRightActions={renderRightActions}
-          renderLeftActions={renderLeftActions}
-          enabled={!isSelectMode}
-        >
+      <Swipeable
+        renderRightActions={renderRightActions}
+        renderLeftActions={renderLeftActions}
+        enabled={!isSelectMode}
+      >
         <TouchableOpacity
           style={[styles.expenseRow, { backgroundColor: isSelected ? colors.surface : colors.card, elevation: isSelected ? 4 : (isActive ? 8 : 0) }]}
           onPress={() => handleRowPress(tx)}
@@ -336,15 +336,15 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
     try {
       setIsDownloading(true);
       const html = generateAccountTransactionsPDFHTML(filteredTransactions, currency, accountFilter);
-            const options = {
+      const options = {
         html,
         fileName: `Account_Report_${new Date().getTime()}`,
         directory: 'Documents',
         base64: true
       };
-      
+
       const file = await generatePDF(options);
-      
+
       if (!file.filePath || !file.base64) {
         throw new Error("Failed to generate PDF");
       }
@@ -355,9 +355,9 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
           mimeType: 'application/pdf'
         });
         await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
-        
+
         if (notifee) {
-          await notifee.displayNotification({ title: "Download Complete", body: "Account report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true } });
+          await notifee.displayNotification({ title: "Download Complete", body: "Account report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' } });
         }
         Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
       } else {

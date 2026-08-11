@@ -21,7 +21,7 @@ export const performBackgroundTasks = async () => {
 
     const last9amKey = '@last_backup_9am';
     const last9pmKey = '@last_backup_9pm';
-    
+
     const last9AM = await AsyncStorage.getItem(last9amKey);
     const last9PM = await AsyncStorage.getItem(last9pmKey);
 
@@ -29,7 +29,7 @@ export const performBackgroundTasks = async () => {
     const eveningKey = '@app_auto_backup_time_evening';
     const morningTimeStr = await AsyncStorage.getItem(morningKey);
     const eveningTimeStr = await AsyncStorage.getItem(eveningKey);
-    
+
     let morningTime = new Date();
     morningTime.setHours(9, 0, 0, 0);
     if (morningTimeStr) morningTime = new Date(morningTimeStr);
@@ -40,7 +40,7 @@ export const performBackgroundTasks = async () => {
 
     const now = new Date();
     const todayStr = now.toDateString();
-    
+
     const isPast = (target: Date) => now.getHours() > target.getHours() || (now.getHours() === target.getHours() && now.getMinutes() >= target.getMinutes());
 
     let shouldBackup = false;
@@ -125,7 +125,7 @@ export const performBackgroundTasks = async () => {
     await notifee.displayNotification({
       title: "Backup Complete",
       body: `Daily auto-backup (${backupType}) was successful.`,
-      android: { channelId: 'daily_accounts', showTimestamp: true }
+      android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
     });
 
     return;
@@ -133,7 +133,7 @@ export const performBackgroundTasks = async () => {
     await notifee.displayNotification({
       title: "Backup Failed",
       body: `Auto-backup encountered an error: ${err.message}`,
-      android: { channelId: 'daily_accounts', showTimestamp: true }
+      android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
     });
     return;
   } finally {

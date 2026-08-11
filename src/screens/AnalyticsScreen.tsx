@@ -176,16 +176,16 @@ export default function AnalyticsScreen() {
       setIsDownloading(true);
       const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
       const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency, analyticsChartType, chartStyle);
-      
+
       const options = {
         html,
         fileName: `Analytics_Report_${new Date().getTime()}`,
         directory: 'Documents',
         base64: true
       };
-      
+
       const file = await generatePDF(options);
-      
+
       if (!file.filePath || !file.base64) {
         throw new Error("Failed to generate PDF");
       }
@@ -196,9 +196,9 @@ export default function AnalyticsScreen() {
           mimeType: 'application/pdf'
         });
         await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
-        
+
         if (notifee) {
-          await notifee.displayNotification({ title: "Download Complete", body: "Analytics report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true } });
+          await notifee.displayNotification({ title: "Download Complete", body: "Analytics report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' } });
         }
         Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
       } else {
@@ -210,7 +210,7 @@ export default function AnalyticsScreen() {
       }
     } catch (error) {
       if (notifee) {
-        await notifee.displayNotification({ title: "Download Failed", body: `Failed to generate analytics report.`, android: { channelId: 'daily_accounts', showTimestamp: true } });
+        await notifee.displayNotification({ title: "Download Failed", body: `Failed to generate analytics report.`, android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' } });
       }
       Alert.alert('Error', 'Failed to generate or save PDF report.' + error);
     } finally {

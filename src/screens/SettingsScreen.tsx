@@ -118,7 +118,7 @@ export default function SettingsScreen({ navigation }: any) {
         await notifee.displayNotification({
           title: "Backup Complete",
           body: "Manual backup saved successfully to your chosen folder.",
-          android: { channelId: 'daily_accounts', showTimestamp: true }
+          android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
         });
         Alert.alert('Success', 'Backup saved successfully to your chosen folder.');
       } else {
@@ -136,7 +136,7 @@ export default function SettingsScreen({ navigation }: any) {
       await notifee.displayNotification({
         title: "Backup Failed",
         body: `Manual backup failed: ${e.message}`,
-        android: { channelId: 'daily_accounts', showTimestamp: true }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
       });
       Alert.alert('Error', 'Backup failed: ' + e.message);
     } finally {
@@ -186,14 +186,14 @@ export default function SettingsScreen({ navigation }: any) {
       await notifee.displayNotification({
         title: "Restore Complete",
         body: "Your data has been successfully restored.",
-        android: { channelId: 'daily_accounts', showTimestamp: true }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
       });
       Alert.alert('Success', 'Restore Successful! Your data has been loaded instantly.');
     } catch (e: any) {
       await notifee.displayNotification({
         title: "Restore Failed",
         body: `Failed to restore data: ${e.message}`,
-        android: { channelId: 'daily_accounts', showTimestamp: true }
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification' }
       });
       Alert.alert('Restore Failed', 'Restore failed: ' + e.message);
     } finally {
@@ -469,7 +469,7 @@ export default function SettingsScreen({ navigation }: any) {
             <Ionicons name={isRemindersExpanded ? "chevron-down" : "chevron-forward"} size={20} color={colors.text} />
           </View>
         </TouchableOpacity>
-        
+
         {isRemindersExpanded && (
           <View style={{ backgroundColor: isDarkTheme ? '#1e293b' : '#f8fafc', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 12, marginHorizontal: 16, marginBottom: 16 }}>
             {reminderTimes.map((rTime, index) => (
