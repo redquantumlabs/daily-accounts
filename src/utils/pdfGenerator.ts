@@ -47,7 +47,7 @@ export const generateDashboardPDFHTML = (
         return `
           <tr>
             <td class="nowrap" style="width: 150px;">${formatDDMMYY(exp.date)}</td>
-            <td class="nowrap" style="width: 150px; color: #ff4444;">${formatAmount(exp.amount)}</td>
+            <td class="nowrap" style="width: 150px; color: #ff0000;">${formatAmount(exp.amount)}</td>
             <td class="description-col" style="width: 500px;">${exp.description}</td>
             <td class="nowrap" style="width: 150px;">${cat ? cat.name : ''}</td>
             <td class="nowrap" style="width: 150px;">${mode ? mode.name : ''}</td>
@@ -203,14 +203,14 @@ export const generateAccountTransactionsPDFHTML = (
           .amount-col { text-align: left; }
           
           .debit-text { color: #ff0000; }
-          .credit-text { color: #008000; }
+          .credit-text { color: #6aa84f; }
           
           .total-row { font-weight: bold; background-color: #d0a060 !important; }
           .total-row td { border-top: 1px solid #000; }
           .total-row .total-label { background-color: #d0a060 !important; color: #000 !important; text-align: center; }
           .total-row .total-dashes { background-color: #d0a060 !important; color: #000 !important; text-align: center; }
-          .total-debit { background-color: #e57373 !important; color: #cc0000 !important; }
-          .total-credit { background-color: #81c784 !important; color: #008000 !important; }
+          .total-debit { background-color: #e06666 !important; color: #990000 !important; }
+          .total-credit { background-color: #93c47d !important; color: #38761d !important; }
           .total-balance { background-color: #d0a060 !important; color: #000 !important; }
         </style>
       </head>
@@ -245,7 +245,7 @@ export const generateAccountTransactionsPDFHTML = (
             ${tableRows.length > 0 ? `
             <tr class="total-row">
               <td class="nowrap total-label" style="width: 150px;">Total</td>
-              <td class="description-col total-dashes" style="width: 500px;">---------------------------------------------------------------------------------------------------------</td>
+              <td class="description-col total-dashes" style="width: 500px;">-------------------------------------------------------------------</td>
               <td class="amount-col total-debit" style="width: 150px;">${formatAmount(totalDebits)}</td>
               <td class="amount-col total-credit" style="width: 150px;">${formatAmount(totalCredits)}</td>
               <td class="amount-col total-balance" style="width: 150px;">${formatAmount(runningBalance)}</td>
