@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
 import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeContext } from '../context/ThemeContext';
@@ -9,6 +9,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { PRESET_COLORS, PRESET_ICONS } from '../constants/presets';
 import ColorPickerModal from './ColorPickerModal';
 import IconPickerModal from './IconPickerModal';
+import { useAlert } from '../context/AlertContext';
 
 interface AddCategoryModalProps {
   visible: boolean;
@@ -17,6 +18,7 @@ interface AddCategoryModalProps {
 }
 
 export default function AddCategoryModal({ visible, onClose, categoryToEdit }: AddCategoryModalProps) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { categories, addCategory, updateCategory, deleteCategory } = useExpenseContext();
@@ -88,7 +90,7 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
 
   const handleDelete = () => {
     if (categoryToEdit) {
-      Alert.alert(
+      showAlert(
         "Delete Category",
         "Are you sure you want to delete this category? This action cannot be undone.",
         [

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import AppText from '../components/AppText';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { PieChart as GiftedPieChart } from 'react-native-gifted-charts';
@@ -20,6 +20,7 @@ const isExpoGo = false;
 
 
 import notifee from '@notifee/react-native';
+import { useAlert } from '../context/AlertContext';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -39,6 +40,7 @@ const darkenColor = (color: string, amount: number) => {
 type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time' | 'Custom';
 
 export default function AnalyticsScreen() {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const {
@@ -200,7 +202,7 @@ export default function AnalyticsScreen() {
         if (notifee) {
           await notifee.displayNotification({ title: "Download Complete", body: "Analytics report saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
         }
-        Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
+        showAlert('Success', 'PDF saved automatically to your chosen download folder.');
       } else {
         await Share.open({
           url: `file://${file.filePath}`,
@@ -212,7 +214,7 @@ export default function AnalyticsScreen() {
       if (notifee) {
         await notifee.displayNotification({ title: "Download Failed", body: `Failed to generate analytics report.`, android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
       }
-      Alert.alert('Error', 'Failed to generate or save PDF report.' + error);
+      showAlert('Error', 'Failed to generate or save PDF report.' + error);
     } finally {
       setIsDownloading(false);
     }

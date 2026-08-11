@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
 import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTransactionContext, AccountTransaction } from '../context/TransactionContext';
+import { useAlert } from '../context/AlertContext';
 
 interface AddTransactionModalProps {
   visible: boolean;
@@ -15,6 +16,7 @@ interface AddTransactionModalProps {
 }
 
 export default function AddTransactionModal({ visible, onClose, transactionToEdit, initialAccount }: AddTransactionModalProps) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { addTransaction, updateTransaction, deleteTransaction, accounts } = useTransactionContext();
   const insets = useSafeAreaInsets();
@@ -90,13 +92,13 @@ export default function AddTransactionModal({ visible, onClose, transactionToEdi
       }
       onClose();
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to save transaction.');
+      showAlert('Error', e.message || 'Failed to save transaction.');
     }
   };
 
   const handleDelete = () => {
     if (transactionToEdit) {
-      Alert.alert(
+      showAlert(
         "Delete Transaction",
         "Are you sure you want to delete this transaction? This action cannot be undone.",
         [
@@ -109,7 +111,7 @@ export default function AddTransactionModal({ visible, onClose, transactionToEdi
                 await deleteTransaction(transactionToEdit.id);
                 onClose();
               } catch (e: any) {
-                Alert.alert('Error', e.message || 'Failed to delete transaction.');
+                showAlert('Error', e.message || 'Failed to delete transaction.');
               }
             }
           }

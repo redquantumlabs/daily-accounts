@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Alert, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useTransactionContext } from '../context/TransactionContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import EmptyState from '../components/EmptyState';
+import { useAlert } from '../context/AlertContext';
 
 export default function ManageAccountsScreen() {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { accounts, addManualAccount, editAccount, deleteAccount } = useTransactionContext();
@@ -53,7 +55,7 @@ export default function ManageAccountsScreen() {
   };
 
   const handleDeleteAccount = (accountName: string) => {
-    Alert.alert(
+    showAlert(
       "Delete Account",
       `Are you sure you want to delete "${accountName}"? All transactions associated with this account will also be deleted.`,
       [

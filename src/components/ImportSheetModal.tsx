@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
 import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Expense, Category, PaymentMode } from '../context/ExpenseContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Papa from 'papaparse';
+import { useAlert } from '../context/AlertContext';
 
 interface ImportSheetModalProps {
   visible: boolean;
@@ -19,6 +20,7 @@ const PRESET_COLORS = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#
 const PRESET_ICONS = ['pricetag', 'bag', 'card', 'cash', 'cart', 'folder', 'star', 'albums'];
 
 export default function ImportSheetModal({ visible, onClose }: ImportSheetModalProps) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { bulkImport, categories, paymentModes } = useExpenseContext();
@@ -162,7 +164,7 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
       await bulkImport(newExpenses, newCategories, newPaymentModes);
 
       setIsLoading(false);
-      Alert.alert(
+      showAlert(
         "Import Successful",
         `Imported ${newExpenses.length} expenses, ${newCategories.length} new categories, and ${newPaymentModes.length} new payment modes.`,
         [{ text: "OK", onPress: onClose }]

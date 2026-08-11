@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, ScrollView } from 'react-native';
 import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeContext } from '../context/ThemeContext';
 import { useTransactionContext, AccountTransaction } from '../context/TransactionContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Papa from 'papaparse';
+import { useAlert } from '../context/AlertContext';
 
 interface ImportTransactionalSheetModalProps {
   visible: boolean;
@@ -14,6 +15,7 @@ interface ImportTransactionalSheetModalProps {
 }
 
 export default function ImportTransactionalSheetModal({ visible, onClose }: ImportTransactionalSheetModalProps) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { bulkImportTransactions } = useTransactionContext();
@@ -204,7 +206,7 @@ export default function ImportTransactionalSheetModal({ visible, onClose }: Impo
       await bulkImportTransactions(newTransactions);
 
       setIsLoading(false);
-      Alert.alert(
+      showAlert(
         "Import Successful",
         `Imported ${newTransactions.length} transactions across accounts.`,
         [{ text: "OK", onPress: () => {

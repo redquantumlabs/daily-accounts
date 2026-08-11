@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView, Platform, ActivityIndicator, Modal } from 'react-native';
+import { View, StyleSheet, Switch, TouchableOpacity, ScrollView, Platform, ActivityIndicator, Modal } from 'react-native';
 import AppText from '../components/AppText';
 import { useThemeContext, ACCENT_COLORS } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
@@ -16,8 +16,10 @@ import DocumentPicker from 'react-native-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import SAF from 'react-native-saf-x';
 import notifee from '@notifee/react-native';
+import { useAlert } from '../context/AlertContext';
 
 export default function SettingsScreen({ navigation }: any) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { isDarkTheme, toggleTheme, refreshTheme, accentColor, setAccentColor } = useThemeContext();
   const { profileName, refreshAuth } = useAuthContext();
@@ -53,33 +55,33 @@ export default function SettingsScreen({ navigation }: any) {
 
   const handleSetDownloadPath = async () => {
     if (Platform.OS !== 'android') {
-      Alert.alert('Unsupported', 'Setting a default download path is only available on Android devices due to system limitations.');
+      showAlert('Unsupported', 'Setting a default download path is only available on Android devices due to system limitations.');
       return;
     }
     try {
       const doc = await SAF.openDocumentTree(true);
       if (doc && doc.uri) {
         await updateDownloadPath(doc.uri);
-        Alert.alert('Success', 'Download path set successfully! Future PDF reports will be saved here automatically.');
+        showAlert('Success', 'Download path set successfully! Future PDF reports will be saved here automatically.');
       }
     } catch (e: any) {
-      Alert.alert('Error', 'Failed to set download path: ' + e.message);
+      showAlert('Error', 'Failed to set download path: ' + e.message);
     }
   };
 
   const handleSetBackupPath = async () => {
     if (Platform.OS !== 'android') {
-      Alert.alert('Unsupported', 'Setting a default backup path is only available on Android devices due to system limitations.');
+      showAlert('Unsupported', 'Setting a default backup path is only available on Android devices due to system limitations.');
       return;
     }
     try {
       const doc = await SAF.openDocumentTree(true);
       if (doc && doc.uri) {
         await updateBackupPath(doc.uri);
-        Alert.alert('Success', 'Backup path set successfully! Future backups will be saved here automatically (keeping the last 5).');
+        showAlert('Success', 'Backup path set successfully! Future backups will be saved here automatically (keeping the last 5).');
       }
     } catch (e: any) {
-      Alert.alert('Error', 'Failed to set backup path: ' + e.message);
+      showAlert('Error', 'Failed to set backup path: ' + e.message);
     }
   };
 
@@ -122,7 +124,7 @@ export default function SettingsScreen({ navigation }: any) {
           body: "Manual backup saved successfully to your chosen folder.",
           android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
         });
-        Alert.alert('Success', 'Backup saved successfully to your chosen folder.');
+        showAlert('Success', 'Backup saved successfully to your chosen folder.');
       } else {
         const timestamp = new Date().getTime();
         const fileUri = RNFS.DocumentDirectoryPath + `/DailyAccountsBackup_${timestamp}.json`;
@@ -140,7 +142,7 @@ export default function SettingsScreen({ navigation }: any) {
         body: `Manual backup failed: ${e.message}`,
         android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
       });
-      Alert.alert('Error', 'Backup failed: ' + e.message);
+      showAlert('Error', 'Backup failed: ' + e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -190,14 +192,14 @@ export default function SettingsScreen({ navigation }: any) {
         body: "Your data has been successfully restored.",
         android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
       });
-      Alert.alert('Success', 'Restore Successful! Your data has been loaded instantly.');
+      showAlert('Success', 'Restore Successful! Your data has been loaded instantly.');
     } catch (e: any) {
       await notifee.displayNotification({
         title: "Restore Failed",
         body: `Failed to restore data: ${e.message}`,
         android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
       });
-      Alert.alert('Restore Failed', 'Restore failed: ' + e.message);
+      showAlert('Restore Failed', 'Restore failed: ' + e.message);
     } finally {
       setIsProcessing(false);
       setRestoreProgress(null);
@@ -621,7 +623,7 @@ export default function SettingsScreen({ navigation }: any) {
         <TouchableOpacity
           style={[styles.row, { opacity: isProcessing ? 0.5 : 1 }]}
           onPress={() => {
-            Alert.alert(
+            showAlert(
               "Restore Data",
               "WARNING: This will completely overwrite all current expenses, categories, settings, and profile data with the backup file. This cannot be undone.",
               [

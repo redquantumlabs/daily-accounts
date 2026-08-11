@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import AppText from '../components/AppText';
 import { useTransactionContext } from '../context/TransactionContext';
@@ -15,8 +15,10 @@ import { generatePDF } from 'react-native-html-to-pdf';
 import SAF from 'react-native-saf-x';
 import notifee from '@notifee/react-native';
 import { Platform } from 'react-native';
+import { useAlert } from '../context/AlertContext';
 
 export default function HomeScreen({ navigation }: any) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats, transactions } = useTransactionContext();
@@ -57,7 +59,7 @@ export default function HomeScreen({ navigation }: any) {
 
   const handleDeleteAccount = (accountName: string) => {
     setActiveDropdown(null);
-    Alert.alert(
+    showAlert(
       "Delete Account",
       `Are you sure you want to delete "${accountName}" and ALL of its transactions? This action cannot be undone.`,
       [
@@ -76,7 +78,7 @@ export default function HomeScreen({ navigation }: any) {
       })).filter(group => group.transactions.length > 0);
 
       if (accountGroups.length === 0) {
-        Alert.alert('No Transactions', 'There are no transactions to download.');
+        showAlert('No Transactions', 'There are no transactions to download.');
         return;
       }
 
@@ -113,12 +115,12 @@ export default function HomeScreen({ navigation }: any) {
             android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } 
           });
         }
-        Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
+        showAlert('Success', 'PDF saved automatically to your chosen download folder.');
       } else {
         throw new Error("Failed to generate PDF or download path not set.");
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to generate or save PDF report. ' + error);
+      showAlert('Error', 'Failed to generate or save PDF report. ' + error);
     }
   };
 
@@ -127,7 +129,7 @@ export default function HomeScreen({ navigation }: any) {
     try {
       const accountTransactions = transactions.filter((t: any) => t.account === accountName);
       if (accountTransactions.length === 0) {
-        Alert.alert('No Transactions', `There are no transactions in ${accountName} to download.`);
+        showAlert('No Transactions', `There are no transactions in ${accountName} to download.`);
         return;
       }
 
@@ -169,12 +171,12 @@ export default function HomeScreen({ navigation }: any) {
             android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } 
           });
         }
-        Alert.alert('Success', `PDF saved automatically to your chosen download folder.`);
+        showAlert('Success', `PDF saved automatically to your chosen download folder.`);
       } else {
         throw new Error("Failed to generate PDF or download path not set.");
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to generate or save PDF report. ' + error);
+      showAlert('Error', 'Failed to generate or save PDF report. ' + error);
     }
   };
 

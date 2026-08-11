@@ -4,6 +4,7 @@ import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/
 import { StatusBar } from 'react-native';
 
 import { useThemeContext } from '../context/ThemeContext';
+import { AlertProvider } from '../context/AlertContext';
 import BottomTabs from './BottomTabs';
 import AnimatedSplashScreen from '../components/AnimatedSplashScreen';
 
@@ -35,8 +36,10 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer theme={isDarkTheme ? CustomDarkTheme : CustomLightTheme}>
-      <StatusBar backgroundColor={isDarkTheme ? '#121212' : '#ffffff'} barStyle={isDarkTheme ? 'light-content' : 'dark-content'} />
-      <BottomTabs />
+      <AlertProvider>
+        <StatusBar backgroundColor={isDarkTheme ? '#121212' : '#ffffff'} barStyle={isDarkTheme ? 'light-content' : 'dark-content'} />
+        <BottomTabs />
+      </AlertProvider>
     </NavigationContainer>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
 import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -9,6 +9,7 @@ import { useExpenseContext, Expense, Category } from '../context/ExpenseContext'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AddCategoryModal from './AddCategoryModal';
 import AddPaymentModeModal from './AddPaymentModeModal';
+import { useAlert } from '../context/AlertContext';
 
 interface AddExpenseModalProps {
   visible: boolean;
@@ -17,6 +18,7 @@ interface AddExpenseModalProps {
 }
 
 export default function AddExpenseModal({ visible, onClose, expenseToEdit }: AddExpenseModalProps) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { addExpense, updateExpense, deleteExpense, categories, paymentModes } = useExpenseContext();
@@ -98,13 +100,13 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
       }
       onClose();
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to save expense.');
+      showAlert('Error', e.message || 'Failed to save expense.');
     }
   };
 
   const handleDelete = () => {
     if (expenseToEdit) {
-      Alert.alert(
+      showAlert(
         "Delete Expense",
         "Are you sure you want to delete this expense? This action cannot be undone.",
         [
@@ -117,7 +119,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
                 await deleteExpense(expenseToEdit.id);
                 onClose();
               } catch (e: any) {
-                Alert.alert('Error', e.message || 'Failed to delete expense.');
+                showAlert('Error', e.message || 'Failed to delete expense.');
               }
             }
           }

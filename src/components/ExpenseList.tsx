@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, Alert, TextInput, Platform, ActivityIndicator, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, Platform, ActivityIndicator, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
@@ -22,6 +22,7 @@ import notifee from '@notifee/react-native';
 import { generateDashboardPDFHTML } from '../utils/pdfGenerator';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { parseISOYear, parseISOMonth, getMonthYearString } from '../utils/dateUtils';
+import { useAlert } from '../context/AlertContext';
 const isExpoGo = false;
 
 
@@ -38,6 +39,7 @@ interface ExpenseListProps {
 }
 
 export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpensesScreen, dateFilter, forceHiddenState }: ExpenseListProps) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const navigation = useNavigation<any>();
   const { isDarkTheme } = useThemeContext();
@@ -222,7 +224,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
 
   const handleDeleteSelected = () => {
     if (selectedExpenseIds.length === 0) return;
-    Alert.alert(
+    showAlert(
       "Delete Expenses",
       `Are you sure you want to delete ${selectedExpenseIds.length} selected expenses?`,
       [
@@ -295,13 +297,13 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
 
       if (downloadPathUri && Platform.OS === 'android' && notifee) {
         await notifee.displayNotification({ title: "Download Complete", body: "Expense reports saved to your chosen downloads folder.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
-        Alert.alert('Success', 'PDFs saved automatically to your chosen download folder.');
+        showAlert('Success', 'PDFs saved automatically to your chosen download folder.');
       }
     } catch (error) {
       if (notifee) {
         await notifee.displayNotification({ title: "Download Failed", body: `Failed to generate expense report.`, android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
       }
-      Alert.alert('Error', 'Failed to generate or save PDF report.' + error);
+      showAlert('Error', 'Failed to generate or save PDF report.' + error);
     } finally {
       setIsDownloading(false);
     }
@@ -360,7 +362,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
       if (crossedDifferentDate) {
         // Temporarily accept the invalid data so the list internal state syncs up
         setFlatDataState(data);
-        Alert.alert(
+        showAlert(
           "Invalid Move",
           "You can only reorder transactions within the same date.",
           [
@@ -414,7 +416,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
         <TouchableOpacity
           style={[styles.swipeAction, { backgroundColor: '#ff4444', marginLeft: 10 }]}
           onPress={() => {
-            Alert.alert(
+            showAlert(
               "Delete Expense",
               "Are you sure you want to delete this expense?",
               [

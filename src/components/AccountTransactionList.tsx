@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, Alert, TextInput, ActivityIndicator, Platform, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Platform, Animated } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
@@ -19,6 +19,7 @@ import RNFS from 'react-native-fs';
 import SAF from 'react-native-saf-x';
 import notifee from '@notifee/react-native';
 import { generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
+import { useAlert } from '../context/AlertContext';
 
 interface TransactionListItemProps {
   tx: AccountTransaction;
@@ -45,7 +46,7 @@ const RightSwipeAction = ({ dragX, tx, onDelete }: { dragX: SharedValue<number>,
     <TouchableOpacity
       style={[styles.swipeAction, { backgroundColor: '#ff4444', marginLeft: 10 }]}
       onPress={() => {
-        Alert.alert(
+        showAlert(
           "Delete Transaction",
           "Are you sure you want to delete this transaction?",
           [
@@ -166,6 +167,7 @@ interface AccountTransactionListProps {
 }
 
 export default function AccountTransactionList({ accountFilter }: AccountTransactionListProps) {
+  const { showAlert } = useAlert();
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { transactions, deleteTransaction, bulkDeleteTransactions, reorderTransactionsByDate, isLoading } = useTransactionContext();
@@ -268,7 +270,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
 
       if (crossedDifferentDate) {
         setFlatDataState(data);
-        Alert.alert(
+        showAlert(
           "Invalid Move",
           "You can only reorder transactions within the same date.",
           [
@@ -314,7 +316,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
 
   const handleDeleteSelected = () => {
     if (selectedIds.length === 0) return;
-    Alert.alert(
+    showAlert(
       "Delete Transactions",
       `Are you sure you want to delete ${selectedIds.length} selected transactions?`,
       [
@@ -370,7 +372,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         if (notifee) {
           await notifee.displayNotification({ title: "Download Complete", body: `${accountFilter} saved to your chosen downloads folder.`, android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
         }
-        Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
+        showAlert('Success', 'PDF saved automatically to your chosen download folder.');
       } else {
         await Share.open({
           url: "file://${file.filePath}",
@@ -379,7 +381,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         });
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to generate or save PDF report.' + error);
+      showAlert('Error', 'Failed to generate or save PDF report.' + error);
     } finally {
       setIsDownloading(false);
     }
