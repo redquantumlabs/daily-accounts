@@ -44,7 +44,8 @@ export const scheduleAutoDownloadTriggers = async () => {
       const time = times[i];
       const target = new Date(now);
       target.setHours(time.getHours(), time.getMinutes(), 0, 0);
-      if (target.getTime() <= now.getTime()) {
+      // Add a 60-second buffer to prevent immediate looping if the alarm fires slightly early
+      if (target.getTime() <= now.getTime() + 60000) {
         target.setDate(target.getDate() + 1);
       }
 
