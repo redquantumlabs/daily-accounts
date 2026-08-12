@@ -120,7 +120,7 @@ export default function SettingsScreen({ navigation }: any) {
         }
 
         await notifee.displayNotification({
-          title: "Auto Backup",
+          title: "Manual Backup",
           body: "Manual backup saved successfully.",
           android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
         });

@@ -59,7 +59,7 @@ const TransactionContext = createContext<TransactionContextType>({
 
 export const useTransactionContext = () => useContext(TransactionContext);
 
-const TRANSACTIONS_KEY = '@app_bank_transactions';
+const TRANSACTIONS_KEY = '@app_account_transactions';
 
 export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [transactions, setTransactions] = useState<AccountTransaction[]>([]);

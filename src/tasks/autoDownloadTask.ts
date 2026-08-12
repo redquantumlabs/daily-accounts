@@ -70,12 +70,26 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
       }
     }
 
-    const accountsStr = await AsyncStorage.getItem('@app_accounts');
-    const transactionsStr = await AsyncStorage.getItem('@app_transactions');
+    const manualAccountsStr = await AsyncStorage.getItem('@app_manual_accounts');
+    const accountOrderStr = await AsyncStorage.getItem('@app_account_order');
+    const transactionsStr = await AsyncStorage.getItem('@app_account_transactions');
     
-    if (accountsStr && transactionsStr) {
-      const accountsList = JSON.parse(accountsStr);
+    if (transactionsStr) {
+      const manualAccounts = manualAccountsStr ? JSON.parse(manualAccountsStr) : [];
+      const accountOrder = accountOrderStr ? JSON.parse(accountOrderStr) : [];
       const allTransactions = JSON.parse(transactionsStr);
+      
+      const usedAccounts = new Set([...allTransactions.map((t: any) => t.account), ...manualAccounts]);
+      const accountsList = Array.from(usedAccounts);
+      
+      accountsList.sort((a: any, b: any) => {
+        const idxA = accountOrder.indexOf(a);
+        const idxB = accountOrder.indexOf(b);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return a.localeCompare(b);
+      });
       
       const accountGroups = accountsList.map((acc: string) => ({
         accountName: acc,
