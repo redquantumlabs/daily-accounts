@@ -40,7 +40,7 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
 
     for (const year of uniqueYears) {
       const yearExpenses = expenses.filter((exp: any) => parseISOYear(exp.date) === year);
-      
+
       // 1. Generate Expense Report (Dashboard) for this specific year
       const expenseHtml = generateDashboardPDFHTML(yearExpenses, categories, paymentModes, currency);
       const fileName = `Account - ${year}`;
@@ -50,13 +50,13 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
         directory: 'Documents',
         base64: true
       };
-      
+
       const expenseFile = await generatePDF(expenseOptions);
 
       if (expenseFile.base64) {
         const fullFileName = `${fileName}.pdf`;
         const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
-        
+
         // Overwrite if exists
         const fileExists = await SAF.exists(fileUriString);
         if (fileExists) {
@@ -73,15 +73,15 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
     const manualAccountsStr = await AsyncStorage.getItem('@app_manual_accounts');
     const accountOrderStr = await AsyncStorage.getItem('@app_account_order');
     const transactionsStr = await AsyncStorage.getItem('@app_account_transactions');
-    
+
     if (transactionsStr) {
       const manualAccounts = manualAccountsStr ? JSON.parse(manualAccountsStr) : [];
       const accountOrder = accountOrderStr ? JSON.parse(accountOrderStr) : [];
       const allTransactions = JSON.parse(transactionsStr);
-      
+
       const usedAccounts = new Set([...allTransactions.map((t: any) => t.account), ...manualAccounts]);
       const accountsList = Array.from(usedAccounts);
-      
+
       accountsList.sort((a: any, b: any) => {
         const idxA = accountOrder.indexOf(a);
         const idxB = accountOrder.indexOf(b);
@@ -90,7 +90,7 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
         if (idxB !== -1) return 1;
         return a.localeCompare(b);
       });
-      
+
       const accountGroups = accountsList.map((acc: string) => ({
         accountName: acc,
         transactions: allTransactions.filter((t: any) => t.account === acc)
@@ -99,25 +99,25 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
       if (accountGroups.length > 0) {
         const accHtml = generateAccountTransactionsPDFHTML(accountGroups, currency);
         const fileName = 'Transactional Accounts';
-        
+
         const accOptions = {
           html: accHtml,
           fileName: fileName + `_${new Date().getTime()}`,
           directory: 'Documents',
           base64: true
         };
-        
+
         const accFile = await generatePDF(accOptions);
-        
+
         if (accFile.base64) {
           const fullFileName = `${fileName}.pdf`;
           const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
-          
+
           const fileExists = await SAF.exists(fileUriString);
           if (fileExists) {
             await SAF.unlink(fileUriString);
           }
-          
+
           const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
             mimeType: 'application/pdf'
           });
@@ -133,20 +133,27 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
     });
 
   } catch (err: any) {
-    if (err.message && err.message.includes('generating the pdf')) {
-      await AsyncStorage.setItem('@app_pending_auto_download', 'true');
-      await notifee.displayNotification({
-        title: "Auto Download Paused",
-        body: "Your device restricts background PDF generation. Tap here to open the app and complete the download.",
-        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
-      });
-    } else {
-      await notifee.displayNotification({
-        title: "Auto Download Failed",
-        body: `Auto Download encountered an error: ${err.message}`,
-        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
-      });
-    }
+    await AsyncStorage.setItem('@app_pending_auto_download', 'true');
+    await notifee.displayNotification({
+      title: "Auto Download Paused",
+      body: `Auto Download encountered an error: ${err.message}`,
+      android: {
+        channelId: 'daily_accounts',
+        showTimestamp: true,
+        smallIcon: 'ic_notification',
+        largeIcon: 'ic_launcher',
+        circularLargeIcon: true,
+        pressAction: { id: 'default' },
+        actions: [
+          {
+            title: 'Retry',
+            pressAction: {
+              id: 'retry_auto_download'
+            }
+          }
+        ]
+      }
+    });
   } finally {
     isPerformingAutoDownload = false;
   }

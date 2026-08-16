@@ -42,6 +42,12 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
     await performAutoDownloadTask(label);
     await notifee.cancelNotification(notificationId);
     await scheduleAutoDownloadTriggers();
+  } else if (type === EventType.ACTION_PRESS && detail.pressAction?.id === 'retry_auto_download') {
+    const label = `Auto Download (Retry)`;
+    await performAutoDownloadTask(label);
+    if (notificationId) {
+      await notifee.cancelNotification(notificationId);
+    }
   }
 });
 
