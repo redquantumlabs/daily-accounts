@@ -133,11 +133,20 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
     });
 
   } catch (err: any) {
-    await notifee.displayNotification({
-      title: "Auto Download Failed",
-      body: `Auto Download encountered an error: ${err.message}`,
-      android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
-    });
+    if (err.message && err.message.includes('generating the pdf')) {
+      await AsyncStorage.setItem('@app_pending_auto_download', 'true');
+      await notifee.displayNotification({
+        title: "Auto Download Paused",
+        body: "Your device restricts background PDF generation. Tap here to open the app and complete the download.",
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
+      });
+    } else {
+      await notifee.displayNotification({
+        title: "Auto Download Failed",
+        body: `Auto Download encountered an error: ${err.message}`,
+        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
+      });
+    }
   } finally {
     isPerformingAutoDownload = false;
   }

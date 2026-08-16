@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import AppText from '../components/AppText';
@@ -33,6 +34,22 @@ export default function HomeScreen({ navigation }: any) {
     setIsTotalBalanceHidden(!isAmountsVisible);
     setHiddenAccounts({});
   }, [isAmountsVisible]);
+
+  React.useEffect(() => {
+    const checkPendingAutoDownload = async () => {
+      try {
+        const pending = await AsyncStorage.getItem('@app_pending_auto_download');
+        if (pending === 'true') {
+          await AsyncStorage.removeItem('@app_pending_auto_download');
+          const { performAutoDownloadTask } = require('../tasks/autoDownloadTask');
+          await performAutoDownloadTask('Auto');
+        }
+      } catch (e) {
+        console.warn('Error checking pending auto download:', e);
+      }
+    };
+    checkPendingAutoDownload();
+  }, []);
 
   const toggleAccountHidden = (acc: string) => {
     setHiddenAccounts(prev => {
