@@ -488,34 +488,36 @@ export default function DashboardScreen() {
             const expense = categoryExpenses[cat.id] || 0;
             const limit = cat.yearlyBudget!;
             const ratio = limit > 0 ? expense / limit : 0;
-            const totalRatio = yearlyBudget > 0 ? expense / yearlyBudget : 0;
+            const totalRatio = yearlyBudget > 0 ? limit / yearlyBudget : 0;
             const isOver = expense > limit;
             const isWarning = expense >= limit * 0.8 && !isOver;
-            const barColor = isOver ? '#ff4444' : isWarning ? '#ffbb33' : colors.primary;
+            const barColor = isOver ? '#ff4444' : isWarning ? '#ffbb33' : '#FFF';
 
             return (
               <View key={cat.id} style={{ marginBottom: 12 }}>
-                <PremiumCardBackground color={colors.card}>
+                <PremiumCardBackground color={colors.primary}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: cat.color, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: cat.color, alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
                       <Ionicons name={cat.icon as any} size={20} color="#fff" />
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <AppText style={{ fontSize: 16, fontWeight: 'bold', color: colors.text }}>{cat.name}</AppText>
-                      <AppText style={{ fontSize: 12, color: colors.textMuted }}>
-                        {yearlyBudget > 0 ? `${(totalRatio * 100).toFixed(1)}% of Total Yearly Budget` : ' '}
-                      </AppText>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                      <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>{cat.name}</AppText>
+                      {yearlyBudget > 0 && (
+                        <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
+                          {`${(totalRatio * 100).toFixed(1)}% of Total Yearly Budget`}
+                        </AppText>
+                      )}
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <AppText style={{ fontSize: 16, fontWeight: 'bold', color: barColor }}>
                         {isYearlyHidden ? '••••' : `${currency}${formatAmount(expense)}`}
                       </AppText>
-                      <AppText style={{ fontSize: 12, color: colors.textMuted }}>
+                      <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
                         of {currency}{formatAmount(limit)}
                       </AppText>
                     </View>
                   </View>
-                  <View style={{ height: 8, backgroundColor: isDarkTheme ? '#333' : '#e0e0e0', borderRadius: 4, width: '100%', overflow: 'hidden' }}>
+                  <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 4, width: '100%', overflow: 'hidden' }}>
                     <View style={{ height: '100%', backgroundColor: barColor, width: `${Math.min(ratio * 100, 100)}%` }} />
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
