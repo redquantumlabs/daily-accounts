@@ -285,7 +285,7 @@ export default function DashboardScreen() {
                 <Ionicons name="chevron-down" size={14} color="#FFF" style={{ marginLeft: 4, opacity: 0.9 }} />
               </TouchableOpacity>
             </View>
-            <AppText style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 ? (total > monthlyBudget ? '#ff4444' : (total >= monthlyBudget * 0.8 ? '#ffcccc' : '#FFF')) : '#FFF', marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 12 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
+            <AppText style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 ? (total > monthlyBudget ? '#ff4444' : (total >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF')) : '#FFF', marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 12 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
               {isMonthlyHidden ? '••••••' : `${currency}${formatAmount(total)}`}
             </AppText>
             {monthlyBudget > 0 && showMonthlyBudget && (
@@ -309,7 +309,7 @@ export default function DashboardScreen() {
               <Svg width={120} height={120}>
                 <Circle stroke="rgba(255,255,255,0.2)" cx={60} cy={60} r={56} strokeWidth={8} fill="none" />
                 <Circle
-                  stroke={total >= monthlyBudget * 0.8 ? '#ffcccc' : '#FFF'}
+                  stroke={total >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF'}
                   cx={60} cy={60} r={56} strokeWidth={8}
                   strokeDasharray={`${2 * Math.PI * 56} ${2 * Math.PI * 56}`}
                   strokeDashoffset={2 * Math.PI * 56 - (Math.min((total / monthlyBudget) * 100, 100) / 100) * 2 * Math.PI * 56}
@@ -326,7 +326,7 @@ export default function DashboardScreen() {
                 )}
               </Svg>
               <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
-                <AppText style={{ fontSize: 15, fontWeight: 'bold', color: total > monthlyBudget ? '#ff4444' : (total >= monthlyBudget * 0.8 ? '#ffcccc' : '#FFF') }}>
+                <AppText style={{ fontSize: 15, fontWeight: 'bold', color: total > monthlyBudget ? '#ff4444' : (total >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF') }}>
                   {isMonthlyHidden ? '••%' : `${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                 </AppText>
                 <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
@@ -352,7 +352,7 @@ export default function DashboardScreen() {
                   <Ionicons name="chevron-down" size={14} color="#FFF" style={{ marginLeft: 4, opacity: 0.9 }} />
                 </TouchableOpacity>
               </View>
-              <AppText style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 ? (currentYearTotal > yearlyBudget ? '#ff4444' : (currentYearTotal >= yearlyBudget * 0.8 ? '#ffcccc' : '#FFF')) : '#FFF', marginBottom: yearlyBudget > 0 && showYearlyBudget ? 12 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
+              <AppText style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 ? (currentYearTotal > yearlyBudget ? '#ff4444' : (currentYearTotal >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF')) : '#FFF', marginBottom: yearlyBudget > 0 && showYearlyBudget ? 12 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
                 {isYearlyHidden ? '••••••' : `${currency}${formatAmount(currentYearTotal)}`}
               </AppText>
               {yearlyBudget > 0 && showYearlyBudget && (
@@ -376,7 +376,7 @@ export default function DashboardScreen() {
                 <Svg width={120} height={120}>
                   <Circle stroke="rgba(255,255,255,0.2)" cx={60} cy={60} r={56} strokeWidth={8} fill="none" />
                   <Circle
-                    stroke={currentYearTotal >= yearlyBudget * 0.8 ? '#ffcccc' : '#FFF'}
+                    stroke={currentYearTotal >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF'}
                     cx={60} cy={60} r={56} strokeWidth={8}
                     strokeDasharray={`${2 * Math.PI * 56} ${2 * Math.PI * 56}`}
                     strokeDashoffset={2 * Math.PI * 56 - (Math.min((currentYearTotal / yearlyBudget) * 100, 100) / 100) * 2 * Math.PI * 56}
@@ -393,7 +393,7 @@ export default function DashboardScreen() {
                   )}
                 </Svg>
                 <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
-                  <AppText style={{ fontSize: 15, fontWeight: 'bold', color: currentYearTotal > yearlyBudget ? '#ff4444' : (currentYearTotal >= yearlyBudget * 0.8 ? '#ffcccc' : '#FFF') }}>
+                  <AppText style={{ fontSize: 15, fontWeight: 'bold', color: currentYearTotal > yearlyBudget ? '#ff4444' : (currentYearTotal >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF') }}>
                     {isYearlyHidden ? '••%' : `${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                   </AppText>
                   <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
@@ -523,11 +523,10 @@ export default function DashboardScreen() {
                       <AppText style={{ fontSize: 12, color: barColor, fontWeight: '600' }}>
                         {(ratio * 100).toFixed(1)}% Used
                       </AppText>
-                      {isOver && (
-                        <AppText style={{ fontSize: 12, color: '#ff4444', fontWeight: 'bold' }}>
-                          Over Budget!
-                        </AppText>
-                      )}
+                      <AppText style={{ fontSize: 12, color: barColor, fontWeight: '600' }}>
+                        {yearlyBudget > 0 ? `${((expense / yearlyBudget) * 100).toFixed(1)}% of Total Budget ` : ''}
+                        {isOver ? '(Over Budget!)' : ''}
+                      </AppText>
                     </View>
                   </PremiumCardBackground>
                 </View>
