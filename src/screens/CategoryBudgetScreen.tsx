@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, Animated } from 'react-native';
 import AppText from '../components/AppText';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useExpenseContext } from '../context/ExpenseContext';
@@ -8,8 +8,20 @@ import { formatAmount } from '../utils/format';
 
 export default function CategoryBudgetScreen() {
   const colors = useThemeColors();
-  const { categories, currency, updateCategoryBudget } = useExpenseContext();
+  const { categories, currency, updateCategoryBudget, yearlyBudget } = useExpenseContext();
   
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastOpacity] = useState(new Animated.Value(0));
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    Animated.sequence([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.delay(2000),
+      Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start(() => setToastMessage(null));
+  };
+
   // Local state to manage the inputs before saving
   const [budgets, setBudgets] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
@@ -26,13 +38,30 @@ export default function CategoryBudgetScreen() {
   const handleSave = (id: string) => {
     const val = parseFloat(budgets[id]);
     const finalVal = isNaN(val) || val < 0 ? 0 : val;
+
+    let newTotal = 0;
+    categories.forEach(c => {
+      if (c.id === id) {
+        newTotal += finalVal;
+      } else {
+        newTotal += c.yearlyBudget || 0;
+      }
+    });
+
+    if (yearlyBudget > 0 && newTotal > yearlyBudget) {
+      showToast(`Budget Exceeded! Sum cannot exceed ${currency}${formatAmount(yearlyBudget)}`);
+      // Reset input back to saved state or let them fix it
+      return;
+    }
+
     updateCategoryBudget(id, finalVal);
     setBudgets(prev => ({ ...prev, [id]: finalVal ? finalVal.toString() : '' }));
     Keyboard.dismiss();
   };
 
   return (
-    <KeyboardAvoidingView 
+    <View style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
       style={[styles.container, { backgroundColor: colors.background }]} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
@@ -89,6 +118,22 @@ export default function CategoryBudgetScreen() {
         )}
       </ScrollView>
     </KeyboardAvoidingView>
+      {toastMessage && (
+        <Animated.View style={{
+          position: 'absolute',
+          bottom: 50,
+          alignSelf: 'center',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          borderRadius: 20,
+          opacity: toastOpacity,
+          zIndex: 9999,
+        }}>
+          <AppText style={{ color: 'white', fontSize: 14 }}>{toastMessage}</AppText>
+        </Animated.View>
+      )}
+    </View>
   );
 }
 
