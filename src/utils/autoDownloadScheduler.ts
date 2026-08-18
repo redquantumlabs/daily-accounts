@@ -52,7 +52,7 @@ export const scheduleAutoDownloadTriggers = async () => {
       const trigger: TimestampTrigger = {
         type: TriggerType.TIMESTAMP,
         timestamp: target.getTime(),
-        alarmManager: true,
+        alarmManager: { allowWhileIdle: true },
       };
 
       await notifee.createTriggerNotification(

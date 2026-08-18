@@ -411,6 +411,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const timeoutId = setTimeout(() => {
       scheduleAllNotifications(expenses, currency, summaryTime, reminderTimes);
+      
+      const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
+      const { scheduleAutoDownloadTriggers } = require('../utils/autoDownloadScheduler');
+      
+      scheduleAutoBackupTriggers().catch(console.warn);
+      scheduleAutoDownloadTriggers().catch(console.warn);
     }, 1000);
 
     return () => clearTimeout(timeoutId);
