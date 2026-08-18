@@ -25,9 +25,9 @@ const SpendingVelocityCard = ({ colors, timeElapsedRatio, budgetSpentRatio, mont
   const isSlightlyFast = budgetSpentRatio > timeElapsedRatio && !isTooFast;
 
   const statusColor = isTooFast ? '#ff4444' : (isSlightlyFast ? '#ffeb3b' : '#00C851');
-  const statusMessage = isTooFast 
+  const statusMessage = isTooFast
     ? `Slow down! You've spent ${(budgetSpentRatio * 100).toFixed(0)}% of your budget, but only ${(timeElapsedRatio * 100).toFixed(0)}% of the month has passed.`
-    : isSlightlyFast 
+    : isSlightlyFast
       ? `Careful. You are spending slightly faster than the month is progressing.`
       : `Great job! Your spending is perfectly on track for the month.`;
 
@@ -37,12 +37,12 @@ const SpendingVelocityCard = ({ colors, timeElapsedRatio, budgetSpentRatio, mont
   const semiCircumference = circumference / 2;
   const clampedBudgetSpentRatio = Math.min(budgetSpentRatio, 1);
   const filledLength = clampedBudgetSpentRatio * semiCircumference;
-  
+
   const angleRad = Math.PI + timeElapsedRatio * Math.PI;
-  const markerX = 100 + (radius + strokeWidth/2 + 5) * Math.cos(angleRad);
-  const markerY = 100 + (radius + strokeWidth/2 + 5) * Math.sin(angleRad);
-  const innerMarkerX = 100 + (radius - strokeWidth/2 - 5) * Math.cos(angleRad);
-  const innerMarkerY = 100 + (radius - strokeWidth/2 - 5) * Math.sin(angleRad);
+  const markerX = 100 + (radius + strokeWidth / 2 + 5) * Math.cos(angleRad);
+  const markerY = 100 + (radius + strokeWidth / 2 + 5) * Math.sin(angleRad);
+  const innerMarkerX = 100 + (radius - strokeWidth / 2 - 5) * Math.cos(angleRad);
+  const innerMarkerY = 100 + (radius - strokeWidth / 2 - 5) * Math.sin(angleRad);
 
   return (
     <PremiumCardBackground color={colors.primary}>
@@ -69,7 +69,7 @@ const SpendingVelocityCard = ({ colors, timeElapsedRatio, budgetSpentRatio, mont
               fill="none"
             />
           </G>
-          
+
           <Line
             x1={innerMarkerX} y1={innerMarkerY}
             x2={markerX} y2={markerY}
@@ -77,12 +77,12 @@ const SpendingVelocityCard = ({ colors, timeElapsedRatio, budgetSpentRatio, mont
             strokeWidth={3}
             strokeLinecap="round"
           />
-          
+
           <AppText style={{ position: 'absolute', top: 70, left: 0, right: 0, textAlign: 'center', fontSize: 24, fontWeight: 'bold', color: statusColor }}>
             {(budgetSpentRatio * 100).toFixed(2).padStart(5, '0')}%
           </AppText>
         </Svg>
-        
+
         <View style={{ marginTop: 4, paddingHorizontal: 16 }}>
           <AppText style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>
             {statusMessage}
@@ -173,7 +173,7 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
           <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
             {MONTHS[selectedMonth]} {selectedYear}
           </AppText>
-          <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+          <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
         </View>
@@ -347,7 +347,7 @@ export default function DashboardScreen() {
     <View>
       {/* Monthly Spending Card */}
       <PremiumCardBackground color={colors.primary}>
-        <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsMonthlyHidden(!isMonthlyHidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+        <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsMonthlyHidden(!isMonthlyHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name={isMonthlyHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -414,7 +414,7 @@ export default function DashboardScreen() {
       {/* Yearly Spending Card */}
       {showYearCard && (
         <PremiumCardBackground color={colors.primary}>
-          <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsYearlyHidden(!isYearlyHidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+          <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsYearlyHidden(!isYearlyHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isYearlyHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -477,64 +477,6 @@ export default function DashboardScreen() {
             )}
           </View>
         </PremiumCardBackground>
-      )}
-
-      {showYearCard && categoryBudgets.length > 0 && (
-        <View style={{ marginTop: 16 }}>
-          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 12 }}>
-            Category Budgets ({selectedYear})
-          </AppText>
-          {categoryBudgets.map(cat => {
-            const expense = categoryExpenses[cat.id] || 0;
-            const limit = cat.yearlyBudget!;
-            const ratio = limit > 0 ? expense / limit : 0;
-            const totalRatio = yearlyBudget > 0 ? limit / yearlyBudget : 0;
-            const isOver = expense > limit;
-            const isWarning = expense >= limit * 0.8 && !isOver;
-            const barColor = isOver ? '#ff4444' : isWarning ? '#ffbb33' : '#FFF';
-
-            return (
-              <View key={cat.id} style={{ marginBottom: 12 }}>
-                <PremiumCardBackground color={colors.primary}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: cat.color, alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
-                      <Ionicons name={cat.icon as any} size={20} color="#fff" />
-                    </View>
-                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                      <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>{cat.name}</AppText>
-                      {yearlyBudget > 0 && (
-                        <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
-                          {`${(totalRatio * 100).toFixed(1)}% of Total Yearly Budget`}
-                        </AppText>
-                      )}
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <AppText style={{ fontSize: 16, fontWeight: 'bold', color: barColor }}>
-                        {isYearlyHidden ? '••••' : `${currency}${formatAmount(expense)}`}
-                      </AppText>
-                      <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
-                        of {currency}{formatAmount(limit)}
-                      </AppText>
-                    </View>
-                  </View>
-                  <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 4, width: '100%', overflow: 'hidden' }}>
-                    <View style={{ height: '100%', backgroundColor: barColor, width: `${Math.min(ratio * 100, 100)}%` }} />
-                  </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                    <AppText style={{ fontSize: 12, color: barColor, fontWeight: '600' }}>
-                      {(ratio * 100).toFixed(1)}% Used
-                    </AppText>
-                    {isOver && (
-                      <AppText style={{ fontSize: 12, color: '#ff4444', fontWeight: 'bold' }}>
-                        Over Budget!
-                      </AppText>
-                    )}
-                  </View>
-                </PremiumCardBackground>
-              </View>
-            );
-          })}
-        </View>
       )}
 
       <SingleFilterModal
@@ -609,13 +551,70 @@ export default function DashboardScreen() {
           setIsCalendarHidden={setIsCalendarHidden}
         />
         {monthlyBudget > 0 && showMonthlyBudget && (
-          <SpendingVelocityCard 
+          <SpendingVelocityCard
             colors={colors}
             timeElapsedRatio={monthlyTimeProgress}
             budgetSpentRatio={budgetSpentRatio}
             monthlyBudget={monthlyBudget}
             currency={currency}
           />
+        )}
+        {showYearCard && categoryBudgets.length > 0 && (
+          <View style={{ marginTop: 16 }}>
+            <AppText style={{ fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 12 }}>
+              Category Spending ({selectedYear})
+            </AppText>
+            {categoryBudgets.map(cat => {
+              const expense = categoryExpenses[cat.id] || 0;
+              const limit = cat.yearlyBudget!;
+              const ratio = limit > 0 ? expense / limit : 0;
+              const totalRatio = yearlyBudget > 0 ? limit / yearlyBudget : 0;
+              const isOver = expense > limit;
+              const isWarning = expense >= limit * 0.8 && !isOver;
+              const barColor = isOver ? '#ff4444' : isWarning ? '#ffbb33' : '#FFF';
+
+              return (
+                <View key={cat.id}>
+                  <PremiumCardBackground color={colors.primary}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: cat.color, alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
+                        <Ionicons name={cat.icon as any} size={20} color="#fff" />
+                      </View>
+                      <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>{cat.name}</AppText>
+                        {yearlyBudget > 0 && (
+                          <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
+                            {`${(totalRatio * 100).toFixed(1)}% of Total Yearly Budget`}
+                          </AppText>
+                        )}
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: barColor }}>
+                          {isYearlyHidden ? '••••' : `${currency}${formatAmount(expense)}`}
+                        </AppText>
+                        <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
+                          of {currency}{formatAmount(limit)}
+                        </AppText>
+                      </View>
+                    </View>
+                    <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 4, width: '100%', overflow: 'hidden' }}>
+                      <View style={{ height: '100%', backgroundColor: barColor, width: `${Math.min(ratio * 100, 100)}%` }} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                      <AppText style={{ fontSize: 12, color: barColor, fontWeight: '600' }}>
+                        {(ratio * 100).toFixed(1)}% Used
+                      </AppText>
+                      {isOver && (
+                        <AppText style={{ fontSize: 12, color: '#ff4444', fontWeight: 'bold' }}>
+                          Over Budget!
+                        </AppText>
+                      )}
+                    </View>
+                  </PremiumCardBackground>
+                </View>
+              );
+            })}
+          </View>
         )}
       </ScrollView>
 
