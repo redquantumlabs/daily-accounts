@@ -27,6 +27,7 @@ export default function CategoryBudgetScreen() {
     const val = parseFloat(budgets[id]);
     const finalVal = isNaN(val) || val < 0 ? 0 : val;
     updateCategoryBudget(id, finalVal);
+    setBudgets(prev => ({ ...prev, [id]: finalVal ? finalVal.toString() : '' }));
     Keyboard.dismiss();
   };
 
@@ -48,37 +49,43 @@ export default function CategoryBudgetScreen() {
             <AppText style={styles.emptyText}>No categories found.</AppText>
           </View>
         ) : (
-          categories.map((cat) => (
-            <View key={cat.id} style={[styles.card, { backgroundColor: colors.card }]}>
-              <View style={styles.cardHeader}>
-                <View style={[styles.iconContainer, { backgroundColor: cat.color }]}>
-                  <Ionicons name={cat.icon as any} size={20} color="#fff" />
+          categories.map((cat) => {
+            const isChanged = budgets[cat.id] !== (cat.yearlyBudget ? cat.yearlyBudget.toString() : '');
+            
+            return (
+              <View key={cat.id} style={[styles.card, { backgroundColor: colors.card }]}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.iconContainer, { backgroundColor: cat.color }]}>
+                    <Ionicons name={cat.icon as any} size={20} color="#fff" />
+                  </View>
+                  <AppText style={[styles.catName, { color: colors.text }]} numberOfLines={1}>
+                    {cat.name}
+                  </AppText>
                 </View>
-                <AppText style={[styles.catName, { color: colors.text }]} numberOfLines={1}>
-                  {cat.name}
-                </AppText>
+                
+                <View style={styles.inputRow}>
+                  <AppText style={[styles.currencySymbol, { color: colors.textMuted }]}>{currency}</AppText>
+                  <TextInput
+                    style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                    placeholder="0.00"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    value={budgets[cat.id]}
+                    onChangeText={(val) => handleBudgetChange(cat.id, val)}
+                    onBlur={() => handleSave(cat.id)}
+                  />
+                  {isChanged && (
+                    <TouchableOpacity 
+                      style={[styles.saveBtn, { backgroundColor: colors.primary }]} 
+                      onPress={() => handleSave(cat.id)}
+                    >
+                      <Ionicons name="checkmark" size={20} color="#fff" />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-              
-              <View style={styles.inputRow}>
-                <AppText style={[styles.currencySymbol, { color: colors.textMuted }]}>{currency}</AppText>
-                <TextInput
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                  placeholder="0.00"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                  value={budgets[cat.id]}
-                  onChangeText={(val) => handleBudgetChange(cat.id, val)}
-                  onBlur={() => handleSave(cat.id)}
-                />
-                <TouchableOpacity 
-                  style={[styles.saveBtn, { backgroundColor: colors.primary }]} 
-                  onPress={() => handleSave(cat.id)}
-                >
-                  <Ionicons name="checkmark" size={20} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </KeyboardAvoidingView>
