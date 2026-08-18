@@ -203,7 +203,7 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
 export default function DashboardScreen() {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
-  const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible } = useExpenseContext();
+  const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed } = useExpenseContext();
 
   const currentMonthIndex = new Date().getMonth();
   const currentYearVal = new Date().getFullYear();
@@ -300,16 +300,30 @@ export default function DashboardScreen() {
     if (selectedYear > now.getFullYear() || (selectedYear === now.getFullYear() && selectedMonth > now.getMonth())) {
       return 0;
     }
+    if (isPreciseTimeElapsed) {
+      const elapsedHours = (now.getDate() - 1) * 24 + now.getHours() + (now.getMinutes() / 60);
+      const totalHours = totalDays * 24;
+      return elapsedHours / totalHours;
+    }
     return Math.max(0, now.getDate() - 1) / totalDays;
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, isPreciseTimeElapsed]);
 
   const yearlyTimeProgress = useMemo(() => {
     const now = new Date();
     if (selectedYear < now.getFullYear()) return 1;
     if (selectedYear > now.getFullYear()) return 0;
 
+    if (isPreciseTimeElapsed) {
+      const startOfYear = new Date(selectedYear, 0, 1);
+      const diffTime = now.getTime() - startOfYear.getTime();
+      const elapsedDays = diffTime / (1000 * 60 * 60 * 24);
+      const isLeapYear = (selectedYear % 4 === 0 && selectedYear % 100 !== 0) || (selectedYear % 400 === 0);
+      const totalYearDays = isLeapYear ? 366 : 365;
+      return Math.min(1, elapsedDays / totalYearDays);
+    }
+
     return now.getMonth() / 12;
-  }, [selectedYear]);
+  }, [selectedYear, isPreciseTimeElapsed]);
 
   const budgetSpentRatio = monthlyBudget > 0 ? total / monthlyBudget : 0;
 

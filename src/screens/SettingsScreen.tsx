@@ -206,7 +206,7 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
-  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility, isPreciseTimeElapsed, togglePreciseTimeElapsed } = useExpenseContext();
   const { accounts, excludedFromTotal, toggleAccountInTotal, refreshTransactionData, showCardStats, toggleShowCardStats } = useTransactionContext();
 
   const handleNav = (screen: string) => {
@@ -319,6 +319,19 @@ export default function SettingsScreen({ navigation }: any) {
             onValueChange={toggleAmountsVisibility}
             trackColor={{ false: '#767577', true: colors.primary }}
             thumbColor={isAmountsVisible ? '#fff' : '#f4f3f4'}
+          />
+        </View>
+        <View style={styles.divider} />
+        <View style={[styles.row, { paddingVertical: 12 }]}>
+          <View style={styles.rowLeft}>
+            <Ionicons name="time-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Precise Time Elapsed</AppText>
+          </View>
+          <Switch
+            value={isPreciseTimeElapsed}
+            onValueChange={togglePreciseTimeElapsed}
+            trackColor={{ false: '#767577', true: colors.primary }}
+            thumbColor={isPreciseTimeElapsed ? '#fff' : '#f4f3f4'}
           />
         </View>
         <View style={styles.divider} />

@@ -39,6 +39,8 @@ interface ExpenseContextType {
   showYearCard: boolean;
   analyticsChartType: 'Pie' | 'Donut';
   chartStyle: 'Classic' | '3D' | 'Spaced' | 'Semi-Circle';
+  isPreciseTimeElapsed: boolean;
+  togglePreciseTimeElapsed: (val: boolean) => Promise<void>;
   monthlyIncomes: Record<string, number>;
   addExpense: (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
@@ -104,6 +106,8 @@ const ExpenseContext = createContext<ExpenseContextType>({
   isAmountsVisible: false,
   analyticsChartType: 'Pie',
   chartStyle: 'Classic',
+  isPreciseTimeElapsed: false,
+  togglePreciseTimeElapsed: async () => {},
   monthlyIncomes: {},
   addExpense: async () => {},
   updateExpense: async () => {},
@@ -169,6 +173,7 @@ const SUMMARY_TIME_KEY = '@app_summary_time';
 const REMINDER_TIME_KEY = '@app_reminder_time';
 const AUTO_BACKUP_TIMES_KEY = '@app_auto_backup_times';
 const AUTO_DOWNLOAD_TIMES_KEY = '@app_auto_download_times';
+const PRECISE_TIME_ELAPSED_KEY = '@app_precise_time_elapsed';
 
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -183,6 +188,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isAmountsVisible, setIsAmountsVisible] = useState(false);
   const [analyticsChartType, setAnalyticsChartType] = useState<'Pie' | 'Donut'>('Pie');
   const [chartStyle, setChartStyle] = useState<'Classic' | '3D' | 'Spaced' | 'Semi-Circle'>('Classic');
+  const [isPreciseTimeElapsed, setIsPreciseTimeElapsed] = useState(false);
   const [downloadPathUri, setDownloadPathUri] = useState<string | null>(null);
   const [backupPathUri, setBackupPathUri] = useState<string | null>(null);
   const [monthlyIncomes, setMonthlyIncomes] = useState<Record<string, number>>({});
@@ -212,11 +218,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const reminderTimeStorageKey = REMINDER_TIME_KEY;
   const autoBackupTimesStorageKey = AUTO_BACKUP_TIMES_KEY;
   const autoDownloadTimesStorageKey = AUTO_DOWNLOAD_TIMES_KEY;
+  const preciseTimeElapsedStorageKey = PRECISE_TIME_ELAPSED_KEY;
 
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const keys = [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
+      const keys = [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
       const data = await AsyncStorage.getMany(keys);
       const storedExpenses = data[storageKey];
       if (storedExpenses) {
@@ -300,6 +307,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setChartStyle(storedChartStyle);
       } else {
         setChartStyle('Classic');
+      }
+
+      const storedPreciseTime = data[preciseTimeElapsedStorageKey];
+      if (storedPreciseTime !== null && storedPreciseTime !== undefined) {
+        setIsPreciseTimeElapsed(storedPreciseTime === 'true');
+      } else {
+        setIsPreciseTimeElapsed(false);
       }
 
       const storedDownloadPath = data[downloadPathStorageKey];
@@ -390,7 +404,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     loadData();
-  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, amountsVisibleStorageKey]);
+  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, amountsVisibleStorageKey, preciseTimeElapsedStorageKey]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -607,6 +621,11 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(showYearCardStorageKey, val.toString());
   };
 
+  const togglePreciseTimeElapsed = async (val: boolean) => {
+    setIsPreciseTimeElapsed(val);
+    await AsyncStorage.setItem(preciseTimeElapsedStorageKey, val.toString());
+  };
+
   const updateAnalyticsChartType = async (type: 'Pie' | 'Donut') => {
     setAnalyticsChartType(type);
     await AsyncStorage.setItem(analyticsChartTypeStorageKey, type);
@@ -727,7 +746,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY, SHOW_YEAR_CARD_KEY,
       ANALYTICS_CHART_TYPE_KEY, CHART_STYLE_KEY, DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY,
       SUMMARY_TIME_KEY, REMINDER_TIME_KEY, AUTO_BACKUP_TIMES_KEY, AUTO_DOWNLOAD_TIMES_KEY,
-      AMOUNTS_VISIBLE_KEY
+      AMOUNTS_VISIBLE_KEY, PRECISE_TIME_ELAPSED_KEY
     ];
 
     for (const key of keys) {
@@ -745,6 +764,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <ExpenseContext.Provider value={{ 
       expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
       showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, analyticsChartType, chartStyle,
+      isPreciseTimeElapsed, togglePreciseTimeElapsed,
       monthlyIncomes,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses, reorderExpensesByDate,
       updateMonthlyIncome,
