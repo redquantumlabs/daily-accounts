@@ -203,7 +203,7 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
 export default function DashboardScreen() {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
-  const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed } = useExpenseContext();
+  const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed, categories } = useExpenseContext();
 
   const currentMonthIndex = new Date().getMonth();
   const currentYearVal = new Date().getFullYear();
@@ -326,6 +326,22 @@ export default function DashboardScreen() {
   }, [selectedYear, isPreciseTimeElapsed]);
 
   const budgetSpentRatio = monthlyBudget > 0 ? total / monthlyBudget : 0;
+
+  const categoryBudgets = useMemo(() => {
+    return categories.filter(c => c.yearlyBudget && c.yearlyBudget > 0);
+  }, [categories]);
+
+  const categoryExpenses = useMemo(() => {
+    const expensesMap: Record<string, number> = {};
+    expenses
+      .filter(exp => parseISOYear(exp.date) === selectedYear)
+      .forEach(exp => {
+        if (exp.categoryId) {
+          expensesMap[exp.categoryId] = (expensesMap[exp.categoryId] || 0) + exp.amount;
+        }
+      });
+    return expensesMap;
+  }, [expenses, selectedYear]);
 
   const renderCards = () => (
     <View>
@@ -461,6 +477,62 @@ export default function DashboardScreen() {
             )}
           </View>
         </PremiumCardBackground>
+      )}
+
+      {showYearCard && categoryBudgets.length > 0 && (
+        <View style={{ marginTop: 16 }}>
+          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 12 }}>
+            Category Budgets ({selectedYear})
+          </AppText>
+          {categoryBudgets.map(cat => {
+            const expense = categoryExpenses[cat.id] || 0;
+            const limit = cat.yearlyBudget!;
+            const ratio = limit > 0 ? expense / limit : 0;
+            const totalRatio = yearlyBudget > 0 ? expense / yearlyBudget : 0;
+            const isOver = expense > limit;
+            const isWarning = expense >= limit * 0.8 && !isOver;
+            const barColor = isOver ? '#ff4444' : isWarning ? '#ffbb33' : colors.primary;
+
+            return (
+              <View key={cat.id} style={{ marginBottom: 12 }}>
+                <PremiumCardBackground color={colors.card}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: cat.color, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                      <Ionicons name={cat.icon as any} size={20} color="#fff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <AppText style={{ fontSize: 16, fontWeight: 'bold', color: colors.text }}>{cat.name}</AppText>
+                      <AppText style={{ fontSize: 12, color: colors.textMuted }}>
+                        {yearlyBudget > 0 ? `${(totalRatio * 100).toFixed(1)}% of Total Yearly Budget` : ' '}
+                      </AppText>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <AppText style={{ fontSize: 16, fontWeight: 'bold', color: barColor }}>
+                        {isYearlyHidden ? '••••' : `${currency}${formatAmount(expense)}`}
+                      </AppText>
+                      <AppText style={{ fontSize: 12, color: colors.textMuted }}>
+                        of {currency}{formatAmount(limit)}
+                      </AppText>
+                    </View>
+                  </View>
+                  <View style={{ height: 8, backgroundColor: isDarkTheme ? '#333' : '#e0e0e0', borderRadius: 4, width: '100%', overflow: 'hidden' }}>
+                    <View style={{ height: '100%', backgroundColor: barColor, width: `${Math.min(ratio * 100, 100)}%` }} />
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                    <AppText style={{ fontSize: 12, color: barColor, fontWeight: '600' }}>
+                      {(ratio * 100).toFixed(1)}% Used
+                    </AppText>
+                    {isOver && (
+                      <AppText style={{ fontSize: 12, color: '#ff4444', fontWeight: 'bold' }}>
+                        Over Budget!
+                      </AppText>
+                    )}
+                  </View>
+                </PremiumCardBackground>
+              </View>
+            );
+          })}
+        </View>
       )}
 
       <SingleFilterModal

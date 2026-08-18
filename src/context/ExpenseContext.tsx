@@ -18,6 +18,7 @@ export interface Category {
   name: string;
   icon: string;
   color: string;
+  yearlyBudget?: number;
 }
 
 export interface PaymentMode {
@@ -48,10 +49,11 @@ interface ExpenseContextType {
   bulkDeleteExpenses: (ids: string[]) => Promise<void>;
   reorderExpensesByDate: (dateStr: string, reorderedDayExpenses: Expense[]) => Promise<void>;
   
-  updateMonthlyIncome: (year: number, month: number, amount: number) => Promise<void>;
+  updateMonthlyIncome: (monthYear: string, amount: number) => Promise<void>;
   
   addCategory: (name: string, icon: string, color: string) => Promise<void>;
   updateCategory: (id: string, name: string, icon: string, color: string) => Promise<void>;
+  updateCategoryBudget: (id: string, yearlyBudget: number) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   bulkDeleteCategories: (ids: string[]) => Promise<void>;
 
@@ -117,6 +119,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   updateMonthlyIncome: async () => {},
   addCategory: async () => {},
   updateCategory: async () => {},
+  updateCategoryBudget: async () => {},
   deleteCategory: async () => {},
   bulkDeleteCategories: async () => {},
   addPaymentMode: async () => {},
@@ -490,9 +493,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(storageKey, JSON.stringify(newExpenses));
   };
 
-  const updateMonthlyIncome = async (year: number, month: number, amount: number) => {
-    const key = `${year}-${String(month).padStart(2, '0')}`;
-    const updated = { ...monthlyIncomes, [key]: amount };
+  const updateMonthlyIncome = async (monthYear: string, amount: number) => {
+    const updated = { ...monthlyIncomes, [monthYear]: amount };
     setMonthlyIncomes(updated);
     await AsyncStorage.setItem(monthlyIncomesStorageKey, JSON.stringify(updated));
   };
@@ -505,9 +507,19 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateCategory = async (id: string, name: string, icon: string, color: string) => {
-    const updated = categories.map(cat => cat.id === id ? { ...cat, name, icon, color } : cat).sort((a, b) => a.name.localeCompare(b.name));
-    setCategories(updated);
-    await AsyncStorage.setItem(categoriesStorageKey, JSON.stringify(updated));
+    const updatedCategories = categories.map(cat => 
+      cat.id === id ? { ...cat, name, icon, color } : cat
+    );
+    setCategories(updatedCategories);
+    await AsyncStorage.setItem(categoriesStorageKey, JSON.stringify(updatedCategories));
+  };
+
+  const updateCategoryBudget = async (id: string, yearlyBudget: number) => {
+    const updatedCategories = categories.map(cat => 
+      cat.id === id ? { ...cat, yearlyBudget } : cat
+    );
+    setCategories(updatedCategories);
+    await AsyncStorage.setItem(categoriesStorageKey, JSON.stringify(updatedCategories));
   };
 
   const deleteCategory = async (id: string) => {
@@ -774,7 +786,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       monthlyIncomes,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses, reorderExpensesByDate,
       updateMonthlyIncome,
-      addCategory, updateCategory, deleteCategory, bulkDeleteCategories,
+      addCategory, updateCategory, updateCategoryBudget, deleteCategory, bulkDeleteCategories,
       addPaymentMode, updatePaymentMode, deletePaymentMode, bulkDeletePaymentModes,
       bulkImport,
       updateCurrency, updateBudgets, toggleShowMonthlyBudget, toggleAmountsVisibility, toggleShowYearlyBudget, toggleShowYearCard, updateAnalyticsChartType, updateChartStyle,

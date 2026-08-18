@@ -370,6 +370,17 @@ export default function SettingsScreen({ navigation }: any) {
         <View style={styles.divider} />
         <TouchableOpacity
           style={styles.row}
+          onPress={() => handleNav('CategoryBudgets')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="pie-chart-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Category Budgets</AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity
+          style={styles.row}
           onPress={() => handleNav('PaymentModes')}
         >
           <View style={styles.rowLeft}>
