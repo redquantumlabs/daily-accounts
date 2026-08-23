@@ -304,10 +304,10 @@ export default function AnalyticsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <DownloadProgressModal visible={isDownloading} message="Generating analytics report…" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
 
         {/* Filter Pills */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
+        <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
           {(['This Month', 'Last Month', 'This Year', 'All Time'] as TimeFilter[]).map(filter => (
             <TouchableOpacity
               key={filter}

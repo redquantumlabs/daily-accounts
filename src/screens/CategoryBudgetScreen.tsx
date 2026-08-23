@@ -65,7 +65,7 @@ export default function CategoryBudgetScreen() {
       style={[styles.container, { backgroundColor: colors.background }]} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <AppText style={[styles.title, { color: colors.text }]}>Category Yearly Budgets</AppText>
           <AppText style={styles.subtitle}>

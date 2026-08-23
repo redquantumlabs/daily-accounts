@@ -464,7 +464,7 @@ export default function DashboardScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
         {renderCards()}
         <MonthlySpendingCalendar
           expenses={expenses}

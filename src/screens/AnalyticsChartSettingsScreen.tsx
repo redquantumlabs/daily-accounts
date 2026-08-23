@@ -18,7 +18,7 @@ export default function AnalyticsChartSettingsScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
         <AppText style={[styles.title, { color: colors.text }]}>Select Chart Type</AppText>
         <AppText style={styles.subtitle}>Choose how you want your analytics data to be visualized.</AppText>

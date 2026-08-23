@@ -33,7 +33,7 @@ export default function ColorPickerModal({ visible, onClose, color, onSelect }: 
               </View>
               
               <View style={{ height: 400 }}>
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                   <View style={styles.gridContainer}>
                     {PRESET_COLORS.map(c => (
                       <View key={c} style={styles.gridItem}>

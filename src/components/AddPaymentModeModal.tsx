@@ -129,7 +129,7 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
               {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
 
               <View style={styles.inputWrapper}>

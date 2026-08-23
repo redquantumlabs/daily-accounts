@@ -210,15 +210,13 @@ export default function SettingsScreen({ navigation }: any) {
   const { accounts, excludedFromTotal, toggleAccountInTotal, refreshTransactionData, showCardStats, toggleShowCardStats } = useTransactionContext();
 
   const handleNav = (screen: string) => {
-    requestAnimationFrame(() => {
-      navigation.navigate(screen);
-    });
+    navigation.navigate(screen);
   };
 
 
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.group, { backgroundColor: colors.card }]}>
         <AppText style={[styles.sectionTitle, { color: colors.text }]}>Profile</AppText>
         <TouchableOpacity

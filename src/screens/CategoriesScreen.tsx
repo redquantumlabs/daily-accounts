@@ -74,7 +74,7 @@ export default function CategoriesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
         
         <View style={styles.header}>
           <AppText style={[styles.title, { color: colors.text }]}>Your Categories</AppText>

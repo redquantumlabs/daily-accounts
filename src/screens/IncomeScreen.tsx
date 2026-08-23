@@ -214,7 +214,7 @@ export default function IncomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.yearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.yearScroll}>
+        <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.yearScroll}>
           {(['All', ...years] as (number | 'All')[]).map(year => (
             <TouchableOpacity
               key={year}
@@ -232,7 +232,7 @@ export default function IncomeScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <AppText style={[styles.title, { color: colors.text }]}>
             {selectedYear === 'All' ? 'Yearly Income' : 'Monthly Income'}

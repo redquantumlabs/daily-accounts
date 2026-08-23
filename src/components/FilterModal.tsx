@@ -102,7 +102,7 @@ export default function FilterModal(props: FilterModalProps) {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
 
           {/* Years */}
           {props.availableYears.length > 0 && (

@@ -89,7 +89,7 @@ export default function AccountFilterModal(props: AccountFilterModalProps) {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
 
           {/* Types */}
           <View style={styles.section}>

@@ -33,7 +33,7 @@ export default function IconPickerModal({ visible, onClose, icon, onSelect }: Ic
               </View>
               
               <View style={{ height: 400 }}>
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                   <View style={styles.gridContainer}>
                     {PRESET_ICONS.map(i => (
                       <View key={i} style={styles.gridItem}>

@@ -179,7 +179,7 @@ export default function AddTransactionModal({ visible, onClose, transactionToEdi
             <View style={styles.inputWrapper}>
               <AppText style={styles.label}>Description</AppText>
               <View style={[styles.input, { height: 80, backgroundColor: colors.surface, borderColor: colors.border, paddingHorizontal: 0, overflow: 'hidden' }]}>
-                <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={true}>
+                <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled={true} showsVerticalScrollIndicator={true}>
                   <TextInput
                     style={{ minHeight: 80, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, fontSize: 16, color: colors.text, textAlignVertical: 'top' }}
                     placeholder="Description"
@@ -208,7 +208,7 @@ export default function AddTransactionModal({ visible, onClose, transactionToEdi
             {(!initialAccount && !transactionToEdit) && (
               <View style={styles.inputWrapper}>
                 <AppText style={styles.label}>Account</AppText>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+                <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
                   {accounts.map((acc) => (
                     <TouchableOpacity
                       key={acc}

@@ -129,7 +129,7 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
               {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
 
               <View style={styles.inputWrapper}>

@@ -45,7 +45,7 @@ export default function ProfileScreen({ navigation }: any) {
       style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {generalMessage ? (
           <View style={[styles.messageBox, { backgroundColor: isSuccess ? '#4caf5020' : '#ff444420', borderColor: isSuccess ? '#4caf50' : '#ff4444' }]}>

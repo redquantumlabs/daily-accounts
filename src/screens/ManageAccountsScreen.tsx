@@ -80,7 +80,7 @@ export default function ManageAccountsScreen() {
           message="You haven't added any accounts yet. Click the + button to add one manually!"
         />
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
             <AppText style={[styles.title, { color: colors.text }]}>Your Accounts</AppText>
             <AppText style={styles.subtitle}>Manage your accounts. Adding an account here lets you prepare your dashboard before adding transactions.</AppText>

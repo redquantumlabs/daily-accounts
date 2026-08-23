@@ -169,7 +169,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
             <View style={styles.inputWrapper}>
               <AppText style={styles.label}>Description</AppText>
               <View style={[styles.input, { height: 80, backgroundColor: colors.surface, borderColor: colors.border, paddingHorizontal: 0, overflow: 'hidden' }]}>
-                <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={true}>
+                <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled={true} showsVerticalScrollIndicator={true}>
                   <TextInput
                     style={{ minHeight: 80, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, fontSize: 16, color: colors.text, textAlignVertical: 'top' }}
                     placeholder="Description"
@@ -196,7 +196,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
 
             <View style={styles.inputWrapper}>
               <AppText style={styles.label}>Category</AppText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
                 {categories.map((cat) => (
                   <TouchableOpacity
                     key={cat.id}
@@ -225,7 +225,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
 
             <View style={styles.inputWrapper}>
               <AppText style={styles.label}>Payment Mode</AppText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
                 {paymentModes.map((mode) => (
                   <TouchableOpacity
                     key={mode.id}

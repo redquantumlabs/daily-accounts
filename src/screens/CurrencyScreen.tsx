@@ -30,7 +30,7 @@ export default function CurrencyScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView keyboardShouldPersistTaps="handled" style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
         {CURRENCIES.map((c, index) => {
           const isSelected = currency === c.symbol;

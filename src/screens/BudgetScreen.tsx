@@ -44,7 +44,7 @@ export default function BudgetScreen({ navigation }: any) {
         style={[styles.container, { backgroundColor: colors.background }]} 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
           
           <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
             <AppText style={[styles.title, { color: colors.text }]}>Set Your Budgets</AppText>
