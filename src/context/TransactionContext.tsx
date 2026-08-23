@@ -188,7 +188,8 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const reorderTransactionsByDate = async (dateStr: string, reorderedDayTransactions: AccountTransaction[]) => {
-    const otherTransactions = transactions.filter(t => new Date(t.date).toDateString() !== dateStr);
+    const reorderedIds = new Set(reorderedDayTransactions.map(t => t.id));
+    const otherTransactions = transactions.filter(t => !reorderedIds.has(t.id));
     
     const baseDate = new Date(dateStr);
     
