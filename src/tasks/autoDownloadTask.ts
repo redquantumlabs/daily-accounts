@@ -24,49 +24,46 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
     const currency = (await AsyncStorage.getItem('@app_currency')) || '$';
 
 
-    if (!expensesStr) return;
+    if (expensesStr) {
+      const expenses = JSON.parse(expensesStr);
+      const categories = categoriesStr ? JSON.parse(categoriesStr) : [];
+      const paymentModes = paymentModesStr ? JSON.parse(paymentModesStr) : [];
 
-    const expenses = JSON.parse(expensesStr);
-    const categories = categoriesStr ? JSON.parse(categoriesStr) : [];
-    const paymentModes = paymentModesStr ? JSON.parse(paymentModesStr) : [];
+      // Extract unique years
+      const uniqueYears = Array.from(new Set(expenses.map((exp: any) => parseISOYear(exp.date)))).sort((a: any, b: any) => (b as number) - (a as number));
 
-    // Extract unique years
-    const uniqueYears = Array.from(new Set(expenses.map((exp: any) => parseISOYear(exp.date)))).sort((a: any, b: any) => (b as number) - (a as number));
+      if (uniqueYears.length > 0) {
+        for (const year of uniqueYears) {
+          const yearExpenses = expenses.filter((exp: any) => parseISOYear(exp.date) === year);
 
-    if (uniqueYears.length === 0) {
-      isPerformingAutoDownload = false;
-      return;
-    }
+          // 1. Generate Expense Report (Dashboard) for this specific year
+          const expenseHtml = generateDashboardPDFHTML(yearExpenses, categories, paymentModes, currency);
+          const fileName = `Account - ${year}`;
+          const expenseOptions = {
+            html: expenseHtml,
+            fileName: fileName + `_${new Date().getTime()}`, // temp internal name
+            directory: 'Documents',
+            base64: true
+          };
 
-    for (const year of uniqueYears) {
-      const yearExpenses = expenses.filter((exp: any) => parseISOYear(exp.date) === year);
+          const expenseFile = await generatePDF(expenseOptions);
 
-      // 1. Generate Expense Report (Dashboard) for this specific year
-      const expenseHtml = generateDashboardPDFHTML(yearExpenses, categories, paymentModes, currency);
-      const fileName = `Account - ${year}`;
-      const expenseOptions = {
-        html: expenseHtml,
-        fileName: fileName + `_${new Date().getTime()}`, // temp internal name
-        directory: 'Documents',
-        base64: true
-      };
+          if (expenseFile.base64) {
+            const fullFileName = `${fileName}.pdf`;
+            const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
 
-      const expenseFile = await generatePDF(expenseOptions);
+            // Overwrite if exists
+            const fileExists = await SAF.exists(fileUriString);
+            if (fileExists) {
+              await SAF.unlink(fileUriString);
+            }
 
-      if (expenseFile.base64) {
-        const fullFileName = `${fileName}.pdf`;
-        const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
-
-        // Overwrite if exists
-        const fileExists = await SAF.exists(fileUriString);
-        if (fileExists) {
-          await SAF.unlink(fileUriString);
+            const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
+              mimeType: 'application/pdf'
+            });
+            await SAF.writeFile(fileUri.uri, expenseFile.base64, { encoding: 'base64' });
+          }
         }
-
-        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
-          mimeType: 'application/pdf'
-        });
-        await SAF.writeFile(fileUri.uri, expenseFile.base64, { encoding: 'base64' });
       }
     }
 
@@ -88,7 +85,7 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
         if (idxA !== -1 && idxB !== -1) return idxA - idxB;
         if (idxA !== -1) return -1;
         if (idxB !== -1) return 1;
-        return a.localeCompare(b);
+        return (a || '').localeCompare(b || '');
       });
 
       const accountGroups = accountsList.map((acc: string) => ({
