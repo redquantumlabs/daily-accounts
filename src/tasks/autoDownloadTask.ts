@@ -6,6 +6,18 @@ import { generateDashboardPDFHTML, generateAccountTransactionsPDFHTML } from '..
 import { generatePDF } from 'react-native-html-to-pdf';
 import { parseISOYear } from '../utils/dateUtils';
 
+const generatePDFWithTimeout = (options: any, timeoutMs: number = 15000): Promise<any> => {
+  let timeoutHandle: any;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutHandle = setTimeout(() => reject(new Error('PDF generation timed out')), timeoutMs);
+  });
+  return Promise.race([generatePDF(options), timeoutPromise]).finally(() => {
+    clearTimeout(timeoutHandle);
+  });
+};
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 let isPerformingAutoDownload = false;
 
 export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') => {
@@ -46,7 +58,7 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
             base64: true
           };
 
-          const expenseFile = await generatePDF(expenseOptions);
+          const expenseFile = await generatePDFWithTimeout(expenseOptions);
 
           if (expenseFile.base64) {
             const fullFileName = `${fileName}.pdf`;
@@ -104,7 +116,9 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
           base64: true
         };
 
-        const accFile = await generatePDF(accOptions);
+        // Add a small delay to allow the WebView to clean up from previous generation
+        await delay(1000);
+        const accFile = await generatePDFWithTimeout(accOptions);
 
         if (accFile.base64) {
           const fullFileName = `${fileName}.pdf`;
