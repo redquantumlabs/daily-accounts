@@ -104,7 +104,7 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            applicationIdSuffix ".debug"
+            applicationIdSuffix ".dev"
             manifestPlaceholders = [appName: "Daily Accounts Dev"]
         }
         release {
