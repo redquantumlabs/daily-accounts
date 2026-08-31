@@ -11,7 +11,6 @@ import CurrencyScreen from '../screens/CurrencyScreen';
 import BudgetScreen from '../screens/BudgetScreen';
 import IncomeScreen from '../screens/IncomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
-import CategoryBudgetScreen from '../screens/CategoryBudgetScreen';
 import PaymentModesScreen from '../screens/PaymentModesScreen';
 import ManageAccountsScreen from '../screens/ManageAccountsScreen';
 import AnalyticsChartSettingsScreen from '../screens/AnalyticsChartSettingsScreen';
@@ -100,18 +99,6 @@ export default function SettingsStack() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: Platform.OS === 'android' ? -20 : 0 }}>
               <Ionicons name="pricetag" size={22} color={colors.text} style={{ marginRight: 8 }} />
               <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>Manage Categories</AppText>
-            </View>
-          )
-        }}
-      />
-      <Stack.Screen
-        name="CategoryBudgets"
-        component={CategoryBudgetScreen}
-        options={{
-          headerTitle: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: Platform.OS === 'android' ? -20 : 0 }}>
-              <Ionicons name="pie-chart" size={22} color={colors.text} style={{ marginRight: 8 }} />
-              <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>Category Budgets</AppText>
             </View>
           )
         }}
