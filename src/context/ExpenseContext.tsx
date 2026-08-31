@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthContext } from './AuthContext';
 import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
 import { scheduleAllNotifications } from '../utils/notificationScheduler';
+import { roundAmount } from '../utils/format';
 
 export interface Expense {
   id: string;
@@ -425,7 +426,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
     const newExpense: Expense = {
       id: Date.now().toString(),
-      amount,
+      amount: roundAmount(amount),
       description,
       date: date.toISOString(),
       categoryId,
@@ -442,7 +443,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateExpense = async (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
     const updatedExpenses = expenses.map(exp => 
       exp.id === id 
-        ? { ...exp, amount, description, date: date.toISOString(), categoryId, paymentModeId } 
+        ? { ...exp, amount: roundAmount(amount), description, date: date.toISOString(), categoryId, paymentModeId } 
         : exp
     );
     
@@ -491,7 +492,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateMonthlyIncome = async (monthYear: string, amount: number) => {
-    const updated = { ...monthlyIncomes, [monthYear]: amount };
+    const updated = { ...monthlyIncomes, [monthYear]: roundAmount(amount) };
     setMonthlyIncomes(updated);
     await AsyncStorage.setItem(monthlyIncomesStorageKey, JSON.stringify(updated));
   };
@@ -603,9 +604,9 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateBudgets = async (monthly: number, yearly: number) => {
-    setMonthlyBudget(monthly);
-    setYearlyBudget(yearly);
-    await AsyncStorage.setItem(budgetStorageKey, JSON.stringify({ monthly, yearly }));
+    setMonthlyBudget(roundAmount(monthly));
+    setYearlyBudget(roundAmount(yearly));
+    await AsyncStorage.setItem(budgetStorageKey, JSON.stringify({ monthly: roundAmount(monthly), yearly: roundAmount(yearly) }));
   };
 
   const toggleShowMonthlyBudget = async (val: boolean) => {
