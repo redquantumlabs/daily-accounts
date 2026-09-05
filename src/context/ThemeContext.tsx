@@ -19,15 +19,15 @@ export const ACCENT_COLORS = [
   '#F59E0B', // Amber Orange
   '#14B8A6', // Teal
   '#EAB308', // Yellow
-  '#64748B', // Slate Grey
+  '#64848B', // Slate Grey
   '#84CC16', // Lime Green
   '#8B4513', // Brown
   '#0EA5E9', // Sky Blue
   '#34D399', // Mint
-  '#F97316', // Orange
+  '#F98316', // Orange
   '#EF4444', // Red
   '#A8A29E', // Warm Gray
-  '#0F172A', // Slate Dark
+  '#0F182A', // Slate Dark
 ];
 
 const ThemeContext = createContext<ThemeContextType>({
