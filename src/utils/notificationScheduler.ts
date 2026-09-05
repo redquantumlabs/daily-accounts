@@ -164,7 +164,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const currentMonthName = monthNames[now.getMonth()];
 
-    const triggerMonthly: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: nextMonthDate.getTime(), alarmManager: { allowWhileIdle: true } };
+    const triggerMonthly: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: nextMonthDate.getTime() + 5000, alarmManager: { allowWhileIdle: true } };
     promises.push(
       notifee.createTriggerNotification({
         id: `${MONTHLY_PREFIX}_${RUN_ID}`,
