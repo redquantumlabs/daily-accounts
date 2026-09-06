@@ -78,7 +78,11 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
           <AppText style={{ fontSize: 10, color: isToday ? '#FFF' : 'rgba(255,255,255,0.8)', position: 'absolute', top: 2, left: 4, fontWeight: isToday ? 'bold' : 'normal' }}>
             {day}
           </AppText>
-          {(!isFutureDay || total > 0) && (
+          {isFutureDay && total === 0 ? (
+            <View style={{ marginTop: 8, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+              <Ionicons name="lock-closed-outline" size={12} color="rgba(255,255,255,0.5)" />
+            </View>
+          ) : (
             <View style={{ marginTop: 8, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
               <AppText style={{ fontSize: 9, color: total > 0 ? colors.notification : '#FFF', fontWeight: total > 0 ? 'bold' : 'normal', textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
                 {isCalendarHidden ? '•••' : formatCompact(total)}
