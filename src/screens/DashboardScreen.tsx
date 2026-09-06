@@ -132,7 +132,7 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
   );
 };
 
-const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, isCalendarHidden, setIsCalendarHidden }: any) => {
+const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, onPrevYear, onNextYear, isCalendarHidden, setIsCalendarHidden }: any) => {
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   
   const today = new Date();
@@ -209,8 +209,16 @@ const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, 
           </TouchableOpacity>
         </View>
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-        {gridCells}
+      <View style={{ position: 'relative' }}>
+        <TouchableOpacity style={{ position: 'absolute', top: -4, left: -4, padding: 4, zIndex: 10 }} onPress={onPrevYear}>
+          <Ionicons name="chevron-back" size={16} color="#FFF" />
+        </TouchableOpacity>
+        <TouchableOpacity style={{ position: 'absolute', top: -4, right: -4, padding: 4, zIndex: 10 }} onPress={onNextYear}>
+          <Ionicons name="chevron-forward" size={16} color="#FFF" />
+        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 24 }}>
+          {gridCells}
+        </View>
       </View>
     </PremiumCardBackground>
   );
@@ -561,6 +569,14 @@ export default function DashboardScreen() {
     }
   };
 
+  const handlePrevYear = () => {
+    setSelectedYear(selectedYear - 1);
+  };
+
+  const handleNextYear = () => {
+    setSelectedYear(selectedYear + 1);
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
@@ -584,6 +600,8 @@ export default function DashboardScreen() {
           selectedYear={selectedYear}
           colors={colors}
           onMonthPress={handleMonthPress}
+          onPrevYear={handlePrevYear}
+          onNextYear={handleNextYear}
           isCalendarHidden={isYearlyHidden}
           setIsCalendarHidden={setIsYearlyHidden}
         />
