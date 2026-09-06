@@ -1,4 +1,4 @@
-export interface BankStyle {
+export interface CustomCardStyle {
   colors: string[] | null;
   icon: {
     type: 'icon' | 'image';
@@ -6,7 +6,7 @@ export interface BankStyle {
   };
 }
 
-export const getBankStyle = (accountName: string, defaultColor: string): BankStyle => {
+export const getCustomCardStyle = (accountName: string, defaultColor: string): CustomCardStyle => {
   const name = accountName.toLowerCase();
 
   // HDFC Bank
@@ -20,7 +20,7 @@ export const getBankStyle = (accountName: string, defaultColor: string): BankSty
     };
   }
 
-  // Add more banks here in the future
+  // Add more custom cards here in the future
 
   // Default configuration
   return {

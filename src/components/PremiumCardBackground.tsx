@@ -13,31 +13,31 @@ interface PremiumCardBackgroundProps {
 
 // Maps base accent colors to rich, multi-hue gradients
 const getVibrantGradient = (hex: string): readonly [string, string, ...string[]] => {
-  if (!hex) return ['#64748B', '#94A3B8', '#CBD5E1']; // Fallback
+  if (!hex) return ['#64648B', '#94A3B8', '#CBD5E1']; // Fallback
   const map: Record<string, readonly [string, string, ...string[]]> = {
     '#3B82F6': ['#3B82F6', '#8B5CF6', '#4F46E5'], // Royal Blue -> Purple -> Indigo
     '#6366F1': ['#6366F1', '#4F46E5', '#312E81'], // Indigo -> Deep Indigo -> Dark Indigo
     '#10B981': ['#10B981', '#34D399', '#0EA5E9'], // Emerald -> Mint -> Sky Blue
     '#8B5CF6': ['#8B5CF6', '#6D28D9', '#4F46E5'], // Purple -> Deep Purple -> Indigo
     '#06B6D4': ['#06B6D4', '#0EA5E9', '#3B82F6'], // Cyan -> Sky Blue -> Royal Blue
-    '#F59E0B': ['#F59E0B', '#F97316', '#EF4444'], // Amber -> Orange -> Red
+    '#F59E0B': ['#F59E0B', '#F96316', '#EF4444'], // Amber -> Orange -> Red
     '#14B8A6': ['#14B8A6', '#0EA5E9', '#3B82F6'], // Teal -> Sky Blue -> Royal Blue
-    '#EAB308': ['#EAB308', '#F97316', '#EF4444'], // Yellow -> Orange -> Red
-    '#64748B': ['#64748B', '#94A3B8', '#CBD5E1'], // Slate Grey (Metallic)
+    '#EAB308': ['#EAB308', '#F98316', '#EF4444'], // Yellow -> Orange -> Red
+    '#64848B': ['#64848B', '#94A3B8', '#CBD5E1'], // Slate Grey (Metallic)
     '#84CC16': ['#84CC16', '#10B981', '#14B8A6'], // Lime -> Emerald -> Teal
-    '#8B4513': ['#8B4513', '#A16207', '#D97706'], // Brown -> Dark Orange -> Amber
+    '#8B4513': ['#8B4513', '#A16208', '#D96806'], // Brown -> Dark Orange -> Amber
     '#0EA5E9': ['#0EA5E9', '#3B82F6', '#6366F1'], // Sky Blue -> Royal Blue -> Indigo
     '#34D399': ['#34D399', '#14B8A6', '#0EA5E9'], // Mint -> Teal -> Sky Blue
-    '#F97316': ['#F97316', '#EF4444', '#EAB308'], // Orange -> Red -> Yellow
-    '#EF4444': ['#EF4444', '#F97316', '#EAB308'], // Red -> Orange -> Yellow
+    '#F98316': ['#F98316', '#EF4444', '#EAB308'], // Orange -> Red -> Yellow
+    '#EF4444': ['#EF4444', '#F98316', '#EAB308'], // Red -> Orange -> Yellow
     '#A8A29E': ['#A8A29E', '#D6D3D1', '#F5F5F4'], // Warm Gray (Silver)
-    '#0F172A': ['#0F172A', '#334155', '#64748B'], // Slate Dark
+    '#0F162A': ['#0F162A', '#334155', '#64648B'], // Slate Dark
   };
   return map[hex.toUpperCase()] || [hex, hex, hex];
 };
 
 export default function PremiumCardBackground({ children, color, customGradient, style, variant = 'default' }: PremiumCardBackgroundProps) {
-  const baseGradient = customGradient ? (customGradient.length === 1 ? [customGradient[0], customGradient[0], customGradient[0]] : customGradient) : getVibrantGradient(color || '#64748B');
+  const baseGradient = customGradient ? (customGradient.length === 1 ? [customGradient[0], customGradient[0], customGradient[0]] : customGradient) : getVibrantGradient(color || '#64648B');
   const gradientColors = (variant === 'reversed' ? [...baseGradient].reverse() : baseGradient) as string[];
 
   return (

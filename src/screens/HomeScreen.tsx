@@ -18,11 +18,13 @@ import notifee from '@notifee/react-native';
 import { Platform } from 'react-native';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
-import { getBankStyle } from '../utils/bankStyles';
+import { getCustomCardStyle } from '../utils/customCardStyles';
+import { useThemeContext } from '../context/ThemeContext';
 
 export default function HomeScreen({ navigation }: any) {
   const { showAlert } = useAlert();
   const colors = useThemeColors();
+  const { useCustomCardUI } = useThemeContext();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats, transactions } = useTransactionContext();
@@ -208,7 +210,7 @@ export default function HomeScreen({ navigation }: any) {
 
   const renderItem = ({ item: acc, drag, isActive }: RenderItemParams<string>) => {
     const stats = getAccountStats(acc);
-    const bankStyle = getBankStyle(acc, colors.primary);
+    const customCardStyle = getCustomCardStyle(useCustomCardUI ? acc : '', colors.primary);
     return (
       <ScaleDecorator>
         <TouchableOpacity
@@ -223,15 +225,15 @@ export default function HomeScreen({ navigation }: any) {
           onLongPress={drag}
           activeOpacity={0.8}
         >
-          <PremiumCardBackground color={colors.primary} customGradient={bankStyle.colors || undefined}>
+          <PremiumCardBackground color={colors.primary} customGradient={customCardStyle.colors || undefined}>
             <View style={styles.cardHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                {bankStyle.icon.type === 'image' ? (
+                {customCardStyle.icon.type === 'image' ? (
                   <View style={{ width: 28, height: 28, marginRight: 8, borderRadius: 14, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-                    <Image source={typeof bankStyle.icon.source === 'string' ? { uri: bankStyle.icon.source } : bankStyle.icon.source} style={{ width: 20, height: 20 }} resizeMode="contain" />
+                    <Image source={typeof customCardStyle.icon.source === 'string' ? { uri: customCardStyle.icon.source } : customCardStyle.icon.source} style={{ width: 20, height: 20 }} resizeMode="contain" />
                   </View>
                 ) : (
-                  <Ionicons name={bankStyle.icon.source} size={24} color="#fff" style={{ marginRight: 8 }} />
+                  <Ionicons name={customCardStyle.icon.source} size={24} color="#fff" style={{ marginRight: 8 }} />
                 )}
                 <AppText style={[styles.cardTitle, { color: '#fff' }]}>{acc}</AppText>
               </View>

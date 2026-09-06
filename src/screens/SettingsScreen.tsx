@@ -21,7 +21,7 @@ import { useAlert } from '../context/AlertContext';
 export default function SettingsScreen({ navigation }: any) {
   const { showAlert } = useAlert();
   const colors = useThemeColors();
-  const { isDarkTheme, toggleTheme, refreshTheme, accentColor, setAccentColor } = useThemeContext();
+  const { isDarkTheme, toggleTheme, refreshTheme, accentColor, setAccentColor, useCustomCardUI, toggleCustomCardUI } = useThemeContext();
   const { profileName, refreshAuth } = useAuthContext();
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isImportTxModalVisible, setIsImportTxModalVisible] = useState(false);
@@ -245,6 +245,21 @@ export default function SettingsScreen({ navigation }: any) {
             thumbColor={isDarkTheme ? '#ffffff' : '#f4f3f4'}
             onValueChange={toggleTheme}
             value={isDarkTheme}
+          />
+        </View>
+
+        <View style={styles.divider} />
+        
+        <View style={styles.row}>
+          <View style={styles.rowLeft}>
+            <Ionicons name="card-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Custom Card UI</AppText>
+          </View>
+          <Switch
+            trackColor={{ false: '#767577', true: colors.primary }}
+            thumbColor={useCustomCardUI ? '#ffffff' : '#f4f3f4'}
+            onValueChange={toggleCustomCardUI}
+            value={useCustomCardUI}
           />
         </View>
 

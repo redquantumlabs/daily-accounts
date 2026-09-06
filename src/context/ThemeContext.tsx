@@ -8,6 +8,8 @@ interface ThemeContextType {
   toggleTheme: () => void;
   setAccentColor: (color: string) => Promise<void>;
   refreshTheme: () => Promise<void>;
+  useCustomCardUI: boolean;
+  toggleCustomCardUI: () => Promise<void>;
 }
 
 export const ACCENT_COLORS = [
@@ -36,12 +38,15 @@ const ThemeContext = createContext<ThemeContextType>({
   toggleTheme: () => { },
   setAccentColor: async () => { },
   refreshTheme: async () => { },
+  useCustomCardUI: true,
+  toggleCustomCardUI: async () => { },
 });
 
 export const useThemeContext = () => useContext(ThemeContext);
 
 const THEME_KEY = '@app_theme_is_dark';
 const ACCENT_KEY = '@app_theme_accent_color';
+const CUSTOM_CARD_UI_KEY = '@app_theme_custom_card_ui';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
@@ -50,6 +55,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [isDarkTheme, setIsDarkTheme] = useState(systemColorScheme === 'dark' || systemColorScheme == null);
   const [accentColor, setAccentColorState] = useState(ACCENT_COLORS[0]);
+  const [useCustomCardUI, setUseCustomCardUI] = useState(true);
   const [isReady, setIsReady] = useState(false);
 
   const loadTheme = async () => {
@@ -69,6 +75,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } else {
         setAccentColorState(ACCENT_COLORS[0]);
         await AsyncStorage.setItem(accentKey, ACCENT_COLORS[0]);
+      }
+
+      const storedCustomCardUI = await AsyncStorage.getItem(CUSTOM_CARD_UI_KEY);
+      if (storedCustomCardUI !== null) {
+        setUseCustomCardUI(JSON.parse(storedCustomCardUI));
+      } else {
+        setUseCustomCardUI(true);
+        await AsyncStorage.setItem(CUSTOM_CARD_UI_KEY, JSON.stringify(true));
       }
     } catch (e) {
       console.error('Failed to load theme.', e);
@@ -92,10 +106,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await AsyncStorage.setItem(accentKey, color);
   };
 
+  const toggleCustomCardUI = async () => {
+    const newVal = !useCustomCardUI;
+    setUseCustomCardUI(newVal);
+    await AsyncStorage.setItem(CUSTOM_CARD_UI_KEY, JSON.stringify(newVal));
+  };
+
   if (!isReady) return null;
 
   return (
-    <ThemeContext.Provider value={{ isDarkTheme, accentColor, toggleTheme, setAccentColor, refreshTheme: loadTheme }}>
+    <ThemeContext.Provider value={{ isDarkTheme, accentColor, toggleTheme, setAccentColor, refreshTheme: loadTheme, useCustomCardUI, toggleCustomCardUI }}>
       {children}
     </ThemeContext.Provider>
   );
