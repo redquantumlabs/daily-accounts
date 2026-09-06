@@ -10,6 +10,7 @@ import PremiumCardBackground from '../components/PremiumCardBackground';
 import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
 import SingleFilterModal from '../components/SingleFilterModal';
 import DayExpensesModal from '../components/DayExpensesModal';
+import MonthExpensesModal from '../components/MonthExpensesModal';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const formatCompact = (num: number) => {
@@ -131,6 +132,90 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
   );
 };
 
+const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, isCalendarHidden, setIsCalendarHidden }: any) => {
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYearVal = today.getFullYear();
+
+  const monthTotals = useMemo(() => {
+    const totals: Record<number, number> = {};
+    expenses.forEach((e: any) => {
+      const d = new Date(e.date);
+      if (d.getFullYear() === selectedYear) {
+        const m = d.getMonth();
+        totals[m] = (totals[m] || 0) + e.amount;
+      }
+    });
+    return totals;
+  }, [expenses, selectedYear]);
+
+  const gridCells = [];
+
+  for (let m = 0; m < 12; m++) {
+    const total = monthTotals[m] || 0;
+    
+    const isFutureMonth = selectedYear > currentYearVal || (selectedYear === currentYearVal && m > currentMonth);
+    const isCurrentMonth = selectedYear === currentYearVal && m === currentMonth;
+
+    gridCells.push(
+      <TouchableOpacity
+        key={`month-${m}`}
+        style={{ width: '25%', aspectRatio: 1.5, padding: 4 }}
+        onPress={() => onMonthPress && onMonthPress(m, selectedYear, total)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: isCurrentMonth ? 'rgba(255,255,255,0.2)' : 'transparent',
+          borderRadius: 8,
+          padding: 4,
+          borderWidth: 1,
+          borderColor: isCurrentMonth ? '#FFF' : 'rgba(255,255,255,0.2)',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <AppText style={{ fontSize: 12, color: isCurrentMonth ? '#FFF' : 'rgba(255,255,255,0.8)', fontWeight: isCurrentMonth ? 'bold' : 'normal', marginBottom: 4 }}>
+            {MONTHS[m]}
+          </AppText>
+          {isFutureMonth && total === 0 ? (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="lock-closed-outline" size={14} color="rgba(255,255,255,0.5)" />
+            </View>
+          ) : (
+            <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+              <AppText style={{ fontSize: 10, color: total > 0 ? colors.notification : '#FFF', fontWeight: total > 0 ? 'bold' : 'normal', textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                {isCalendarHidden ? '•••' : formatCompact(total)}
+              </AppText>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <PremiumCardBackground color={colors.primary}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
+        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
+          Monthly Spending
+        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
+            {selectedYear}
+          </AppText>
+          <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        {gridCells}
+      </View>
+    </PremiumCardBackground>
+  );
+};
+
 export default function DashboardScreen() {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
@@ -147,6 +232,9 @@ export default function DashboardScreen() {
 
   const [selectedDayDate, setSelectedDayDate] = useState<string | null>(null);
   const [isDayModalVisible, setIsDayModalVisible] = useState(false);
+
+  const [selectedMonthForModal, setSelectedMonthForModal] = useState<number | null>(null);
+  const [isMonthModalVisible, setIsMonthModalVisible] = useState(false);
 
   const [isMonthlyHidden, setIsMonthlyHidden] = React.useState(!isAmountsVisible);
   const [isYearlyHidden, setIsYearlyHidden] = React.useState(!isAmountsVisible);
@@ -464,6 +552,15 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleMonthPress = (month: number, year: number, total: number) => {
+    if (total > 0) {
+      setSelectedMonthForModal(month);
+      setIsMonthModalVisible(true);
+    } else {
+      showToast('No transaction found.');
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
@@ -479,7 +576,17 @@ export default function DashboardScreen() {
           isCalendarHidden={isCalendarHidden}
           setIsCalendarHidden={setIsCalendarHidden}
         />
+        
+        <View style={{ height: 16 }} />
 
+        <YearlySpendingCalendar
+          expenses={expenses}
+          selectedYear={selectedYear}
+          colors={colors}
+          onMonthPress={handleMonthPress}
+          isCalendarHidden={isYearlyHidden}
+          setIsCalendarHidden={setIsYearlyHidden}
+        />
 
       </ScrollView>
 
@@ -504,6 +611,14 @@ export default function DashboardScreen() {
         onClose={() => setIsDayModalVisible(false)}
         selectedDate={selectedDayDate}
         isHidden={isCalendarHidden}
+      />
+
+      <MonthExpensesModal
+        visible={isMonthModalVisible}
+        onClose={() => setIsMonthModalVisible(false)}
+        selectedMonth={selectedMonthForModal}
+        selectedYear={selectedYear}
+        isHidden={isYearlyHidden}
       />
     </View>
   );
