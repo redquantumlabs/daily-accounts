@@ -5,13 +5,15 @@ import Svg, { Path } from 'react-native-svg';
 
 interface PremiumCardBackgroundProps {
   children: React.ReactNode;
-  color: string;
+  color?: string;
+  customGradient?: string[];
   style?: StyleProp<ViewStyle>;
   variant?: 'default' | 'reversed';
 }
 
 // Maps base accent colors to rich, multi-hue gradients
 const getVibrantGradient = (hex: string): readonly [string, string, ...string[]] => {
+  if (!hex) return ['#64748B', '#94A3B8', '#CBD5E1']; // Fallback
   const map: Record<string, readonly [string, string, ...string[]]> = {
     '#3B82F6': ['#3B82F6', '#8B5CF6', '#4F46E5'], // Royal Blue -> Purple -> Indigo
     '#6366F1': ['#6366F1', '#4F46E5', '#312E81'], // Indigo -> Deep Indigo -> Dark Indigo
@@ -34,8 +36,8 @@ const getVibrantGradient = (hex: string): readonly [string, string, ...string[]]
   return map[hex.toUpperCase()] || [hex, hex, hex];
 };
 
-export default function PremiumCardBackground({ children, color, style, variant = 'default' }: PremiumCardBackgroundProps) {
-  const baseGradient = getVibrantGradient(color);
+export default function PremiumCardBackground({ children, color, customGradient, style, variant = 'default' }: PremiumCardBackgroundProps) {
+  const baseGradient = customGradient ? (customGradient.length === 1 ? [customGradient[0], customGradient[0], customGradient[0]] : customGradient) : getVibrantGradient(color || '#64748B');
   const gradientColors = (variant === 'reversed' ? [...baseGradient].reverse() : baseGradient) as string[];
 
   return (

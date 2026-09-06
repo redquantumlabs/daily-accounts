@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import AppText from '../components/AppText';
 import { useTransactionContext } from '../context/TransactionContext';
@@ -18,6 +18,7 @@ import notifee from '@notifee/react-native';
 import { Platform } from 'react-native';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
+import { getBankStyle } from '../utils/bankStyles';
 
 export default function HomeScreen({ navigation }: any) {
   const { showAlert } = useAlert();
@@ -207,6 +208,7 @@ export default function HomeScreen({ navigation }: any) {
 
   const renderItem = ({ item: acc, drag, isActive }: RenderItemParams<string>) => {
     const stats = getAccountStats(acc);
+    const bankStyle = getBankStyle(acc, colors.primary);
     return (
       <ScaleDecorator>
         <TouchableOpacity
@@ -221,10 +223,16 @@ export default function HomeScreen({ navigation }: any) {
           onLongPress={drag}
           activeOpacity={0.8}
         >
-          <PremiumCardBackground color={colors.primary}>
+          <PremiumCardBackground color={colors.primary} customGradient={bankStyle.colors || undefined}>
             <View style={styles.cardHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Ionicons name="card" size={24} color="#fff" style={{ marginRight: 8 }} />
+                {bankStyle.icon.type === 'image' ? (
+                  <View style={{ width: 28, height: 28, marginRight: 8, borderRadius: 14, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+                    <Image source={typeof bankStyle.icon.source === 'string' ? { uri: bankStyle.icon.source } : bankStyle.icon.source} style={{ width: 20, height: 20 }} resizeMode="contain" />
+                  </View>
+                ) : (
+                  <Ionicons name={bankStyle.icon.source} size={24} color="#fff" style={{ marginRight: 8 }} />
+                )}
                 <AppText style={[styles.cardTitle, { color: '#fff' }]}>{acc}</AppText>
               </View>
 
