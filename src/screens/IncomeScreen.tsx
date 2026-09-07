@@ -169,7 +169,7 @@ export default function IncomeScreen() {
     const amountStr = incomeInput.trim();
     if (!amountStr) {
       // If empty, save as 0
-      const monthYearKey = `${selectedYear}-${String(selectedMonth.monthIndex + 1).padStart(2, '0')}`;
+      const monthYearKey = `${selectedYear}-${String(selectedMonth.monthIndex).padStart(2, '0')}`;
       await updateMonthlyIncome(monthYearKey, 0);
       setIsModalVisible(false);
       return;
@@ -181,7 +181,7 @@ export default function IncomeScreen() {
       return;
     }
 
-    const monthYearKey = `${selectedYear}-${String(selectedMonth.monthIndex + 1).padStart(2, '0')}`;
+    const monthYearKey = `${selectedYear}-${String(selectedMonth.monthIndex).padStart(2, '0')}`;
     await updateMonthlyIncome(monthYearKey, amount);
     setIsModalVisible(false);
   };
