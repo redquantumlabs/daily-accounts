@@ -28,7 +28,7 @@ export default function IncomeScreen() {
   const [selectedYear, setSelectedYear] = useState<number | 'All'>(currentYear);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<{ monthIndex: number; monthName: string } | null>(null);
-  
+
   const [isSummaryHidden, setIsSummaryHidden] = React.useState(!isAmountsVisible);
   const [hiddenItems, setHiddenItems] = React.useState<Record<string, boolean>>({});
 
@@ -38,7 +38,7 @@ export default function IncomeScreen() {
       return { ...prev, [key]: !current };
     });
   };
-  
+
   const [incomeInput, setIncomeInput] = useState('');
   const [error, setError] = useState('');
 
@@ -193,10 +193,10 @@ export default function IncomeScreen() {
       <View style={{ marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
           <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>
-            EXPENSE {expensePercent.toFixed(2)}%
+            EXPENSE {String(expensePercent.toFixed(2)).padStart(5, '0')}%
           </AppText>
           <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>
-            AVAILABLE BALANCE {availablePercent.toFixed(2)}%
+            AVAILABLE BALANCE {String(availablePercent.toFixed(2)).padStart(5, '0')}%
           </AppText>
         </View>
         <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 4, flexDirection: 'row', overflow: 'hidden' }}>
@@ -251,7 +251,7 @@ export default function IncomeScreen() {
                 <AppText style={{ fontSize: 16, color: '#FFF', fontWeight: 'bold' }}>
                   Overall Overview
                 </AppText>
-                <TouchableOpacity onPress={() => setIsSummaryHidden(!isSummaryHidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                <TouchableOpacity onPress={() => setIsSummaryHidden(!isSummaryHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                   <Ionicons name={isSummaryHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
                 </TouchableOpacity>
               </View>
@@ -259,23 +259,23 @@ export default function IncomeScreen() {
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Total Income</AppText>
                   <AppText style={[styles.statValue, { color: overallTotals.income === 0 ? '#FFF' : '#00C851' }]}>
-                    {isSummaryHidden ? '••••' : `+${currency}${formatAmount(overallTotals.income)}`}
+                    {isSummaryHidden ? '••••' : `+${currency}${String(formatAmount(overallTotals.income)).padStart(5, '0')}`}
                   </AppText>
                 </View>
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Total Expense</AppText>
                   <AppText style={[styles.statValue, { color: overallTotals.expense === 0 ? '#FFF' : '#ff4444' }]}>
-                    {isSummaryHidden ? '••••' : `-${currency}${formatAmount(overallTotals.expense)}`}
+                    {isSummaryHidden ? '••••' : `-${currency}${String(formatAmount(overallTotals.expense)).padStart(5, '0')}`}
                   </AppText>
                 </View>
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Available Balance</AppText>
                   <AppText style={[styles.statValue, { color: overallTotals.balance === 0 ? '#FFF' : (overallTotals.balance > 0 ? '#00C851' : '#ff4444') }]}>
-                    {isSummaryHidden ? '••••' : `${overallTotals.balance === 0 ? '' : (overallTotals.balance > 0 ? '+' : '-')}${currency}${formatAmount(Math.abs(overallTotals.balance))}`}
+                    {isSummaryHidden ? '••••' : `${overallTotals.balance === 0 ? '' : (overallTotals.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(overallTotals.balance))).padStart(5, '0')}`}
                   </AppText>
                 </View>
               </View>
-              {renderProgressBar(overallTotals.income, overallTotals.expense, overallTotals.balance, `Yearly Avg: ${currency}${formatAmount(overallTotals.yearlyAverage)}`)}
+              {renderProgressBar(overallTotals.income, overallTotals.expense, overallTotals.balance, `Yearly Avg: ${currency}${String(formatAmount(overallTotals.yearlyAverage)).padStart(5, '0')}`)}
             </PremiumCardBackground>
 
             <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
@@ -292,7 +292,7 @@ export default function IncomeScreen() {
                         <AppText style={[styles.monthName, { color: '#FFF' }]}>{stat.year} Overview</AppText>
                         <Ionicons name="chevron-forward" size={18} color="#FFF" style={{ marginLeft: 4 }} />
                       </View>
-                      <TouchableOpacity onPress={() => toggleHiddenItem(`year-${stat.year}`)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                      <TouchableOpacity onPress={() => toggleHiddenItem(`year-${stat.year}`)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                         <Ionicons name={(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
                       </TouchableOpacity>
                     </View>
@@ -301,14 +301,14 @@ export default function IncomeScreen() {
                       <View style={styles.statColumn}>
                         <AppText style={styles.statLabelWhite}>Total Income</AppText>
                         <AppText style={[styles.statValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
-                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `+${currency}${formatAmount(stat.income)}`}
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
                         </AppText>
                       </View>
 
                       <View style={styles.statColumn}>
                         <AppText style={styles.statLabelWhite}>Total Expense</AppText>
                         <AppText style={[styles.statValue, { color: stat.expense === 0 ? '#FFF' : '#ff4444' }]}>
-                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `-${currency}${formatAmount(stat.expense)}`}
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `-${currency}${String(formatAmount(stat.expense)).padStart(5, '0')}`}
                         </AppText>
                       </View>
 
@@ -317,11 +317,11 @@ export default function IncomeScreen() {
                         <AppText
                           style={[styles.statValue, { color: stat.balance === 0 ? '#FFF' : (stat.balance > 0 ? '#00C851' : '#ff4444') }]}
                         >
-                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${formatAmount(Math.abs(stat.balance))}`}
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(stat.balance))).padStart(5, '0')}`}
                         </AppText>
                       </View>
                     </View>
-                    {renderProgressBar(stat.income, stat.expense, stat.balance, `Monthly Avg: ${currency}${formatAmount(stat.monthlyAverage)}`)}
+                    {renderProgressBar(stat.income, stat.expense, stat.balance, `Monthly Avg: ${currency}${String(formatAmount(stat.monthlyAverage)).padStart(5, '0')}`)}
                   </PremiumCardBackground>
                 </TouchableOpacity>
               ))}
@@ -334,7 +334,7 @@ export default function IncomeScreen() {
                 <AppText style={{ fontSize: 16, color: '#FFF', fontWeight: 'bold' }}>
                   {selectedYear} Overview
                 </AppText>
-                <TouchableOpacity onPress={() => setIsSummaryHidden(!isSummaryHidden)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                <TouchableOpacity onPress={() => setIsSummaryHidden(!isSummaryHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                   <Ionicons name={isSummaryHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
                 </TouchableOpacity>
               </View>
@@ -342,23 +342,23 @@ export default function IncomeScreen() {
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Total Income</AppText>
                   <AppText style={[styles.statValue, { color: yearlyTotals.income === 0 ? '#FFF' : '#00C851' }]}>
-                    {isSummaryHidden ? '••••' : `+${currency}${formatAmount(yearlyTotals.income)}`}
+                    {isSummaryHidden ? '••••' : `+${currency}${String(formatAmount(yearlyTotals.income)).padStart(5, '0')}`}
                   </AppText>
                 </View>
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Total Expense</AppText>
                   <AppText style={[styles.statValue, { color: yearlyTotals.expense === 0 ? '#FFF' : '#ff4444' }]}>
-                    {isSummaryHidden ? '••••' : `-${currency}${formatAmount(yearlyTotals.expense)}`}
+                    {isSummaryHidden ? '••••' : `-${currency}${String(formatAmount(yearlyTotals.expense)).padStart(5, '0')}`}
                   </AppText>
                 </View>
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Available Balance</AppText>
                   <AppText style={[styles.statValue, { color: yearlyTotals.balance === 0 ? '#FFF' : (yearlyTotals.balance > 0 ? '#00C851' : '#ff4444') }]}>
-                    {isSummaryHidden ? '••••' : `${yearlyTotals.balance === 0 ? '' : (yearlyTotals.balance > 0 ? '+' : '-')}${currency}${formatAmount(Math.abs(yearlyTotals.balance))}`}
+                    {isSummaryHidden ? '••••' : `${yearlyTotals.balance === 0 ? '' : (yearlyTotals.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(yearlyTotals.balance))).padStart(5, '0')}`}
                   </AppText>
                 </View>
               </View>
-              {renderProgressBar(yearlyTotals.income, yearlyTotals.expense, yearlyTotals.balance, `Monthly Avg: ${currency}${formatAmount(yearlyTotals.monthlyAverage)}`)}
+              {renderProgressBar(yearlyTotals.income, yearlyTotals.expense, yearlyTotals.balance, `Monthly Avg: ${currency}${String(formatAmount(yearlyTotals.monthlyAverage)).padStart(5, '0')}`)}
             </PremiumCardBackground>
 
             <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
@@ -376,7 +376,7 @@ export default function IncomeScreen() {
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Ionicons name="pencil" size={18} color="rgba(255,255,255,0.7)" style={{ marginRight: 12 }} />
-                        <TouchableOpacity onPress={() => toggleHiddenItem(`month-${stat.monthIndex}`)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                        <TouchableOpacity onPress={() => toggleHiddenItem(`month-${stat.monthIndex}`)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                           <Ionicons name={(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
                         </TouchableOpacity>
                       </View>
@@ -386,14 +386,14 @@ export default function IncomeScreen() {
                       <View style={styles.statColumn}>
                         <AppText style={styles.statLabelWhite}>Income</AppText>
                         <AppText style={[styles.statValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
-                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `+${currency}${formatAmount(stat.income)}`}
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
                         </AppText>
                       </View>
 
                       <View style={styles.statColumn}>
                         <AppText style={styles.statLabelWhite}>Expense</AppText>
                         <AppText style={[styles.statValue, { color: stat.expense === 0 ? '#FFF' : '#ff4444' }]}>
-                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `-${currency}${formatAmount(stat.expense)}`}
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `-${currency}${String(formatAmount(stat.expense)).padStart(5, '0')}`}
                         </AppText>
                       </View>
 
@@ -402,11 +402,11 @@ export default function IncomeScreen() {
                         <AppText
                           style={[styles.statValue, { color: stat.balance === 0 ? '#FFF' : (stat.balance > 0 ? '#00C851' : '#ff4444') }]}
                         >
-                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${formatAmount(Math.abs(stat.balance))}`}
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(stat.balance))).padStart(5, '0')}`}
                         </AppText>
                       </View>
                     </View>
-                    {renderProgressBar(stat.income, stat.expense, stat.balance, `Daily Avg: ${currency}${formatAmount(stat.dailyAverage)}`)}
+                    {renderProgressBar(stat.income, stat.expense, stat.balance, `Daily Avg: ${currency}${String(formatAmount(stat.dailyAverage)).padStart(5, '0')}`)}
                   </PremiumCardBackground>
                 </TouchableOpacity>
               ))}
