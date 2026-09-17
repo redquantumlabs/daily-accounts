@@ -134,7 +134,7 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
 
 const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, onPrevYear, onNextYear, isCalendarHidden, setIsCalendarHidden }: any) => {
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  
+
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYearVal = today.getFullYear();
@@ -155,7 +155,7 @@ const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, 
 
   for (let m = 0; m < 12; m++) {
     const total = monthTotals[m] || 0;
-    
+
     const isFutureMonth = selectedYear > currentYearVal || (selectedYear === currentYearVal && m > currentMonth);
     const isCurrentMonth = selectedYear === currentYearVal && m === currentMonth;
 
@@ -592,8 +592,6 @@ export default function DashboardScreen() {
           isCalendarHidden={isCalendarHidden}
           setIsCalendarHidden={setIsCalendarHidden}
         />
-        
-        <View style={{ height: 16 }} />
 
         <YearlySpendingCalendar
           expenses={expenses}

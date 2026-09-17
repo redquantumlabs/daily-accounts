@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingTop: 10,
-    paddingBottom: 100, // padding for FAB
+    paddingBottom: 10,
   },
   card: {
     borderRadius: 16,
