@@ -21,6 +21,7 @@ import notifee from '@notifee/react-native';
 import { generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
+import ThreeDotsLoader from '../components/ThreeDotsLoader';
 
 interface TransactionListItemProps {
   tx: AccountTransaction;
@@ -189,6 +190,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [displayCount, setDisplayCount] = useState(50);
 
   const [flatDataState, setFlatDataState] = useState<AccountTransaction[]>([]);
@@ -542,10 +544,23 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
           filteredTransactions.length > displayCount ? (
             <TouchableOpacity
               style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]}
-              onPress={() => setDisplayCount(prev => prev + 50)}
+              onPress={() => {
+                if (isLoadingMore) return;
+                setIsLoadingMore(true);
+                setTimeout(() => {
+                  setDisplayCount(prev => prev + 50);
+                  setIsLoadingMore(false);
+                }, 500);
+              }}
             >
-              <AppText style={[styles.loadMoreText, { color: colors.primary }]}>Load More</AppText>
-              <Ionicons name="chevron-down" size={16} color={colors.primary} />
+              {isLoadingMore ? (
+                <ThreeDotsLoader color={colors.primary} />
+              ) : (
+                <>
+                  <AppText style={[styles.loadMoreText, { color: colors.primary }]}>Load More</AppText>
+                  <Ionicons name="chevron-down" size={16} color={colors.primary} />
+                </>
+              )}
             </TouchableOpacity>
           ) : null
         }

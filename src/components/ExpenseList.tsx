@@ -24,6 +24,7 @@ import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { parseISOYear, parseISOMonth, getMonthYearString } from '../utils/dateUtils';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
+import ThreeDotsLoader from '../components/ThreeDotsLoader';
 const isExpoGo = false;
 
 
@@ -52,6 +53,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const draggedItemDateRef = useRef<string | null>(null);
   const [flatDataState, setFlatDataState] = useState<ListItem[]>([]);
   const [prevDerived, setPrevDerived] = useState<ListItem[] | null>(null);
@@ -654,10 +656,23 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
       {filteredExpenses.length > displayCount && (
         <TouchableOpacity
           style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]}
-          onPress={() => setDisplayCount(prev => prev + 20)}
+          onPress={() => {
+            if (isLoadingMore) return;
+            setIsLoadingMore(true);
+            setTimeout(() => {
+              setDisplayCount(prev => prev + 20);
+              setIsLoadingMore(false);
+            }, 500);
+          }}
         >
-          <AppText style={[styles.loadMoreText, { color: colors.primary }]}>Load More</AppText>
-          <Ionicons name="chevron-down" size={16} color={colors.primary} />
+          {isLoadingMore ? (
+            <ThreeDotsLoader color={colors.primary} />
+          ) : (
+            <>
+              <AppText style={[styles.loadMoreText, { color: colors.primary }]}>Load More</AppText>
+              <Ionicons name="chevron-down" size={16} color={colors.primary} />
+            </>
+          )}
         </TouchableOpacity>
       )}
     </>
