@@ -244,14 +244,16 @@ export default function DashboardScreen() {
   const [selectedMonthForModal, setSelectedMonthForModal] = useState<number | null>(null);
   const [isMonthModalVisible, setIsMonthModalVisible] = useState(false);
 
-  const [isMonthlyHidden, setIsMonthlyHidden] = React.useState(!isAmountsVisible);
-  const [isYearlyHidden, setIsYearlyHidden] = React.useState(!isAmountsVisible);
-  const [isCalendarHidden, setIsCalendarHidden] = React.useState(!isAmountsVisible);
+  const [isMonthlyCardHidden, setIsMonthlyCardHidden] = React.useState(!isAmountsVisible);
+  const [isYearlyCardHidden, setIsYearlyCardHidden] = React.useState(!isAmountsVisible);
+  const [isMonthlyCalendarHidden, setIsMonthlyCalendarHidden] = React.useState(!isAmountsVisible);
+  const [isYearlyCalendarHidden, setIsYearlyCalendarHidden] = React.useState(!isAmountsVisible);
 
   React.useEffect(() => {
-    setIsMonthlyHidden(!isAmountsVisible);
-    setIsYearlyHidden(!isAmountsVisible);
-    setIsCalendarHidden(!isAmountsVisible);
+    setIsMonthlyCardHidden(!isAmountsVisible);
+    setIsYearlyCardHidden(!isAmountsVisible);
+    setIsMonthlyCalendarHidden(!isAmountsVisible);
+    setIsYearlyCalendarHidden(!isAmountsVisible);
   }, [isAmountsVisible]);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -372,8 +374,8 @@ export default function DashboardScreen() {
     <View>
       {/* Monthly Spending Card */}
       <PremiumCardBackground color={colors.primary}>
-        <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsMonthlyHidden(!isMonthlyHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name={isMonthlyHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+        <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsMonthlyCardHidden(!isMonthlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name={isMonthlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1, paddingRight: 16 }}>
@@ -384,7 +386,7 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
             <AppText style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 ? (total > monthlyBudget ? '#ff4444' : (total >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF')) : '#FFF', marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 12 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
-              {isMonthlyHidden ? '••••••' : `${currency}${formatAmount(total)}`}
+              {isMonthlyCardHidden ? '••••••' : `${currency}${formatAmount(total)}`}
             </AppText>
             {monthlyBudget > 0 && showMonthlyBudget && (
               <View style={{ marginBottom: 12 }}>
@@ -398,7 +400,7 @@ export default function DashboardScreen() {
               </View>
             )}
             <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8 }}>
-              Daily Avg: {isMonthlyHidden ? '•••••' : `${currency}${formatAmount(monthlyDailyAverage)}`}
+              Daily Avg: {isMonthlyCardHidden ? '•••••' : `${currency}${formatAmount(monthlyDailyAverage)}`}
             </AppText>
           </View>
 
@@ -425,10 +427,10 @@ export default function DashboardScreen() {
               </Svg>
               <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
                 <AppText style={{ fontSize: 15, fontWeight: 'bold', color: total > monthlyBudget ? '#ff4444' : (total >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF') }}>
-                  {isMonthlyHidden ? '•••%' : `${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
+                  {isMonthlyCardHidden ? '•••%' : `${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                 </AppText>
                 <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
-                  of {isMonthlyHidden ? '•••••' : `${currency}${formatAmount(monthlyBudget)}`}
+                  of {isMonthlyCardHidden ? '•••••' : `${currency}${formatAmount(monthlyBudget)}`}
                 </AppText>
               </View>
             </View>
@@ -439,8 +441,8 @@ export default function DashboardScreen() {
       {/* Yearly Spending Card */}
       {showYearCard && (
         <PremiumCardBackground color={colors.primary}>
-          <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsYearlyHidden(!isYearlyHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name={isYearlyHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+          <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsYearlyCardHidden(!isYearlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name={isYearlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View style={{ flex: 1, paddingRight: 16 }}>
@@ -451,7 +453,7 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
               </View>
               <AppText style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 ? (currentYearTotal > yearlyBudget ? '#ff4444' : (currentYearTotal >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF')) : '#FFF', marginBottom: yearlyBudget > 0 && showYearlyBudget ? 12 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
-                {isYearlyHidden ? '••••••' : `${currency}${formatAmount(currentYearTotal)}`}
+                {isYearlyCardHidden ? '••••••' : `${currency}${formatAmount(currentYearTotal)}`}
               </AppText>
               {yearlyBudget > 0 && showYearlyBudget && (
                 <View style={{ marginBottom: 12 }}>
@@ -465,7 +467,7 @@ export default function DashboardScreen() {
                 </View>
               )}
               <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8 }}>
-                Monthly Avg: {isYearlyHidden ? '•••••' : `${currency}${formatAmount(yearlyMonthlyAverage)}`}
+                Monthly Avg: {isYearlyCardHidden ? '•••••' : `${currency}${formatAmount(yearlyMonthlyAverage)}`}
               </AppText>
             </View>
 
@@ -492,10 +494,10 @@ export default function DashboardScreen() {
                 </Svg>
                 <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
                   <AppText style={{ fontSize: 15, fontWeight: 'bold', color: currentYearTotal > yearlyBudget ? '#ff4444' : (currentYearTotal >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF') }}>
-                    {isYearlyHidden ? '•••%' : `${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
+                    {isYearlyCardHidden ? '•••%' : `${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                   </AppText>
                   <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
-                    of {isYearlyHidden ? '•••••' : `${currency}${formatAmount(yearlyBudget)}`}
+                    of {isYearlyCardHidden ? '•••••' : `${currency}${formatAmount(yearlyBudget)}`}
                   </AppText>
                 </View>
               </View>
@@ -589,8 +591,8 @@ export default function DashboardScreen() {
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
           onDayPress={handleDayPress}
-          isCalendarHidden={isCalendarHidden}
-          setIsCalendarHidden={setIsCalendarHidden}
+          isCalendarHidden={isMonthlyCalendarHidden}
+          setIsCalendarHidden={setIsMonthlyCalendarHidden}
         />
 
         <YearlySpendingCalendar
@@ -600,8 +602,8 @@ export default function DashboardScreen() {
           onMonthPress={handleMonthPress}
           onPrevYear={handlePrevYear}
           onNextYear={handleNextYear}
-          isCalendarHidden={isYearlyHidden}
-          setIsCalendarHidden={setIsYearlyHidden}
+          isCalendarHidden={isYearlyCalendarHidden}
+          setIsCalendarHidden={setIsYearlyCalendarHidden}
         />
 
       </ScrollView>
@@ -626,7 +628,7 @@ export default function DashboardScreen() {
         visible={isDayModalVisible}
         onClose={() => setIsDayModalVisible(false)}
         selectedDate={selectedDayDate}
-        isHidden={isCalendarHidden}
+        isHidden={isMonthlyCalendarHidden}
       />
 
       <MonthExpensesModal
@@ -634,7 +636,7 @@ export default function DashboardScreen() {
         onClose={() => setIsMonthModalVisible(false)}
         selectedMonth={selectedMonthForModal}
         selectedYear={selectedYear}
-        isHidden={isYearlyHidden}
+        isHidden={isYearlyCalendarHidden}
       />
     </View>
   );
