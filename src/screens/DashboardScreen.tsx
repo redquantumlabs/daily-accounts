@@ -86,7 +86,7 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
           ) : (
             <View style={{ marginTop: 8, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
               <AppText style={{ fontSize: 9, color: total > 0 ? colors.notification : '#FFF', fontWeight: total > 0 ? 'bold' : 'normal', textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                {isCalendarHidden ? '•••' : formatCompact(total)}
+                {isCalendarHidden ? '•••••' : formatCompact(total)}
               </AppText>
             </View>
           )}
@@ -185,7 +185,7 @@ const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, 
           ) : (
             <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
               <AppText style={{ fontSize: 10, color: total > 0 ? colors.notification : '#FFF', fontWeight: total > 0 ? 'bold' : 'normal', textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                {isCalendarHidden ? '•••' : formatCompact(total)}
+                {isCalendarHidden ? '•••••' : formatCompact(total)}
               </AppText>
             </View>
           )}
@@ -425,7 +425,7 @@ export default function DashboardScreen() {
               </Svg>
               <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
                 <AppText style={{ fontSize: 15, fontWeight: 'bold', color: total > monthlyBudget ? '#ff4444' : (total >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF') }}>
-                  {isMonthlyHidden ? '••%' : `${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
+                  {isMonthlyHidden ? '•••%' : `${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                 </AppText>
                 <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
                   of {isMonthlyHidden ? '•••••' : `${currency}${formatAmount(monthlyBudget)}`}
@@ -492,7 +492,7 @@ export default function DashboardScreen() {
                 </Svg>
                 <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
                   <AppText style={{ fontSize: 15, fontWeight: 'bold', color: currentYearTotal > yearlyBudget ? '#ff4444' : (currentYearTotal >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF') }}>
-                    {isYearlyHidden ? '••%' : `${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
+                    {isYearlyHidden ? '•••%' : `${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                   </AppText>
                   <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
                     of {isYearlyHidden ? '•••••' : `${currency}${formatAmount(yearlyBudget)}`}
