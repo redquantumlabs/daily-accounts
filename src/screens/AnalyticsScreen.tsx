@@ -398,7 +398,7 @@ export default function AnalyticsScreen() {
             </View>
 
             {/* Payment Modes */}
-            <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, marginBottom: 40 }]}>
+            <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, marginBottom: 10 }]}>
               <AppText style={[styles.cardTitle, { color: colors.text }]}>Payment Modes</AppText>
 
               {renderChart(paymentModeData)}
