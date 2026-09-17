@@ -389,7 +389,7 @@ export default function AnalyticsScreen() {
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <AppText style={{ color: colors.text, fontWeight: 'bold', fontSize: 12 }}>
-                        {isAmountsHidden ? '••••' : `${currency}${formatAmount(cat.amount)}`}
+                        {isAmountsHidden ? '•••••' : `${currency}${formatAmount(cat.amount)}`}
                       </AppText>
                     </View>
                   </View>
@@ -412,7 +412,7 @@ export default function AnalyticsScreen() {
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <AppText style={{ color: colors.text, fontWeight: 'bold', fontSize: 12 }}>
-                        {isAmountsHidden ? '••••' : `${currency}${formatAmount(mode.amount)}`}
+                        {isAmountsHidden ? '•••••' : `${currency}${formatAmount(mode.amount)}`}
                       </AppText>
                     </View>
                   </View>

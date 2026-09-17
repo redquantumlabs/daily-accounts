@@ -303,14 +303,14 @@ export default function HomeScreen({ navigation }: any) {
                       <Ionicons name="arrow-down-circle" size={16} color="#4CAF50" style={{ marginRight: 4 }} />
                       <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>CREDIT</AppText>
                     </View>
-                    <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>{(hiddenAccounts[acc] ?? !isAmountsVisible) ? '••••' : `${currency}${formatAmount(stats.totalCredit)}`}</AppText>
+                    <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>{(hiddenAccounts[acc] ?? !isAmountsVisible) ? '•••••' : `${currency}${formatAmount(stats.totalCredit)}`}</AppText>
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                       <Ionicons name="arrow-up-circle" size={16} color="#F44336" style={{ marginRight: 4 }} />
                       <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>DEBIT</AppText>
                     </View>
-                    <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#F44336' }}>{(hiddenAccounts[acc] ?? !isAmountsVisible) ? '••••' : `${currency}${formatAmount(stats.totalDebit)}`}</AppText>
+                    <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#F44336' }}>{(hiddenAccounts[acc] ?? !isAmountsVisible) ? '•••••' : `${currency}${formatAmount(stats.totalDebit)}`}</AppText>
                   </View>
                 </View>
               )}
@@ -368,14 +368,14 @@ export default function HomeScreen({ navigation }: any) {
                   <Ionicons name="arrow-down-circle" size={16} color="#4CAF50" style={{ marginRight: 4 }} />
                   <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>TOTAL CREDIT</AppText>
                 </View>
-                <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>{isTotalBalanceHidden ? '••••' : `${currency}${formatAmount(totalCredit)}`}</AppText>
+                <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>{isTotalBalanceHidden ? '•••••' : `${currency}${formatAmount(totalCredit)}`}</AppText>
               </View>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                   <Ionicons name="arrow-up-circle" size={16} color="#F44336" style={{ marginRight: 4 }} />
                   <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>TOTAL DEBIT</AppText>
                 </View>
-                <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#F44336' }}>{isTotalBalanceHidden ? '••••' : `${currency}${formatAmount(totalDebit)}`}</AppText>
+                <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#F44336' }}>{isTotalBalanceHidden ? '•••••' : `${currency}${formatAmount(totalDebit)}`}</AppText>
               </View>
             </View>
           )}

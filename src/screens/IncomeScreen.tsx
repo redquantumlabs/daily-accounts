@@ -259,19 +259,19 @@ export default function IncomeScreen() {
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Total Income</AppText>
                   <AppText style={[styles.statValue, { color: overallTotals.income === 0 ? '#FFF' : '#00C851' }]}>
-                    {isSummaryHidden ? '••••' : `+${currency}${String(formatAmount(overallTotals.income)).padStart(5, '0')}`}
+                    {isSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(overallTotals.income)).padStart(5, '0')}`}
                   </AppText>
                 </View>
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Total Expense</AppText>
                   <AppText style={[styles.statValue, { color: overallTotals.expense === 0 ? '#FFF' : '#ff4444' }]}>
-                    {isSummaryHidden ? '••••' : `-${currency}${String(formatAmount(overallTotals.expense)).padStart(5, '0')}`}
+                    {isSummaryHidden ? '•••••' : `-${currency}${String(formatAmount(overallTotals.expense)).padStart(5, '0')}`}
                   </AppText>
                 </View>
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Available Balance</AppText>
                   <AppText style={[styles.statValue, { color: overallTotals.balance === 0 ? '#FFF' : (overallTotals.balance > 0 ? '#00C851' : '#ff4444') }]}>
-                    {isSummaryHidden ? '••••' : `${overallTotals.balance === 0 ? '' : (overallTotals.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(overallTotals.balance))).padStart(5, '0')}`}
+                    {isSummaryHidden ? '•••••' : `${overallTotals.balance === 0 ? '' : (overallTotals.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(overallTotals.balance))).padStart(5, '0')}`}
                   </AppText>
                 </View>
               </View>
@@ -301,14 +301,14 @@ export default function IncomeScreen() {
                       <View style={styles.statColumn}>
                         <AppText style={styles.statLabelWhite}>Total Income</AppText>
                         <AppText style={[styles.statValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
-                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
                         </AppText>
                       </View>
 
                       <View style={styles.statColumn}>
                         <AppText style={styles.statLabelWhite}>Total Expense</AppText>
                         <AppText style={[styles.statValue, { color: stat.expense === 0 ? '#FFF' : '#ff4444' }]}>
-                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `-${currency}${String(formatAmount(stat.expense)).padStart(5, '0')}`}
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `-${currency}${String(formatAmount(stat.expense)).padStart(5, '0')}`}
                         </AppText>
                       </View>
 
@@ -317,7 +317,7 @@ export default function IncomeScreen() {
                         <AppText
                           style={[styles.statValue, { color: stat.balance === 0 ? '#FFF' : (stat.balance > 0 ? '#00C851' : '#ff4444') }]}
                         >
-                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(stat.balance))).padStart(5, '0')}`}
+                          {(hiddenItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(stat.balance))).padStart(5, '0')}`}
                         </AppText>
                       </View>
                     </View>
@@ -342,19 +342,19 @@ export default function IncomeScreen() {
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Total Income</AppText>
                   <AppText style={[styles.statValue, { color: yearlyTotals.income === 0 ? '#FFF' : '#00C851' }]}>
-                    {isSummaryHidden ? '••••' : `+${currency}${String(formatAmount(yearlyTotals.income)).padStart(5, '0')}`}
+                    {isSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(yearlyTotals.income)).padStart(5, '0')}`}
                   </AppText>
                 </View>
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Total Expense</AppText>
                   <AppText style={[styles.statValue, { color: yearlyTotals.expense === 0 ? '#FFF' : '#ff4444' }]}>
-                    {isSummaryHidden ? '••••' : `-${currency}${String(formatAmount(yearlyTotals.expense)).padStart(5, '0')}`}
+                    {isSummaryHidden ? '•••••' : `-${currency}${String(formatAmount(yearlyTotals.expense)).padStart(5, '0')}`}
                   </AppText>
                 </View>
                 <View style={styles.yearlyStatColumn}>
                   <AppText style={styles.statLabelWhite}>Available Balance</AppText>
                   <AppText style={[styles.statValue, { color: yearlyTotals.balance === 0 ? '#FFF' : (yearlyTotals.balance > 0 ? '#00C851' : '#ff4444') }]}>
-                    {isSummaryHidden ? '••••' : `${yearlyTotals.balance === 0 ? '' : (yearlyTotals.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(yearlyTotals.balance))).padStart(5, '0')}`}
+                    {isSummaryHidden ? '•••••' : `${yearlyTotals.balance === 0 ? '' : (yearlyTotals.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(yearlyTotals.balance))).padStart(5, '0')}`}
                   </AppText>
                 </View>
               </View>
@@ -386,14 +386,14 @@ export default function IncomeScreen() {
                       <View style={styles.statColumn}>
                         <AppText style={styles.statLabelWhite}>Income</AppText>
                         <AppText style={[styles.statValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
-                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
                         </AppText>
                       </View>
 
                       <View style={styles.statColumn}>
                         <AppText style={styles.statLabelWhite}>Expense</AppText>
                         <AppText style={[styles.statValue, { color: stat.expense === 0 ? '#FFF' : '#ff4444' }]}>
-                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `-${currency}${String(formatAmount(stat.expense)).padStart(5, '0')}`}
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `-${currency}${String(formatAmount(stat.expense)).padStart(5, '0')}`}
                         </AppText>
                       </View>
 
@@ -402,7 +402,7 @@ export default function IncomeScreen() {
                         <AppText
                           style={[styles.statValue, { color: stat.balance === 0 ? '#FFF' : (stat.balance > 0 ? '#00C851' : '#ff4444') }]}
                         >
-                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(stat.balance))).padStart(5, '0')}`}
+                          {(hiddenItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(stat.balance))).padStart(5, '0')}`}
                         </AppText>
                       </View>
                     </View>

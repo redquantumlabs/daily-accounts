@@ -398,7 +398,7 @@ export default function DashboardScreen() {
               </View>
             )}
             <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8 }}>
-              Daily Avg: {isMonthlyHidden ? '••••' : `${currency}${formatAmount(monthlyDailyAverage)}`}
+              Daily Avg: {isMonthlyHidden ? '•••••' : `${currency}${formatAmount(monthlyDailyAverage)}`}
             </AppText>
           </View>
 
@@ -428,7 +428,7 @@ export default function DashboardScreen() {
                   {isMonthlyHidden ? '••%' : `${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                 </AppText>
                 <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
-                  of {isMonthlyHidden ? '••••' : `${currency}${formatAmount(monthlyBudget)}`}
+                  of {isMonthlyHidden ? '•••••' : `${currency}${formatAmount(monthlyBudget)}`}
                 </AppText>
               </View>
             </View>
@@ -465,7 +465,7 @@ export default function DashboardScreen() {
                 </View>
               )}
               <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8 }}>
-                Monthly Avg: {isYearlyHidden ? '••••' : `${currency}${formatAmount(yearlyMonthlyAverage)}`}
+                Monthly Avg: {isYearlyHidden ? '•••••' : `${currency}${formatAmount(yearlyMonthlyAverage)}`}
               </AppText>
             </View>
 
@@ -495,7 +495,7 @@ export default function DashboardScreen() {
                     {isYearlyHidden ? '••%' : `${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                   </AppText>
                   <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
-                    of {isYearlyHidden ? '••••' : `${currency}${formatAmount(yearlyBudget)}`}
+                    of {isYearlyHidden ? '•••••' : `${currency}${formatAmount(yearlyBudget)}`}
                   </AppText>
                 </View>
               </View>
