@@ -28,7 +28,6 @@ export const ACCENT_COLORS = [
   '#34D399', // Mint
   '#F98316', // Orange
   '#EF4444', // Red
-  '#A8A29E', // Warm Gray
   '#0F182A', // Slate Dark
 ];
 
