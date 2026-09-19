@@ -681,7 +681,7 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={{ flexDirection: 'row', height: 140, marginTop: 4 }}>
+          <View style={{ flexDirection: 'row', height: 200, marginTop: 4 }}>
             <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
               {[
                 monthlyBudget > 0 ? monthlyBudget : maxExpense,
@@ -706,7 +706,7 @@ export default function DashboardScreen() {
                     <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
                       {!isYearlyBarChartHidden && amount > 0 && (
                         <AppText style={{ fontSize: 8, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                          {formatAmount(amount)}
+                          {formatCompact(amount)}
                         </AppText>
                       )}
                       <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: amount > 0 ? (monthlyBudget > 0 && amount > monthlyBudget ? '#ff4444' : '#FFF') : 'rgba(255,255,255,0.2)', borderRadius: 4, minHeight: 4 }} />
