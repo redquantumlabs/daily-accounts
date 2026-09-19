@@ -238,7 +238,7 @@ const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPres
   }, [expenses]);
 
   const orderedYears = [...availableYears].sort((a: number, b: number) => a - b);
-  
+
   const gridCells = orderedYears.map((year: number) => {
     const isCurrentYear = year === currentYearVal;
     const total = yearTotals[year] || 0;
@@ -762,7 +762,7 @@ export default function DashboardScreen() {
         <PremiumCardBackground color={colors.primary}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
             <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-              Spending by Month
+              Monthly Spending Chart
             </AppText>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
@@ -832,7 +832,7 @@ export default function DashboardScreen() {
         <PremiumCardBackground color={colors.primary}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
             <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-              Spending by Year
+              Yearly Spending Chart
             </AppText>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TouchableOpacity onPress={() => setIsAllYearsBarChartHidden(!isAllYearsBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
