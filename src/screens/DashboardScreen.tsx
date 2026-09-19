@@ -658,29 +658,47 @@ export default function DashboardScreen() {
 
         {/* Yearly Monthly Bar Chart */}
         <PremiumCardBackground color={colors.primary}>
-          <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsYearlyBarChartHidden(!isYearlyBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name={isYearlyBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
-          </TouchableOpacity>
-          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF', marginBottom: 16 }}>{selectedYear} Spending by Month</AppText>
-          
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 120, marginTop: 10 }}>
-            {monthlyData.map((amount, index) => {
-              const heightPercentage = (amount / maxExpense) * 100;
-              return (
-                <View key={index} style={{ alignItems: 'center', width: '7%' }}>
-                  {!isYearlyBarChartHidden && amount > 0 && (
-                    <AppText style={{ fontSize: 8, color: '#FFF', opacity: 0.8, marginBottom: 4 }} numberOfLines={1} adjustsFontSizeToFit>
-                      {formatAmount(amount)}
-                    </AppText>
-                  )}
-                  <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: amount > 0 ? '#FFF' : 'rgba(255,255,255,0.2)', borderRadius: 4, minHeight: 4 }} />
-                  <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
-                    {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][index]}
-                  </AppText>
-                </View>
-              );
-            })}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
+            <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
+              Spending by Month
+            </AppText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
+                {selectedYear}
+              </AppText>
+              <TouchableOpacity onPress={() => setIsYearlyBarChartHidden(!isYearlyBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name={isYearlyBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
+              </TouchableOpacity>
+            </View>
           </View>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 }}>
+            <TouchableOpacity onPress={handlePrevYear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="chevron-back" size={20} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleNextYear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="chevron-forward" size={20} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 120 }}>
+              {monthlyData.map((amount, index) => {
+                const heightPercentage = (amount / maxExpense) * 100;
+                return (
+                  <View key={index} style={{ alignItems: 'center', width: '7%' }}>
+                    {!isYearlyBarChartHidden && amount > 0 && (
+                      <AppText style={{ fontSize: 8, color: '#FFF', opacity: 0.8, marginBottom: 4 }} numberOfLines={1} adjustsFontSizeToFit>
+                        {formatAmount(amount)}
+                      </AppText>
+                    )}
+                    <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: amount > 0 ? '#FFF' : 'rgba(255,255,255,0.2)', borderRadius: 4, minHeight: 4 }} />
+                    <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
+                      {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][index]}
+                    </AppText>
+                  </View>
+                );
+              })}
+            </View>
         </PremiumCardBackground>
 
 
