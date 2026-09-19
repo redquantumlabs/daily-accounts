@@ -703,23 +703,23 @@ export default function DashboardScreen() {
               {monthlyData.map((amount, index) => {
                 const yAxisMax = monthlyBudget > 0 ? monthlyBudget : maxExpense;
                 const heightPercentage = Math.min((amount / yAxisMax) * 100, 100);
-                const barColor = amount === 0 
-                  ? 'rgba(255,255,255,0.2)' 
-                  : (monthlyBudget > 0 
-                      ? (amount > monthlyBudget ? '#ff4444' : (amount >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF')) 
-                      : '#FFF');
+                const barColor = amount === 0
+                  ? 'rgba(255,255,255,0.2)'
+                  : (monthlyBudget > 0
+                    ? (amount > monthlyBudget ? '#ff4444' : (amount >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF'))
+                    : '#FFF');
                 return (
-                  <View key={index} style={{ alignItems: 'center', width: '7%', height: '100%', justifyContent: 'flex-end' }}>
+                  <View key={index} style={{ alignItems: 'center', width: '6.9%', height: '100%', justifyContent: 'flex-end' }}>
                     <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
                       {!isYearlyBarChartHidden && amount > 0 && (
-                        <AppText style={{ fontSize: 8, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                        <AppText style={{ fontSize: 6, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
                           {`${currency}${formatCompact(amount)}`}
                         </AppText>
                       )}
                       <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
                     </View>
-                    <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, height: 16 }}>
-                      {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][index]}
+                    <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
+                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
                     </AppText>
                   </View>
                 );
