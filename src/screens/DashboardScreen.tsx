@@ -21,7 +21,7 @@ const formatCompact = (num: number) => {
 
 
 
-const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors, onPrevMonth, onNextMonth, onDayPress, isCalendarHidden, setIsCalendarHidden }: any) => {
+const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors, onPrevMonth, onNextMonth, onDayPress, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1).getDay();
@@ -86,7 +86,7 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
           ) : (
             <View style={{ marginTop: 8, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
               <AppText style={{ fontSize: 9, color: total > 0 ? colors.notification : '#FFF', fontWeight: total > 0 ? 'bold' : 'normal', textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                {isCalendarHidden ? '•••••' : formatCompact(total)}
+                {isCalendarHidden ? '•••••' : `${currency}${formatCompact(total)}`}
               </AppText>
             </View>
           )}
@@ -132,7 +132,7 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
   );
 };
 
-const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, onPrevYear, onNextYear, isCalendarHidden, setIsCalendarHidden }: any) => {
+const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, onPrevYear, onNextYear, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const today = new Date();
@@ -185,7 +185,7 @@ const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, 
           ) : (
             <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
               <AppText style={{ fontSize: 10, color: total > 0 ? colors.notification : '#FFF', fontWeight: total > 0 ? 'bold' : 'normal', textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                {isCalendarHidden ? '•••••' : formatCompact(total)}
+                {isCalendarHidden ? '•••••' : `${currency}${formatCompact(total)}`}
               </AppText>
             </View>
           )}
@@ -643,6 +643,7 @@ export default function DashboardScreen() {
           onDayPress={handleDayPress}
           isCalendarHidden={isMonthlyCalendarHidden}
           setIsCalendarHidden={setIsMonthlyCalendarHidden}
+          currency={currency}
         />
 
         <YearlySpendingCalendar
@@ -654,6 +655,7 @@ export default function DashboardScreen() {
           onNextYear={handleNextYear}
           isCalendarHidden={isYearlyCalendarHidden}
           setIsCalendarHidden={setIsYearlyCalendarHidden}
+          currency={currency}
         />
 
         {/* Yearly Monthly Bar Chart */}
@@ -692,7 +694,7 @@ export default function DashboardScreen() {
                 0
               ].map((val, idx) => (
                 <AppText key={idx} style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', textAlign: 'right' }}>
-                  {isYearlyBarChartHidden ? '•••••' : formatCompact(val)}
+                  {isYearlyBarChartHidden ? '•••••' : `${currency}${formatCompact(val)}`}
                 </AppText>
               ))}
             </View>
@@ -711,7 +713,7 @@ export default function DashboardScreen() {
                     <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
                       {!isYearlyBarChartHidden && amount > 0 && (
                         <AppText style={{ fontSize: 8, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                          {formatCompact(amount)}
+                          {`${currency}${formatCompact(amount)}`}
                         </AppText>
                       )}
                       <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
