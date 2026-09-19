@@ -681,7 +681,7 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={{ flexDirection: 'row', height: 200, marginTop: 4 }}>
+          <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
             <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
               {[
                 monthlyBudget > 0 ? monthlyBudget : maxExpense,
@@ -701,6 +701,11 @@ export default function DashboardScreen() {
               {monthlyData.map((amount, index) => {
                 const yAxisMax = monthlyBudget > 0 ? monthlyBudget : maxExpense;
                 const heightPercentage = Math.min((amount / yAxisMax) * 100, 100);
+                const barColor = amount === 0 
+                  ? 'rgba(255,255,255,0.2)' 
+                  : (monthlyBudget > 0 
+                      ? (amount > monthlyBudget ? '#ff4444' : (amount >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF')) 
+                      : '#FFF');
                 return (
                   <View key={index} style={{ alignItems: 'center', width: '7%', height: '100%', justifyContent: 'flex-end' }}>
                     <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
@@ -709,7 +714,7 @@ export default function DashboardScreen() {
                           {formatCompact(amount)}
                         </AppText>
                       )}
-                      <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: amount > 0 ? (monthlyBudget > 0 && amount > monthlyBudget ? '#ff4444' : '#FFF') : 'rgba(255,255,255,0.2)', borderRadius: 4, minHeight: 4 }} />
+                      <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
                     </View>
                     <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, height: 16 }}>
                       {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][index]}
