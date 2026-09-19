@@ -248,12 +248,14 @@ export default function DashboardScreen() {
   const [isYearlyCardHidden, setIsYearlyCardHidden] = React.useState(!isAmountsVisible);
   const [isMonthlyCalendarHidden, setIsMonthlyCalendarHidden] = React.useState(!isAmountsVisible);
   const [isYearlyCalendarHidden, setIsYearlyCalendarHidden] = React.useState(!isAmountsVisible);
+  const [isYearlyBarChartHidden, setIsYearlyBarChartHidden] = React.useState(!isAmountsVisible);
 
   React.useEffect(() => {
     setIsMonthlyCardHidden(!isAmountsVisible);
     setIsYearlyCardHidden(!isAmountsVisible);
     setIsMonthlyCalendarHidden(!isAmountsVisible);
     setIsYearlyCalendarHidden(!isAmountsVisible);
+    setIsYearlyBarChartHidden(!isAmountsVisible);
   }, [isAmountsVisible]);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -394,6 +396,18 @@ export default function DashboardScreen() {
       });
     return expensesMap;
   }, [expenses, selectedYear]);
+
+  const monthlyData = useMemo(() => {
+    const data = new Array(12).fill(0);
+    expenses.forEach(exp => {
+      if (parseISOYear(exp.date) === selectedYear) {
+        data[parseISOMonth(exp.date)] += exp.amount;
+      }
+    });
+    return data;
+  }, [expenses, selectedYear]);
+
+  const maxExpense = Math.max(...monthlyData, 1);
 
   const renderCards = () => (
     <View>
@@ -541,6 +555,7 @@ export default function DashboardScreen() {
         </PremiumCardBackground>
       )}
 
+
       <SingleFilterModal
         visible={isMonthFilterVisible}
         onClose={() => setIsMonthFilterVisible(false)}
@@ -640,6 +655,34 @@ export default function DashboardScreen() {
           isCalendarHidden={isYearlyCalendarHidden}
           setIsCalendarHidden={setIsYearlyCalendarHidden}
         />
+
+        {/* Yearly Monthly Bar Chart */}
+        <PremiumCardBackground color={colors.primary}>
+          <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsYearlyBarChartHidden(!isYearlyBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name={isYearlyBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF', marginBottom: 16 }}>{selectedYear} Spending by Month</AppText>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 120, marginTop: 10 }}>
+            {monthlyData.map((amount, index) => {
+              const heightPercentage = (amount / maxExpense) * 100;
+              return (
+                <View key={index} style={{ alignItems: 'center', width: '7%' }}>
+                  {!isYearlyBarChartHidden && amount > 0 && (
+                    <AppText style={{ fontSize: 8, color: '#FFF', opacity: 0.8, marginBottom: 4 }} numberOfLines={1} adjustsFontSizeToFit>
+                      {formatAmount(amount)}
+                    </AppText>
+                  )}
+                  <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: amount > 0 ? '#FFF' : 'rgba(255,255,255,0.2)', borderRadius: 4, minHeight: 4 }} />
+                  <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
+                    {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][index]}
+                  </AppText>
+                </View>
+              );
+            })}
+          </View>
+        </PremiumCardBackground>
+
 
       </ScrollView>
 
