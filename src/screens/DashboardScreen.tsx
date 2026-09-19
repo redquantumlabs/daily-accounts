@@ -530,6 +530,11 @@ export default function DashboardScreen() {
                 Daily Left: {isMonthlyCardHidden ? '•••••' : `${currency}${formatAmount(remainingDailyBudget)}`}
               </AppText>
             )}
+            {monthlyBudget > 0 && remainingDaysInMonth === 0 && (
+              <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
+                {total > monthlyBudget ? 'Overspent: ' : 'Left: '}{isMonthlyCardHidden ? '•••••' : `${currency}${formatAmount(Math.abs(monthlyBudget - total))}`}
+              </AppText>
+            )}
           </View>
 
           {monthlyBudget > 0 && showMonthlyBudget && (
@@ -600,6 +605,11 @@ export default function DashboardScreen() {
               {yearlyBudget > 0 && remainingMonthsInYear > 0 && (
                 <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
                   Monthly Left: {isYearlyCardHidden ? '•••••' : `${currency}${formatAmount(remainingMonthlyBudget)}`}
+                </AppText>
+              )}
+              {yearlyBudget > 0 && remainingMonthsInYear === 0 && (
+                <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
+                  {currentYearTotal > yearlyBudget ? 'Overspent: ' : 'Left: '}{isYearlyCardHidden ? '•••••' : `${currency}${formatAmount(Math.abs(yearlyBudget - currentYearTotal))}`}
                 </AppText>
               )}
             </View>
