@@ -320,6 +320,31 @@ export default function DashboardScreen() {
 
   const yearlyMonthlyAverage = currentYearTotal / monthsToConsider;
 
+  const remainingDaysInMonth = useMemo(() => {
+    const now = new Date();
+    if (selectedYear === now.getFullYear() && selectedMonth === now.getMonth()) {
+      const totalDays = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+      return totalDays - now.getDate() + 1;
+    } else if (selectedYear > now.getFullYear() || (selectedYear === now.getFullYear() && selectedMonth > now.getMonth())) {
+      return new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    }
+    return 0;
+  }, [selectedYear, selectedMonth]);
+
+  const remainingDailyBudget = monthlyBudget > 0 && remainingDaysInMonth > 0 ? (monthlyBudget - total) / remainingDaysInMonth : 0;
+
+  const remainingMonthsInYear = useMemo(() => {
+    const now = new Date();
+    if (selectedYear === now.getFullYear()) {
+      return 12 - now.getMonth();
+    } else if (selectedYear > now.getFullYear()) {
+      return 12;
+    }
+    return 0;
+  }, [selectedYear]);
+
+  const remainingMonthlyBudget = yearlyBudget > 0 && remainingMonthsInYear > 0 ? (yearlyBudget - currentYearTotal) / remainingMonthsInYear : 0;
+
   const monthlyTimeProgress = useMemo(() => {
     const now = new Date();
     const totalDays = new Date(selectedYear, selectedMonth + 1, 0).getDate();
@@ -402,6 +427,11 @@ export default function DashboardScreen() {
             <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8 }}>
               Daily Avg: {isMonthlyCardHidden ? '•••••' : `${currency}${formatAmount(monthlyDailyAverage)}`}
             </AppText>
+            {monthlyBudget > 0 && remainingDaysInMonth > 0 && (
+              <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
+                Daily Left: {isMonthlyCardHidden ? '•••••' : `${currency}${formatAmount(remainingDailyBudget)}`}
+              </AppText>
+            )}
           </View>
 
           {monthlyBudget > 0 && showMonthlyBudget && (
@@ -469,6 +499,11 @@ export default function DashboardScreen() {
               <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8 }}>
                 Monthly Avg: {isYearlyCardHidden ? '•••••' : `${currency}${formatAmount(yearlyMonthlyAverage)}`}
               </AppText>
+              {yearlyBudget > 0 && remainingMonthsInYear > 0 && (
+                <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
+                  Monthly Left: {isYearlyCardHidden ? '•••••' : `${currency}${formatAmount(remainingMonthlyBudget)}`}
+                </AppText>
+              )}
             </View>
 
             {yearlyBudget > 0 && showYearlyBudget && (
