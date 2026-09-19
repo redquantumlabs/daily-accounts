@@ -224,6 +224,75 @@ const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, 
   );
 };
 
+const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPress, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
+  const currentYearVal = new Date().getFullYear();
+
+  const yearTotals = useMemo(() => {
+    const totals: Record<number, number> = {};
+    expenses.forEach((e: any) => {
+      const d = new Date(e.date);
+      const y = d.getFullYear();
+      totals[y] = (totals[y] || 0) + e.amount;
+    });
+    return totals;
+  }, [expenses]);
+
+  const orderedYears = [...availableYears].sort((a: number, b: number) => a - b);
+  
+  const gridCells = orderedYears.map((year: number) => {
+    const isCurrentYear = year === currentYearVal;
+    const total = yearTotals[year] || 0;
+
+    return (
+      <TouchableOpacity
+        key={`year-${year}`}
+        style={{ width: '25%', aspectRatio: 1, padding: 4 }}
+        onPress={() => onYearPress && onYearPress(year, total)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: isCurrentYear ? 'rgba(255,255,255,0.2)' : 'transparent',
+          borderRadius: 8,
+          padding: 4,
+          borderWidth: 1,
+          borderColor: isCurrentYear ? '#FFF' : 'rgba(255,255,255,0.2)',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <AppText style={{ fontSize: 12, color: isCurrentYear ? '#FFF' : 'rgba(255,255,255,0.8)', fontWeight: isCurrentYear ? 'bold' : 'normal', marginBottom: 4 }}>
+            {year}
+          </AppText>
+          <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <AppText style={{ fontSize: 10, color: total > 0 ? colors.notification : '#FFF', fontWeight: total > 0 ? 'bold' : 'normal', textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+              {isCalendarHidden ? '•••••' : `${currency}${formatCompact(total)}`}
+            </AppText>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  });
+
+  return (
+    <PremiumCardBackground color={colors.primary}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
+        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
+          Yearly Spending
+        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={{ position: 'relative' }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          {gridCells}
+        </View>
+      </View>
+    </PremiumCardBackground>
+  );
+};
+
 export default function DashboardScreen() {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
@@ -250,6 +319,7 @@ export default function DashboardScreen() {
   const [isYearlyCalendarHidden, setIsYearlyCalendarHidden] = React.useState(!isAmountsVisible);
   const [isYearlyBarChartHidden, setIsYearlyBarChartHidden] = React.useState(!isAmountsVisible);
   const [isAllYearsBarChartHidden, setIsAllYearsBarChartHidden] = React.useState(!isAmountsVisible);
+  const [isAllYearsCalendarHidden, setIsAllYearsCalendarHidden] = React.useState(!isAmountsVisible);
 
   React.useEffect(() => {
     setIsMonthlyCardHidden(!isAmountsVisible);
@@ -258,6 +328,7 @@ export default function DashboardScreen() {
     setIsYearlyCalendarHidden(!isAmountsVisible);
     setIsYearlyBarChartHidden(!isAmountsVisible);
     setIsAllYearsBarChartHidden(!isAmountsVisible);
+    setIsAllYearsCalendarHidden(!isAmountsVisible);
   }, [isAmountsVisible]);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -671,6 +742,22 @@ export default function DashboardScreen() {
           currency={currency}
         />
 
+        <AllYearsSpendingCalendar
+          expenses={expenses}
+          availableYears={availableYears}
+          colors={colors}
+          onYearPress={(year: number, total: number) => {
+            if (total > 0) {
+              setSelectedYear(year);
+            } else {
+              showToast('No transaction found.');
+            }
+          }}
+          isCalendarHidden={isAllYearsCalendarHidden}
+          setIsCalendarHidden={setIsAllYearsCalendarHidden}
+          currency={currency}
+        />
+
         {/* Yearly Monthly Bar Chart */}
         <PremiumCardBackground color={colors.primary}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
@@ -753,7 +840,7 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
           </View>
-          
+
           <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
             <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
               {[
