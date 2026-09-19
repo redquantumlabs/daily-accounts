@@ -249,6 +249,7 @@ export default function DashboardScreen() {
   const [isMonthlyCalendarHidden, setIsMonthlyCalendarHidden] = React.useState(!isAmountsVisible);
   const [isYearlyCalendarHidden, setIsYearlyCalendarHidden] = React.useState(!isAmountsVisible);
   const [isYearlyBarChartHidden, setIsYearlyBarChartHidden] = React.useState(!isAmountsVisible);
+  const [isAllYearsBarChartHidden, setIsAllYearsBarChartHidden] = React.useState(!isAmountsVisible);
 
   React.useEffect(() => {
     setIsMonthlyCardHidden(!isAmountsVisible);
@@ -256,6 +257,7 @@ export default function DashboardScreen() {
     setIsMonthlyCalendarHidden(!isAmountsVisible);
     setIsYearlyCalendarHidden(!isAmountsVisible);
     setIsYearlyBarChartHidden(!isAmountsVisible);
+    setIsAllYearsBarChartHidden(!isAmountsVisible);
   }, [isAmountsVisible]);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -409,6 +411,17 @@ export default function DashboardScreen() {
 
   const maxExpense = Math.max(...monthlyData, 1);
 
+  const yearlyDataForChart = useMemo(() => {
+    const orderedYears = [...availableYears].sort((a, b) => a - b);
+    return orderedYears.map(year => {
+      const amount = expenses
+        .filter(exp => parseISOYear(exp.date) === year)
+        .reduce((sum, exp) => sum + exp.amount, 0);
+      return { year, amount };
+    });
+  }, [availableYears, expenses]);
+
+  const maxYearExpense = Math.max(...yearlyDataForChart.map(d => d.amount), 1);
   const renderCards = () => (
     <View>
       {/* Monthly Spending Card */}
@@ -720,6 +733,64 @@ export default function DashboardScreen() {
                     </View>
                     <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
                       {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
+                    </AppText>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        </PremiumCardBackground>
+
+        {/* All Years Bar Chart */}
+        <PremiumCardBackground color={colors.primary}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
+            <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
+              Spending by Year
+            </AppText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity onPress={() => setIsAllYearsBarChartHidden(!isAllYearsBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name={isAllYearsBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
+            <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
+              {[
+                yearlyBudget > 0 ? yearlyBudget : maxYearExpense,
+                (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.80,
+                (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.60,
+                (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.40,
+                (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.20,
+                0
+              ].map((val, idx) => (
+                <AppText key={idx} style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', textAlign: 'right' }}>
+                  {isAllYearsBarChartHidden ? '•••••' : `${currency}${formatCompact(val)}`}
+                </AppText>
+              ))}
+            </View>
+
+            <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end' }}>
+              {yearlyDataForChart.map((item, index) => {
+                const yAxisMax = yearlyBudget > 0 ? yearlyBudget : maxYearExpense;
+                const heightPercentage = Math.min((item.amount / yAxisMax) * 100, 100);
+                const barColor = item.amount === 0
+                  ? 'rgba(255,255,255,0.2)'
+                  : (yearlyBudget > 0
+                    ? (item.amount > yearlyBudget ? '#ff4444' : (item.amount >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF'))
+                    : '#FFF');
+                return (
+                  <View key={index} style={{ alignItems: 'center', flex: 1, marginHorizontal: 2, maxWidth: 50, height: '100%', justifyContent: 'flex-end' }}>
+                    <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
+                      {!isAllYearsBarChartHidden && item.amount > 0 && (
+                        <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                          {`${currency}${formatCompact(item.amount)}`}
+                        </AppText>
+                      )}
+                      <View style={{ width: '100%', height: isAllYearsBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
+                    </View>
+                    <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
+                      {item.year}
                     </AppText>
                   </View>
                 );
