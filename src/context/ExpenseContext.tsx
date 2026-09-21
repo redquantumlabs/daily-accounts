@@ -42,14 +42,14 @@ interface ExpenseContextType {
   chartStyle: 'Classic' | '3D' | 'Spaced' | 'Semi-Circle';
   isPreciseTimeElapsed: boolean;
   togglePreciseTimeElapsed: (val: boolean) => Promise<void>;
-  monthlyIncomes: Record<string, number>;
+  monthlyIncomes: Record<string, { gross: number; deduction: number }>;
   addExpense: (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   bulkDeleteExpenses: (ids: string[]) => Promise<void>;
   reorderExpensesByDate: (dateStr: string, reorderedDayExpenses: Expense[]) => Promise<void>;
   
-  updateMonthlyIncome: (monthYear: string, amount: number) => Promise<void>;
+  updateMonthlyIncome: (monthYear: string, gross: number, deduction: number) => Promise<void>;
   
   addCategory: (name: string, icon: string, color: string) => Promise<void>;
   updateCategory: (id: string, name: string, icon: string, color: string) => Promise<void>;
@@ -192,7 +192,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isPreciseTimeElapsed, setIsPreciseTimeElapsed] = useState(false);
   const [downloadPathUri, setDownloadPathUri] = useState<string | null>(null);
   const [backupPathUri, setBackupPathUri] = useState<string | null>(null);
-  const [monthlyIncomes, setMonthlyIncomes] = useState<Record<string, number>>({});
+  const [monthlyIncomes, setMonthlyIncomes] = useState<Record<string, { gross: number; deduction: number }>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [summaryTime, setSummaryTime] = useState<Date>(new Date(new Date().setHours(8, 0, 0, 0)));
   const [reminderTimes, setReminderTimes] = useState<Date[]>([new Date(new Date().setHours(18, 0, 0, 0))]);
@@ -333,7 +333,20 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       const storedMonthlyIncomes = data[monthlyIncomesStorageKey];
       if (storedMonthlyIncomes !== null) {
-        setMonthlyIncomes(JSON.parse(storedMonthlyIncomes));
+        try {
+          const parsed = JSON.parse(storedMonthlyIncomes);
+          const migrated: Record<string, { gross: number; deduction: number }> = {};
+          for (const key in parsed) {
+            if (typeof parsed[key] === 'number') {
+              migrated[key] = { gross: parsed[key], deduction: 0 };
+            } else {
+              migrated[key] = parsed[key];
+            }
+          }
+          setMonthlyIncomes(migrated);
+        } catch (e) {
+          setMonthlyIncomes({});
+        }
       } else {
         setMonthlyIncomes({});
       }
@@ -491,8 +504,11 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(storageKey, JSON.stringify(newExpenses));
   };
 
-  const updateMonthlyIncome = async (monthYear: string, amount: number) => {
-    const updated = { ...monthlyIncomes, [monthYear]: roundAmount(amount) };
+  const updateMonthlyIncome = async (monthYear: string, gross: number, deduction: number) => {
+    const updated = { 
+      ...monthlyIncomes, 
+      [monthYear]: { gross: roundAmount(gross), deduction: roundAmount(deduction) } 
+    };
     setMonthlyIncomes(updated);
     await AsyncStorage.setItem(monthlyIncomesStorageKey, JSON.stringify(updated));
   };

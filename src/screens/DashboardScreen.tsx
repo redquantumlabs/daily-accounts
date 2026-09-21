@@ -343,16 +343,19 @@ export default function DashboardScreen({ navigation }: any) {
     });
   };
 
-  const [incomeInput, setIncomeInput] = useState('');
+  const [grossIncomeInput, setGrossIncomeInput] = useState('');
+  const [deductionInput, setDeductionInput] = useState('');
   const [incomeError, setIncomeError] = useState('');
-
   const incomeMonthlyStats = useMemo(() => {
     if (incomeSelectedYear === 'All') return [];
     return INCOME_MONTHS.map((monthName, index) => {
       const monthNumber = index + 1;
       const key = `${incomeSelectedYear}-${String(monthNumber).padStart(2, '0')}`;
 
-      const income = monthlyIncomes[key] || 0;
+      const incomeObj = monthlyIncomes[key] || { gross: 0, deduction: 0 };
+      const gross = incomeObj.gross || 0;
+      const deduction = incomeObj.deduction || 0;
+      const net = gross - deduction;
 
       const expense = expenses
         .filter(e => {
@@ -360,23 +363,23 @@ export default function DashboardScreen({ navigation }: any) {
         })
         .reduce((sum, e) => sum + e.amount, 0);
 
-      const balance = income - expense;
+      const balance = net - expense;
 
-      const now = new Date();
-      let daysToConsider = 1;
-      if (incomeSelectedYear === now.getFullYear() && monthNumber === now.getMonth() + 1) {
-        daysToConsider = Math.max(now.getDate() - 1, 1);
-      } else if ((incomeSelectedYear as number) < now.getFullYear() || ((incomeSelectedYear as number) === now.getFullYear() && monthNumber < now.getMonth() + 1)) {
-        daysToConsider = new Date(incomeSelectedYear as number, monthNumber, 0).getDate();
-      } else {
-        daysToConsider = new Date(incomeSelectedYear as number, monthNumber, 0).getDate();
+      let daysToConsider = new Date(incomeSelectedYear as number, monthNumber, 0).getDate();
+      if (incomeSelectedYear === new Date().getFullYear() && index === new Date().getMonth()) {
+        daysToConsider = new Date().getDate();
+      } else if ((incomeSelectedYear as number) === new Date().getFullYear() && index > new Date().getMonth()) {
+        daysToConsider = 1; 
       }
+
       const dailyAverage = expense / daysToConsider;
 
       return {
         monthIndex: monthNumber,
         monthName,
-        income,
+        gross,
+        deduction,
+        net,
         expense,
         balance,
         dailyAverage
@@ -385,15 +388,17 @@ export default function DashboardScreen({ navigation }: any) {
   }, [incomeSelectedYear, expenses, monthlyIncomes]);
 
   const incomeYearlyTotals = useMemo(() => {
-    if (incomeSelectedYear === 'All') return { income: 0, expense: 0, balance: 0, monthlyAverage: 0 };
+    if (incomeSelectedYear === 'All') return { gross: 0, deduction: 0, net: 0, expense: 0, balance: 0, monthlyAverage: 0 };
     const totals = incomeMonthlyStats.reduce(
       (acc, curr) => {
-        acc.income += curr.income;
+        acc.gross += curr.gross;
+        acc.deduction += curr.deduction;
+        acc.net += curr.net;
         acc.expense += curr.expense;
         acc.balance += curr.balance;
         return acc;
       },
-      { income: 0, expense: 0, balance: 0 }
+      { gross: 0, deduction: 0, net: 0, expense: 0, balance: 0 }
     );
 
     const now = new Date();
@@ -412,7 +417,9 @@ export default function DashboardScreen({ navigation }: any) {
     if (incomeSelectedYear !== 'All') return [];
 
     return incomeYears.map(year => {
-      let income = 0;
+      let gross = 0;
+      let deduction = 0;
+      let net = 0;
       let expense = 0;
 
       expense = expenses
@@ -421,8 +428,13 @@ export default function DashboardScreen({ navigation }: any) {
 
       for (let i = 1; i <= 12; i++) {
         const key = `${year}-${String(i).padStart(2, '0')}`;
-        income += (monthlyIncomes[key] || 0);
+        const incomeObj = monthlyIncomes[key] || { gross: 0, deduction: 0 };
+        gross += incomeObj.gross || 0;
+        deduction += incomeObj.deduction || 0;
       }
+
+      net = gross - deduction;
+      const balance = net - expense;
 
       const now = new Date();
       let monthsToConsider = 12;
@@ -433,22 +445,26 @@ export default function DashboardScreen({ navigation }: any) {
 
       return {
         year,
-        income,
+        gross,
+        deduction,
+        net,
         expense,
-        balance: income - expense,
+        balance,
         monthlyAverage
       };
     });
   }, [incomeSelectedYear, incomeYears, expenses, monthlyIncomes]);
 
   const incomeOverallTotals = useMemo(() => {
-    if (incomeSelectedYear !== 'All') return { income: 0, expense: 0, balance: 0, yearlyAverage: 0 };
+    if (incomeSelectedYear !== 'All') return { gross: 0, deduction: 0, net: 0, expense: 0, balance: 0, yearlyAverage: 0 };
     const totals = incomeAllYearsStats.reduce((acc, curr) => {
-      acc.income += curr.income;
+      acc.gross += curr.gross;
+      acc.deduction += curr.deduction;
+      acc.net += curr.net;
       acc.expense += curr.expense;
       acc.balance += curr.balance;
       return acc;
-    }, { income: 0, expense: 0, balance: 0 });
+    }, { gross: 0, deduction: 0, net: 0, expense: 0, balance: 0 });
 
     const yearlyAverage = totals.expense / Math.max(incomeAllYearsStats.length - 1, 1);
 
@@ -460,9 +476,10 @@ export default function DashboardScreen({ navigation }: any) {
     setHiddenIncomeItems({});
   }, [isAmountsVisible]);
 
-  const handleOpenIncomeModal = (monthIndex: number, monthName: string, currentIncome: number) => {
+  const handleOpenIncomeModal = (monthIndex: number, monthName: string, currentGross: number, currentDeduction: number) => {
     setIncomeSelectedMonth({ monthIndex, monthName });
-    setIncomeInput(currentIncome > 0 ? currentIncome.toString() : '');
+    setGrossIncomeInput(currentGross > 0 ? currentGross.toString() : '');
+    setDeductionInput(currentDeduction > 0 ? currentDeduction.toString() : '');
     setIncomeError('');
     setIsIncomeModalVisible(true);
   };
@@ -470,22 +487,36 @@ export default function DashboardScreen({ navigation }: any) {
   const handleSaveIncome = async () => {
     if (!incomeSelectedMonth || incomeSelectedYear === 'All') return;
 
-    const amountStr = incomeInput.trim();
-    if (!amountStr) {
+    const grossStr = grossIncomeInput.trim();
+    const dedStr = deductionInput.trim();
+
+    if (!grossStr && !dedStr) {
       const monthYearKey = `${incomeSelectedYear}-${String(incomeSelectedMonth.monthIndex).padStart(2, '0')}`;
-      await updateMonthlyIncome(monthYearKey, 0);
+      await updateMonthlyIncome(monthYearKey, 0, 0);
       setIsIncomeModalVisible(false);
       return;
     }
 
-    const amount = parseFloat(amountStr);
-    if (isNaN(amount) || amount < 0) {
-      setIncomeError('Please enter a valid positive number.');
-      return;
+    let parsedGross = 0;
+    if (grossStr) {
+      parsedGross = parseFloat(grossStr);
+      if (isNaN(parsedGross) || parsedGross < 0) {
+        setIncomeError('Please enter a valid positive gross income.');
+        return;
+      }
+    }
+    
+    let parsedDed = 0;
+    if (dedStr) {
+      parsedDed = parseFloat(dedStr);
+      if (isNaN(parsedDed) || parsedDed < 0) {
+        setIncomeError('Please enter a valid positive deduction.');
+        return;
+      }
     }
 
     const monthYearKey = `${incomeSelectedYear}-${String(incomeSelectedMonth.monthIndex).padStart(2, '0')}`;
-    await updateMonthlyIncome(monthYearKey, amount);
+    await updateMonthlyIncome(monthYearKey, parsedGross, parsedDed);
     setIsIncomeModalVisible(false);
   };
 
@@ -1367,9 +1398,21 @@ export default function DashboardScreen({ navigation }: any) {
                   </View>
                   <View style={styles.incomeYearlyStatsRow}>
                     <View style={styles.incomeYearlyStatColumn}>
-                      <AppText style={styles.incomeStatLabelWhite}>Total Income</AppText>
-                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.income === 0 ? '#FFF' : '#00C851' }]}>
-                        {isIncomeSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(incomeOverallTotals.income)).padStart(5, '0')}`}
+                      <AppText style={styles.incomeStatLabelWhite}>Gross Income</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.gross === 0 ? '#FFF' : '#00C851' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(incomeOverallTotals.gross)).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Deduction</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.deduction === 0 ? '#FFF' : '#ffbb33' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `-${currency}${String(formatAmount(incomeOverallTotals.deduction)).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Net Income</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.net === 0 ? '#FFF' : '#00C851' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(incomeOverallTotals.net)).padStart(5, '0')}`}
                       </AppText>
                     </View>
                     <View style={styles.incomeYearlyStatColumn}>
@@ -1385,7 +1428,7 @@ export default function DashboardScreen({ navigation }: any) {
                       </AppText>
                     </View>
                   </View>
-                  {renderIncomeProgressBar(incomeOverallTotals.income, incomeOverallTotals.expense, incomeOverallTotals.balance, `Yearly Avg: ${currency}${String(formatAmount(incomeOverallTotals.yearlyAverage)).padStart(5, '0')}`)}
+                  {renderIncomeProgressBar(incomeOverallTotals.net, incomeOverallTotals.expense, incomeOverallTotals.balance, `Yearly Avg: ${currency}${String(formatAmount(incomeOverallTotals.yearlyAverage)).padStart(5, '0')}`)}
                 </PremiumCardBackground>
 
                 <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
@@ -1409,9 +1452,23 @@ export default function DashboardScreen({ navigation }: any) {
 
                         <View style={styles.incomeStatsRow}>
                           <View style={styles.incomeStatColumn}>
-                            <AppText style={styles.incomeStatLabelWhite}>Total Income</AppText>
-                            <AppText style={[styles.incomeStatValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
-                              {(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
+                            <AppText style={styles.incomeStatLabelWhite}>Gross Income</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.gross === 0 ? '#FFF' : '#00C851' }]}>
+                              {(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.gross)).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Deduction</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.deduction === 0 ? '#FFF' : '#ffbb33' }]}>
+                              {(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `-${currency}${String(formatAmount(stat.deduction)).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Net Income</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.net === 0 ? '#FFF' : '#00C851' }]}>
+                              {(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.net)).padStart(5, '0')}`}
                             </AppText>
                           </View>
 
@@ -1431,7 +1488,7 @@ export default function DashboardScreen({ navigation }: any) {
                             </AppText>
                           </View>
                         </View>
-                        {renderIncomeProgressBar(stat.income, stat.expense, stat.balance, `Monthly Avg: ${currency}${String(formatAmount(stat.monthlyAverage)).padStart(5, '0')}`)}
+                        {renderIncomeProgressBar(stat.net, stat.expense, stat.balance, `Monthly Avg: ${currency}${String(formatAmount(stat.monthlyAverage)).padStart(5, '0')}`)}
                       </PremiumCardBackground>
                     </TouchableOpacity>
                   ))}
@@ -1450,9 +1507,21 @@ export default function DashboardScreen({ navigation }: any) {
                   </View>
                   <View style={styles.incomeYearlyStatsRow}>
                     <View style={styles.incomeYearlyStatColumn}>
-                      <AppText style={styles.incomeStatLabelWhite}>Total Income</AppText>
-                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.income === 0 ? '#FFF' : '#00C851' }]}>
-                        {isIncomeSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(incomeYearlyTotals.income)).padStart(5, '0')}`}
+                      <AppText style={styles.incomeStatLabelWhite}>Gross Income</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.gross === 0 ? '#FFF' : '#00C851' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(incomeYearlyTotals.gross)).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Deduction</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.deduction === 0 ? '#FFF' : '#ffbb33' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `-${currency}${String(formatAmount(incomeYearlyTotals.deduction)).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Net Income</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.net === 0 ? '#FFF' : '#00C851' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(incomeYearlyTotals.net)).padStart(5, '0')}`}
                       </AppText>
                     </View>
                     <View style={styles.incomeYearlyStatColumn}>
@@ -1468,7 +1537,7 @@ export default function DashboardScreen({ navigation }: any) {
                       </AppText>
                     </View>
                   </View>
-                  {renderIncomeProgressBar(incomeYearlyTotals.income, incomeYearlyTotals.expense, incomeYearlyTotals.balance, `Monthly Avg: ${currency}${String(formatAmount(incomeYearlyTotals.monthlyAverage)).padStart(5, '0')}`)}
+                  {renderIncomeProgressBar(incomeYearlyTotals.net, incomeYearlyTotals.expense, incomeYearlyTotals.balance, `Monthly Avg: ${currency}${String(formatAmount(incomeYearlyTotals.monthlyAverage)).padStart(5, '0')}`)}
                 </PremiumCardBackground>
 
                 <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
@@ -1477,7 +1546,7 @@ export default function DashboardScreen({ navigation }: any) {
                   {incomeMonthlyStats.map((stat, index) => (
                     <TouchableOpacity
                       key={stat.monthIndex}
-                      onPress={() => handleOpenIncomeModal(stat.monthIndex, stat.monthName, stat.income)}
+                      onPress={() => handleOpenIncomeModal(stat.monthIndex, stat.monthName, stat.gross, stat.deduction)}
                     >
                       <PremiumCardBackground color={colors.primary} style={styles.incomeMonthCard}>
                         <View style={styles.incomeCardHeader}>
@@ -1494,9 +1563,23 @@ export default function DashboardScreen({ navigation }: any) {
 
                         <View style={styles.incomeStatsRow}>
                           <View style={styles.incomeStatColumn}>
-                            <AppText style={styles.incomeStatLabelWhite}>Income</AppText>
-                            <AppText style={[styles.incomeStatValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
-                              {(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
+                            <AppText style={styles.incomeStatLabelWhite}>Gross Income</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.gross === 0 ? '#FFF' : '#00C851' }]}>
+                              {(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.gross)).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Deduction</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.deduction === 0 ? '#FFF' : '#ffbb33' }]}>
+                              {(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `-${currency}${String(formatAmount(stat.deduction)).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Net Income</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.net === 0 ? '#FFF' : '#00C851' }]}>
+                              {(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.net)).padStart(5, '0')}`}
                             </AppText>
                           </View>
 
@@ -1516,7 +1599,7 @@ export default function DashboardScreen({ navigation }: any) {
                             </AppText>
                           </View>
                         </View>
-                        {renderIncomeProgressBar(stat.income, stat.expense, stat.balance, `Daily Avg: ${currency}${String(formatAmount(stat.dailyAverage)).padStart(5, '0')}`)}
+                        {renderIncomeProgressBar(stat.net, stat.expense, stat.balance, `Daily Avg: ${currency}${String(formatAmount(stat.dailyAverage)).padStart(5, '0')}`)}
                       </PremiumCardBackground>
                     </TouchableOpacity>
                   ))}
@@ -1542,18 +1625,33 @@ export default function DashboardScreen({ navigation }: any) {
                   </View>
 
                   <View style={styles.incomeInputWrapper}>
-                    <AppText style={[styles.incomeLabel, { color: colors.text }]}>Income Amount</AppText>
+                    <AppText style={[styles.incomeLabel, { color: colors.text }]}>Gross Income</AppText>
                     <TextInput
                       style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                       placeholder="0.00"
                       placeholderTextColor={colors.textMuted}
                       keyboardType="numeric"
-                      value={incomeInput}
+                      value={grossIncomeInput}
                       onChangeText={(text) => {
-                        setIncomeInput(text);
+                        setGrossIncomeInput(text);
                         setIncomeError('');
                       }}
                       autoFocus
+                    />
+                  </View>
+
+                  <View style={styles.incomeInputWrapper}>
+                    <AppText style={[styles.incomeLabel, { color: colors.text }]}>Deduction</AppText>
+                    <TextInput
+                      style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                      placeholder="0.00"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="numeric"
+                      value={deductionInput}
+                      onChangeText={(text) => {
+                        setDeductionInput(text);
+                        setIncomeError('');
+                      }}
                     />
                     {incomeError ? <AppText style={styles.incomeErrorText}>{incomeError}</AppText> : null}
                   </View>
