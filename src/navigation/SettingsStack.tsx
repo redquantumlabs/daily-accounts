@@ -9,7 +9,6 @@ import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import CurrencyScreen from '../screens/CurrencyScreen';
 import BudgetScreen from '../screens/BudgetScreen';
-import IncomeScreen from '../screens/IncomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import PaymentModesScreen from '../screens/PaymentModesScreen';
 import ManageAccountsScreen from '../screens/ManageAccountsScreen';
@@ -79,18 +78,7 @@ export default function SettingsStack() {
           )
         }}
       />
-      <Stack.Screen
-        name="Income"
-        component={IncomeScreen}
-        options={{
-          headerTitle: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: Platform.OS === 'android' ? -20 : 0 }}>
-              <Ionicons name="calendar" size={22} color={colors.text} style={{ marginRight: 8 }} />
-              <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>Monthly Income</AppText>
-            </View>
-          )
-        }}
-      />
+
       <Stack.Screen
         name="Categories"
         component={CategoriesScreen}

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
@@ -23,6 +24,11 @@ import notifee from '@notifee/react-native';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
 import { getCustomCardStyle } from '../utils/customCardStyles';
+
+const INCOME_MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
 const formatCompact = (num: number) => {
   if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
@@ -307,22 +313,204 @@ const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPres
 export default function DashboardScreen({ navigation }: any) {
   const colors = useThemeColors();
   const { isDarkTheme, useCustomCardUI } = useThemeContext();
-  const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed, categories, downloadPathUri } = useExpenseContext();
+  const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed, categories, downloadPathUri, monthlyIncomes, updateMonthlyIncome } = useExpenseContext();
   const { showAlert } = useAlert();
-  
-  const [showAccountsView, setShowAccountsView] = useState(false);
-  
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity onPress={() => setShowAccountsView(prev => !prev)} style={{ marginRight: 15 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="swap-horizontal" size={24} color={colors.text} />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, colors]);
+  const insets = useSafeAreaInsets();
+
+  const [activeView, setActiveView] = useState<'expenses' | 'accounts' | 'income'>('expenses');
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const incomeStartYear = 2022;
+  const incomeCurrentYearVal = new Date().getFullYear();
+  const incomeYears = Array.from({ length: incomeCurrentYearVal - incomeStartYear + 1 }, (_, i) => incomeCurrentYearVal - i);
+
+  const [incomeSelectedYear, setIncomeSelectedYear] = useState<number | 'All'>(incomeCurrentYearVal);
+  const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
+  const [incomeSelectedMonth, setIncomeSelectedMonth] = useState<{ monthIndex: number; monthName: string } | null>(null);
+
+  const [isIncomeSummaryHidden, setIsIncomeSummaryHidden] = React.useState(!isAmountsVisible);
+  const [hiddenIncomeItems, setHiddenIncomeItems] = React.useState<Record<string, boolean>>({});
+
+  const toggleHiddenIncomeItem = (key: string) => {
+    setHiddenIncomeItems(prev => {
+      const current = prev[key] ?? !isAmountsVisible;
+      return { ...prev, [key]: !current };
+    });
+  };
+
+  const [incomeInput, setIncomeInput] = useState('');
+  const [incomeError, setIncomeError] = useState('');
+
+  const incomeMonthlyStats = useMemo(() => {
+    if (incomeSelectedYear === 'All') return [];
+    return INCOME_MONTHS.map((monthName, index) => {
+      const monthNumber = index + 1;
+      const key = `${incomeSelectedYear}-${String(monthNumber).padStart(2, '0')}`;
+
+      const income = monthlyIncomes[key] || 0;
+
+      const expense = expenses
+        .filter(e => {
+          return parseISOYear(e.date) === incomeSelectedYear && parseISOMonth(e.date) === index;
+        })
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      const balance = income - expense;
+
+      const now = new Date();
+      let daysToConsider = 1;
+      if (incomeSelectedYear === now.getFullYear() && monthNumber === now.getMonth() + 1) {
+        daysToConsider = Math.max(now.getDate() - 1, 1);
+      } else if ((incomeSelectedYear as number) < now.getFullYear() || ((incomeSelectedYear as number) === now.getFullYear() && monthNumber < now.getMonth() + 1)) {
+        daysToConsider = new Date(incomeSelectedYear as number, monthNumber, 0).getDate();
+      } else {
+        daysToConsider = new Date(incomeSelectedYear as number, monthNumber, 0).getDate();
+      }
+      const dailyAverage = expense / daysToConsider;
+
+      return {
+        monthIndex: monthNumber,
+        monthName,
+        income,
+        expense,
+        balance,
+        dailyAverage
+      };
+    });
+  }, [incomeSelectedYear, expenses, monthlyIncomes]);
+
+  const incomeYearlyTotals = useMemo(() => {
+    if (incomeSelectedYear === 'All') return { income: 0, expense: 0, balance: 0, monthlyAverage: 0 };
+    const totals = incomeMonthlyStats.reduce(
+      (acc, curr) => {
+        acc.income += curr.income;
+        acc.expense += curr.expense;
+        acc.balance += curr.balance;
+        return acc;
+      },
+      { income: 0, expense: 0, balance: 0 }
+    );
+
+    const now = new Date();
+    let monthsToConsider = 12;
+    if (incomeSelectedYear === now.getFullYear()) {
+      monthsToConsider = Math.max(now.getMonth(), 1);
+    } else if ((incomeSelectedYear as number) < now.getFullYear()) {
+      monthsToConsider = 12;
+    }
+    const monthlyAverage = totals.expense / monthsToConsider;
+
+    return { ...totals, monthlyAverage };
+  }, [incomeMonthlyStats, incomeSelectedYear]);
+
+  const incomeAllYearsStats = useMemo(() => {
+    if (incomeSelectedYear !== 'All') return [];
+
+    return incomeYears.map(year => {
+      let income = 0;
+      let expense = 0;
+
+      expense = expenses
+        .filter(e => parseISOYear(e.date) === year)
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      for (let i = 1; i <= 12; i++) {
+        const key = `${year}-${String(i).padStart(2, '0')}`;
+        income += (monthlyIncomes[key] || 0);
+      }
+
+      const now = new Date();
+      let monthsToConsider = 12;
+      if (year === now.getFullYear()) {
+        monthsToConsider = Math.max(now.getMonth(), 1);
+      }
+      const monthlyAverage = expense / monthsToConsider;
+
+      return {
+        year,
+        income,
+        expense,
+        balance: income - expense,
+        monthlyAverage
+      };
+    });
+  }, [incomeSelectedYear, incomeYears, expenses, monthlyIncomes]);
+
+  const incomeOverallTotals = useMemo(() => {
+    if (incomeSelectedYear !== 'All') return { income: 0, expense: 0, balance: 0, yearlyAverage: 0 };
+    const totals = incomeAllYearsStats.reduce((acc, curr) => {
+      acc.income += curr.income;
+      acc.expense += curr.expense;
+      acc.balance += curr.balance;
+      return acc;
+    }, { income: 0, expense: 0, balance: 0 });
+
+    const yearlyAverage = totals.expense / Math.max(incomeAllYearsStats.length - 1, 1);
+
+    return { ...totals, yearlyAverage };
+  }, [incomeAllYearsStats, incomeSelectedYear]);
+
+  React.useEffect(() => {
+    setIsIncomeSummaryHidden(!isAmountsVisible);
+    setHiddenIncomeItems({});
+  }, [isAmountsVisible]);
+
+  const handleOpenIncomeModal = (monthIndex: number, monthName: string, currentIncome: number) => {
+    setIncomeSelectedMonth({ monthIndex, monthName });
+    setIncomeInput(currentIncome > 0 ? currentIncome.toString() : '');
+    setIncomeError('');
+    setIsIncomeModalVisible(true);
+  };
+
+  const handleSaveIncome = async () => {
+    if (!incomeSelectedMonth || incomeSelectedYear === 'All') return;
+
+    const amountStr = incomeInput.trim();
+    if (!amountStr) {
+      const monthYearKey = `${incomeSelectedYear}-${String(incomeSelectedMonth.monthIndex).padStart(2, '0')}`;
+      await updateMonthlyIncome(monthYearKey, 0);
+      setIsIncomeModalVisible(false);
+      return;
+    }
+
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount < 0) {
+      setIncomeError('Please enter a valid positive number.');
+      return;
+    }
+
+    const monthYearKey = `${incomeSelectedYear}-${String(incomeSelectedMonth.monthIndex).padStart(2, '0')}`;
+    await updateMonthlyIncome(monthYearKey, amount);
+    setIsIncomeModalVisible(false);
+  };
+
+  const renderIncomeProgressBar = (income: number, expense: number, balance: number, averageText?: string) => {
+    const expensePercent = income > 0 ? (expense / income) * 100 : (expense > 0 ? 100 : 0);
+    const availablePercent = income > 0 ? (balance / income) * 100 : (balance > 0 ? 100 : 0);
+
+    return (
+      <View style={{ marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>
+            EXPENSE {String(expensePercent.toFixed(2)).padStart(5, '0')}%
+          </AppText>
+          <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>
+            AVAILABLE BALANCE {String(availablePercent.toFixed(2)).padStart(5, '0')}%
+          </AppText>
+        </View>
+        <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 4, flexDirection: 'row', overflow: 'hidden' }}>
+          <View style={{ height: '100%', width: `${Math.min(100, expensePercent)}%`, backgroundColor: '#ff4444' }} />
+          <View style={{ height: '100%', width: `${Math.max(0, 100 - expensePercent)}%`, backgroundColor: income > 0 && balance > 0 ? '#00C851' : 'transparent' }} />
+        </View>
+        {averageText && (
+          <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 12 }}>
+            {averageText}
+          </AppText>
+        )}
+      </View>
+    );
+  };
   const [isDownloading, setIsDownloading] = useState(false);
   const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats, transactions } = useTransactionContext();
 
@@ -1105,34 +1293,283 @@ export default function DashboardScreen({ navigation }: any) {
     setSelectedYear(selectedYear + 1);
   };
 
-  if (showAccountsView) {
-    return (
-      <View style={[{ flex: 1 }, { backgroundColor: colors.background }]}>
-        <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
-        <DraggableFlatList
-          data={accounts}
-          keyExtractor={item => item}
-          onDragEnd={handleDragEnd}
-          renderItem={renderAccountItem}
-          ListHeaderComponent={listHeader}
-          ListEmptyComponent={
-            <EmptyState
-              icon="business-outline"
-              title="No Accounts"
-              message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
-            />
-          }
-          contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 10 }}
-          activationDistance={20}
-        />
-      </View>
-    );
-  }
+  const renderContent = () => {
+    if (activeView === 'accounts') {
+      return (
+        <>
+          <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
+          <DraggableFlatList
+            data={accounts}
+            keyExtractor={item => item}
+            onDragEnd={handleDragEnd}
+            renderItem={renderAccountItem}
+            ListHeaderComponent={listHeader}
+            ListEmptyComponent={
+              <EmptyState
+                icon="business-outline"
+                title="No Accounts"
+                message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
+              />
+            }
+            contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 10 }}
+            activationDistance={20}
+          />
+        </>
+      );
+    }
 
-  return (
-    <View style={{ flex: 1 }}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
-        {renderCards()}
+    if (activeView === 'income') {
+      return (
+        <View style={{ flex: 1 }}>
+          <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+            <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.incomeYearScroll}>
+              {(['All', ...incomeYears] as (number | 'All')[]).map(year => (
+                <TouchableOpacity
+                  key={year}
+                  style={[
+                    styles.incomeYearChip,
+                    { backgroundColor: incomeSelectedYear === year ? colors.primary : colors.surface }
+                  ]}
+                  onPress={() => setIncomeSelectedYear(year)}
+                >
+                  <AppText style={[styles.incomeYearChipText, { color: incomeSelectedYear === year ? '#fff' : colors.text }]}>
+                    {year}
+                  </AppText>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.incomeScroll}>
+            <View style={styles.incomeHeader}>
+              <AppText style={[styles.incomeTitle, { color: colors.text }]}>
+                {incomeSelectedYear === 'All' ? 'Yearly Income' : 'Monthly Income'}
+              </AppText>
+              <AppText style={styles.incomeSubtitle} numberOfLines={1} adjustsFontSizeToFit>
+                {incomeSelectedYear === 'All' ? 'View your yearly income and expense overview.' : 'Track income vs expenses to see your balance.'}
+              </AppText>
+            </View>
+
+            {incomeSelectedYear === 'All' ? (
+              <>
+                <PremiumCardBackground color={colors.primary} style={styles.incomeYearlySummaryCard}>
+                  <View style={{ marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <AppText style={{ fontSize: 16, color: '#FFF', fontWeight: 'bold' }}>
+                      Overall Overview
+                    </AppText>
+                    <TouchableOpacity onPress={() => setIsIncomeSummaryHidden(!isIncomeSummaryHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Ionicons name={isIncomeSummaryHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.incomeYearlyStatsRow}>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Total Income</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.income === 0 ? '#FFF' : '#00C851' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(incomeOverallTotals.income)).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Total Expense</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.expense === 0 ? '#FFF' : '#ff4444' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `-${currency}${String(formatAmount(incomeOverallTotals.expense)).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Available Balance</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.balance === 0 ? '#FFF' : (incomeOverallTotals.balance > 0 ? '#00C851' : '#ff4444') }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `${incomeOverallTotals.balance === 0 ? '' : (incomeOverallTotals.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(incomeOverallTotals.balance))).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                  </View>
+                  {renderIncomeProgressBar(incomeOverallTotals.income, incomeOverallTotals.expense, incomeOverallTotals.balance, `Yearly Avg: ${currency}${String(formatAmount(incomeOverallTotals.yearlyAverage)).padStart(5, '0')}`)}
+                </PremiumCardBackground>
+
+                <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
+
+                <View style={styles.incomeList}>
+                  {incomeAllYearsStats.map((stat) => (
+                    <TouchableOpacity
+                      key={stat.year}
+                      onPress={() => setIncomeSelectedYear(stat.year)}
+                    >
+                      <PremiumCardBackground color={colors.primary} style={styles.incomeMonthCard}>
+                        <View style={styles.incomeCardHeader}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <AppText style={[styles.incomeMonthName, { color: '#FFF' }]}>{stat.year} Overview</AppText>
+                            <Ionicons name="chevron-forward" size={18} color="#FFF" style={{ marginLeft: 4 }} />
+                          </View>
+                          <TouchableOpacity onPress={() => toggleHiddenIncomeItem(`year-${stat.year}`)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                            <Ionicons name={(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                          </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.incomeStatsRow}>
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Total Income</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
+                              {(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Total Expense</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.expense === 0 ? '#FFF' : '#ff4444' }]}>
+                              {(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `-${currency}${String(formatAmount(stat.expense)).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Available Balance</AppText>
+                            <AppText
+                              style={[styles.incomeStatValue, { color: stat.balance === 0 ? '#FFF' : (stat.balance > 0 ? '#00C851' : '#ff4444') }]}
+                            >
+                              {(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(stat.balance))).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+                        </View>
+                        {renderIncomeProgressBar(stat.income, stat.expense, stat.balance, `Monthly Avg: ${currency}${String(formatAmount(stat.monthlyAverage)).padStart(5, '0')}`)}
+                      </PremiumCardBackground>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            ) : (
+              <>
+                <PremiumCardBackground color={colors.primary} style={styles.incomeYearlySummaryCard}>
+                  <View style={{ marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <AppText style={{ fontSize: 16, color: '#FFF', fontWeight: 'bold' }}>
+                      {incomeSelectedYear} Overview
+                    </AppText>
+                    <TouchableOpacity onPress={() => setIsIncomeSummaryHidden(!isIncomeSummaryHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Ionicons name={isIncomeSummaryHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.incomeYearlyStatsRow}>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Total Income</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.income === 0 ? '#FFF' : '#00C851' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `+${currency}${String(formatAmount(incomeYearlyTotals.income)).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Total Expense</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.expense === 0 ? '#FFF' : '#ff4444' }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `-${currency}${String(formatAmount(incomeYearlyTotals.expense)).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                    <View style={styles.incomeYearlyStatColumn}>
+                      <AppText style={styles.incomeStatLabelWhite}>Available Balance</AppText>
+                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.balance === 0 ? '#FFF' : (incomeYearlyTotals.balance > 0 ? '#00C851' : '#ff4444') }]}>
+                        {isIncomeSummaryHidden ? '•••••' : `${incomeYearlyTotals.balance === 0 ? '' : (incomeYearlyTotals.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(incomeYearlyTotals.balance))).padStart(5, '0')}`}
+                      </AppText>
+                    </View>
+                  </View>
+                  {renderIncomeProgressBar(incomeYearlyTotals.income, incomeYearlyTotals.expense, incomeYearlyTotals.balance, `Monthly Avg: ${currency}${String(formatAmount(incomeYearlyTotals.monthlyAverage)).padStart(5, '0')}`)}
+                </PremiumCardBackground>
+
+                <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
+
+                <View style={styles.incomeList}>
+                  {incomeMonthlyStats.map((stat, index) => (
+                    <TouchableOpacity
+                      key={stat.monthIndex}
+                      onPress={() => handleOpenIncomeModal(stat.monthIndex, stat.monthName, stat.income)}
+                    >
+                      <PremiumCardBackground color={colors.primary} style={styles.incomeMonthCard}>
+                        <View style={styles.incomeCardHeader}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <AppText style={[styles.incomeMonthName, { color: '#FFF' }]}>{stat.monthName}</AppText>
+                          </View>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="pencil" size={18} color="rgba(255,255,255,0.7)" style={{ marginRight: 12 }} />
+                            <TouchableOpacity onPress={() => toggleHiddenIncomeItem(`month-${stat.monthIndex}`)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                              <Ionicons name={(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+
+                        <View style={styles.incomeStatsRow}>
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Income</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.income === 0 ? '#FFF' : '#00C851' }]}>
+                              {(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `+${currency}${String(formatAmount(stat.income)).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Expense</AppText>
+                            <AppText style={[styles.incomeStatValue, { color: stat.expense === 0 ? '#FFF' : '#ff4444' }]}>
+                              {(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `-${currency}${String(formatAmount(stat.expense)).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+
+                          <View style={styles.incomeStatColumn}>
+                            <AppText style={styles.incomeStatLabelWhite}>Available  Balance</AppText>
+                            <AppText
+                              style={[styles.incomeStatValue, { color: stat.balance === 0 ? '#FFF' : (stat.balance > 0 ? '#00C851' : '#ff4444') }]}
+                            >
+                              {(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `${stat.balance === 0 ? '' : (stat.balance > 0 ? '+' : '-')}${currency}${String(formatAmount(Math.abs(stat.balance))).padStart(5, '0')}`}
+                            </AppText>
+                          </View>
+                        </View>
+                        {renderIncomeProgressBar(stat.income, stat.expense, stat.balance, `Daily Avg: ${currency}${String(formatAmount(stat.dailyAverage)).padStart(5, '0')}`)}
+                      </PremiumCardBackground>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+          </ScrollView>
+
+          <Modal visible={isIncomeModalVisible} transparent animationType="slide" onRequestClose={() => setIsIncomeModalVisible(false)}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.incomeModalOverlay}>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                  style={[styles.incomeModalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
+                >
+                  <View style={styles.incomeModalHeader}>
+                    <AppText style={[styles.incomeModalTitle, { color: colors.text }]}>
+                      Income for {incomeSelectedMonth?.monthName} {incomeSelectedYear}
+                    </AppText>
+                    <TouchableOpacity onPress={() => setIsIncomeModalVisible(false)}>
+                      <Ionicons name="close" size={24} color={colors.text} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.incomeInputWrapper}>
+                    <AppText style={[styles.incomeLabel, { color: colors.text }]}>Income Amount</AppText>
+                    <TextInput
+                      style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                      placeholder="0.00"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="numeric"
+                      value={incomeInput}
+                      onChangeText={(text) => {
+                        setIncomeInput(text);
+                        setIncomeError('');
+                      }}
+                      autoFocus
+                    />
+                    {incomeError ? <AppText style={styles.incomeErrorText}>{incomeError}</AppText> : null}
+                  </View>
+
+                  <TouchableOpacity style={[styles.incomeSaveButton, { backgroundColor: colors.primary }]} onPress={handleSaveIncome}>
+                    <AppText style={styles.incomeSaveButtonText}>Save Income</AppText>
+                  </TouchableOpacity>
+                </KeyboardAvoidingView>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+        </View>
+      );
+    }
+
+    // Default: 'expenses'
+    return (
+      <>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
+          {renderCards()}
         <MonthlySpendingCalendar
           expenses={expenses}
           selectedMonth={selectedMonth}
@@ -1317,38 +1754,68 @@ export default function DashboardScreen({ navigation }: any) {
         </PremiumCardBackground>
 
 
-      </ScrollView>
+        </ScrollView>
 
-      {toastMessage && (
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: 50,
-          alignSelf: 'center',
-          backgroundColor: 'rgba(0,0,0,0.7)',
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          borderRadius: 20,
-          opacity: toastOpacity,
-          zIndex: 9999,
-        }}>
-          <AppText style={{ color: 'white', fontSize: 14 }}>{toastMessage}</AppText>
-        </Animated.View>
-      )}
+        {toastMessage && (
+          <Animated.View style={{
+            position: 'absolute',
+            bottom: 50,
+            alignSelf: 'center',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderRadius: 20,
+            opacity: toastOpacity,
+            zIndex: 9999,
+          }}>
+            <AppText style={{ color: 'white', fontSize: 14 }}>{toastMessage}</AppText>
+          </Animated.View>
+        )}
 
-      <DayExpensesModal
-        visible={isDayModalVisible}
-        onClose={() => setIsDayModalVisible(false)}
-        selectedDate={selectedDayDate}
-        isHidden={isMonthlyCalendarHidden}
-      />
+        <DayExpensesModal
+          visible={isDayModalVisible}
+          onClose={() => setIsDayModalVisible(false)}
+          selectedDate={selectedDayDate}
+          isHidden={isMonthlyCalendarHidden}
+        />
 
-      <MonthExpensesModal
-        visible={isMonthModalVisible}
-        onClose={() => setIsMonthModalVisible(false)}
-        selectedMonth={selectedMonthForModal}
-        selectedYear={selectedYear}
-        isHidden={isYearlyCalendarHidden}
-      />
+        <MonthExpensesModal
+          visible={isMonthModalVisible}
+          onClose={() => setIsMonthModalVisible(false)}
+          selectedMonth={selectedMonthForModal}
+          selectedYear={selectedYear}
+          isHidden={isYearlyCalendarHidden}
+        />
+      </>
+    );
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flexDirection: 'row', padding: 16, paddingBottom: 0, backgroundColor: colors.background }}>
+        {(['expenses', 'accounts', 'income'] as const).map((view) => (
+          <TouchableOpacity
+            key={view}
+            style={{
+              flex: 1,
+              paddingVertical: 10,
+              alignItems: 'center',
+              borderBottomWidth: 2,
+              borderBottomColor: activeView === view ? colors.primary : 'transparent',
+            }}
+            onPress={() => setActiveView(view)}
+          >
+            <AppText style={{ 
+              color: activeView === view ? colors.primary : colors.textMuted,
+              fontWeight: activeView === view ? 'bold' : 'normal',
+              textTransform: 'capitalize'
+            }}>
+              {view}
+            </AppText>
+          </TouchableOpacity>
+        ))}
+      </View>
+      {renderContent()}
     </View>
   );
 }
@@ -1361,6 +1828,150 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
+  },
+  incomeYearSelectorContainer: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  incomeYearScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  incomeYearChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  incomeYearChipText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  incomeScroll: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  incomeHeader: {
+    marginBottom: 24,
+  },
+  incomeTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  incomeSubtitle: {
+    fontSize: 14,
+    color: '#888',
+    lineHeight: 20,
+  },
+  incomeYearlySummaryCard: {
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  incomeYearlyStatsRow: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  incomeYearlyStatColumn: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  incomeList: {
+    gap: 0,
+  },
+  incomeMonthCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  incomeCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  incomeMonthName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  incomeStatsRow: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  incomeStatColumn: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  incomeStatLabel: {
+    fontSize: 12,
+    color: '#888',
+    textTransform: 'uppercase',
+    fontWeight: '600',
+  },
+  incomeStatLabelWhite: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    textTransform: 'uppercase',
+    fontWeight: '600',
+  },
+  incomeStatValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  incomeModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  incomeModalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  incomeModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  incomeModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  incomeInputWrapper: {
+    marginBottom: 24,
+  },
+  incomeLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  incomeInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+  },
+  incomeErrorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  incomeSaveButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  incomeSaveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   }
 });
-
