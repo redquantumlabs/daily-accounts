@@ -1399,7 +1399,7 @@ export default function DashboardScreen({ navigation }: any) {
                   <View style={styles.incomeYearlyStatsRow}>
                     <View style={styles.incomeYearlyStatColumn}>
                       <AppText style={styles.incomeStatLabelWhite}>Gross Income</AppText>
-                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.gross === 0 ? '#FFF' : '#00C851' }]}>
+                      <AppText style={[styles.incomeStatValue, { color: incomeOverallTotals.gross === 0 ? '#FFF' : '#33B5E5' }]}>
                         {isIncomeSummaryHidden ? '•••••' : `${incomeOverallTotals.gross === 0 ? '' : '+'}${currency}${String(formatAmount(incomeOverallTotals.gross)).padStart(5, '0')}`}
                       </AppText>
                     </View>
@@ -1453,7 +1453,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <View style={styles.incomeStatsRow}>
                           <View style={styles.incomeStatColumn}>
                             <AppText style={styles.incomeStatLabelWhite}>Gross Income</AppText>
-                            <AppText style={[styles.incomeStatValue, { color: stat.gross === 0 ? '#FFF' : '#00C851' }]}>
+                            <AppText style={[styles.incomeStatValue, { color: stat.gross === 0 ? '#FFF' : '#33B5E5' }]}>
                               {(hiddenIncomeItems[`year-${stat.year}`] ?? !isAmountsVisible) ? '•••••' : `${stat.gross === 0 ? '' : '+'}${currency}${String(formatAmount(stat.gross)).padStart(5, '0')}`}
                             </AppText>
                           </View>
@@ -1508,7 +1508,7 @@ export default function DashboardScreen({ navigation }: any) {
                   <View style={styles.incomeYearlyStatsRow}>
                     <View style={styles.incomeYearlyStatColumn}>
                       <AppText style={styles.incomeStatLabelWhite}>Gross Income</AppText>
-                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.gross === 0 ? '#FFF' : '#00C851' }]}>
+                      <AppText style={[styles.incomeStatValue, { color: incomeYearlyTotals.gross === 0 ? '#FFF' : '#33B5E5' }]}>
                         {isIncomeSummaryHidden ? '•••••' : `${incomeYearlyTotals.gross === 0 ? '' : '+'}${currency}${String(formatAmount(incomeYearlyTotals.gross)).padStart(5, '0')}`}
                       </AppText>
                     </View>
@@ -1564,7 +1564,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <View style={styles.incomeStatsRow}>
                           <View style={styles.incomeStatColumn}>
                             <AppText style={styles.incomeStatLabelWhite}>Gross Income</AppText>
-                            <AppText style={[styles.incomeStatValue, { color: stat.gross === 0 ? '#FFF' : '#00C851' }]}>
+                            <AppText style={[styles.incomeStatValue, { color: stat.gross === 0 ? '#FFF' : '#33B5E5' }]}>
                               {(hiddenIncomeItems[`month-${stat.monthIndex}`] ?? !isAmountsVisible) ? '•••••' : `${stat.gross === 0 ? '' : '+'}${currency}${String(formatAmount(stat.gross)).padStart(5, '0')}`}
                             </AppText>
                           </View>
