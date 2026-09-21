@@ -1792,7 +1792,7 @@ export default function DashboardScreen({ navigation }: any) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ flexDirection: 'row', padding: 16, paddingBottom: 0, backgroundColor: colors.background }}>
+      <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
         {(['expenses', 'accounts', 'income'] as const).map((view) => (
           <TouchableOpacity
             key={view}
@@ -1800,15 +1800,18 @@ export default function DashboardScreen({ navigation }: any) {
               flex: 1,
               paddingVertical: 10,
               alignItems: 'center',
-              borderBottomWidth: 2,
-              borderBottomColor: activeView === view ? colors.primary : 'transparent',
+              backgroundColor: activeView === view ? colors.primary : colors.card,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: activeView === view ? colors.primary : colors.border,
             }}
             onPress={() => setActiveView(view)}
           >
             <AppText style={{ 
-              color: activeView === view ? colors.primary : colors.textMuted,
+              color: activeView === view ? '#fff' : colors.text,
               fontWeight: activeView === view ? 'bold' : 'normal',
-              textTransform: 'capitalize'
+              textTransform: 'capitalize',
+              fontSize: 14,
             }}>
               {view}
             </AppText>
