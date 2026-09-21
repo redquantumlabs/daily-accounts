@@ -1311,7 +1311,7 @@ export default function DashboardScreen({ navigation }: any) {
                 message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
               />
             }
-            contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 10 }}
+            contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
             activationDistance={20}
           />
         </>
@@ -1565,193 +1565,193 @@ export default function DashboardScreen({ navigation }: any) {
       );
     }
 
-    // Default: 'expenses'
+    // Default: 'Expenses'
     return (
       <>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
           {renderCards()}
-        <MonthlySpendingCalendar
-          expenses={expenses}
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          colors={colors}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-          onDayPress={handleDayPress}
-          isCalendarHidden={isMonthlyCalendarHidden}
-          setIsCalendarHidden={setIsMonthlyCalendarHidden}
-          currency={currency}
-        />
+          <MonthlySpendingCalendar
+            expenses={expenses}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            colors={colors}
+            onPrevMonth={handlePrevMonth}
+            onNextMonth={handleNextMonth}
+            onDayPress={handleDayPress}
+            isCalendarHidden={isMonthlyCalendarHidden}
+            setIsCalendarHidden={setIsMonthlyCalendarHidden}
+            currency={currency}
+          />
 
-        <YearlySpendingCalendar
-          expenses={expenses}
-          selectedYear={selectedYear}
-          colors={colors}
-          onMonthPress={handleMonthPress}
-          onPrevYear={handlePrevYear}
-          onNextYear={handleNextYear}
-          isCalendarHidden={isYearlyCalendarHidden}
-          setIsCalendarHidden={setIsYearlyCalendarHidden}
-          currency={currency}
-        />
+          <YearlySpendingCalendar
+            expenses={expenses}
+            selectedYear={selectedYear}
+            colors={colors}
+            onMonthPress={handleMonthPress}
+            onPrevYear={handlePrevYear}
+            onNextYear={handleNextYear}
+            isCalendarHidden={isYearlyCalendarHidden}
+            setIsCalendarHidden={setIsYearlyCalendarHidden}
+            currency={currency}
+          />
 
-        <AllYearsSpendingCalendar
-          expenses={expenses}
-          availableYears={availableYears}
-          colors={colors}
-          onYearPress={(year: number, total: number) => {
-            if (total > 0) {
-              setSelectedYear(year);
-            } else {
-              showToast('No transaction found.');
-            }
-          }}
-          isCalendarHidden={isAllYearsCalendarHidden}
-          setIsCalendarHidden={setIsAllYearsCalendarHidden}
-          currency={currency}
-        />
+          <AllYearsSpendingCalendar
+            expenses={expenses}
+            availableYears={availableYears}
+            colors={colors}
+            onYearPress={(year: number, total: number) => {
+              if (total > 0) {
+                setSelectedYear(year);
+              } else {
+                showToast('No transaction found.');
+              }
+            }}
+            isCalendarHidden={isAllYearsCalendarHidden}
+            setIsCalendarHidden={setIsAllYearsCalendarHidden}
+            currency={currency}
+          />
 
-        {/* Yearly Monthly Bar Chart */}
-        <PremiumCardBackground color={colors.primary}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
-            <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-              Monthly Spending Chart
-            </AppText>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
-                {selectedYear}
+          {/* Yearly Monthly Bar Chart */}
+          <PremiumCardBackground color={colors.primary}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
+              <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
+                Monthly Spending Chart
               </AppText>
-              <TouchableOpacity onPress={() => setIsYearlyBarChartHidden(!isYearlyBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name={isYearlyBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
+                  {selectedYear}
+                </AppText>
+                <TouchableOpacity onPress={() => setIsYearlyBarChartHidden(!isYearlyBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name={isYearlyBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 }}>
+              <TouchableOpacity onPress={handlePrevYear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="chevron-back" size={20} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleNextYear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="chevron-forward" size={20} color="#FFF" />
               </TouchableOpacity>
             </View>
-          </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 }}>
-            <TouchableOpacity onPress={handlePrevYear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="chevron-back" size={20} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleNextYear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="chevron-forward" size={20} color="#FFF" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
-            <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
-              {[
-                monthlyBudget > 0 ? monthlyBudget : maxExpense,
-                (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.80,
-                (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.60,
-                (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.40,
-                (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.20,
-                0
-              ].map((val, idx) => (
-                <AppText key={idx} style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', textAlign: 'right' }}>
-                  {isYearlyBarChartHidden ? '•••••' : `${currency}${formatCompact(val)}`}
-                </AppText>
-              ))}
-            </View>
-
-            <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', position: 'relative' }}>
-              <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between', paddingBottom: 20, paddingTop: 14, zIndex: -1 }}>
-                {[1, 2, 3, 4, 5, 6].map((_, i) => (
-                  <View key={i} style={{ height: 12, justifyContent: 'center' }}>
-                    <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)' }} />
-                  </View>
+            <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
+              <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
+                {[
+                  monthlyBudget > 0 ? monthlyBudget : maxExpense,
+                  (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.80,
+                  (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.60,
+                  (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.40,
+                  (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.20,
+                  0
+                ].map((val, idx) => (
+                  <AppText key={idx} style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', textAlign: 'right' }}>
+                    {isYearlyBarChartHidden ? '•••••' : `${currency}${formatCompact(val)}`}
+                  </AppText>
                 ))}
               </View>
-              {monthlyData.map((amount, index) => {
-                const yAxisMax = monthlyBudget > 0 ? monthlyBudget : maxExpense;
-                const heightPercentage = Math.min((amount / yAxisMax) * 100, 100);
-                const barColor = amount === 0
-                  ? 'rgba(255,255,255,0.2)'
-                  : (monthlyBudget > 0
-                    ? (amount > monthlyBudget ? '#ff4444' : (amount >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF'))
-                    : '#FFF');
-                return (
-                  <View key={index} style={{ alignItems: 'center', width: '6.9%', height: '100%', justifyContent: 'flex-end' }}>
-                    <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
-                      {!isYearlyBarChartHidden && amount > 0 && (
-                        <AppText style={{ fontSize: 6, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                          {`${currency}${formatCompact(amount)}`}
-                        </AppText>
-                      )}
-                      <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
+
+              <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', position: 'relative' }}>
+                <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between', paddingBottom: 20, paddingTop: 14, zIndex: -1 }}>
+                  {[1, 2, 3, 4, 5, 6].map((_, i) => (
+                    <View key={i} style={{ height: 12, justifyContent: 'center' }}>
+                      <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)' }} />
                     </View>
-                    <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
-                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
-                    </AppText>
-                  </View>
-                );
-              })}
+                  ))}
+                </View>
+                {monthlyData.map((amount, index) => {
+                  const yAxisMax = monthlyBudget > 0 ? monthlyBudget : maxExpense;
+                  const heightPercentage = Math.min((amount / yAxisMax) * 100, 100);
+                  const barColor = amount === 0
+                    ? 'rgba(255,255,255,0.2)'
+                    : (monthlyBudget > 0
+                      ? (amount > monthlyBudget ? '#ff4444' : (amount >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF'))
+                      : '#FFF');
+                  return (
+                    <View key={index} style={{ alignItems: 'center', width: '6.9%', height: '100%', justifyContent: 'flex-end' }}>
+                      <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
+                        {!isYearlyBarChartHidden && amount > 0 && (
+                          <AppText style={{ fontSize: 6, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                            {`${currency}${formatCompact(amount)}`}
+                          </AppText>
+                        )}
+                        <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
+                      </View>
+                      <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
+                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
+                      </AppText>
+                    </View>
+                  );
+                })}
+              </View>
             </View>
-          </View>
-        </PremiumCardBackground>
+          </PremiumCardBackground>
 
-        {/* All Years Bar Chart */}
-        <PremiumCardBackground color={colors.primary}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
-            <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-              Yearly Spending Chart
-            </AppText>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TouchableOpacity onPress={() => setIsAllYearsBarChartHidden(!isAllYearsBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name={isAllYearsBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
-            <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
-              {[
-                yearlyBudget > 0 ? yearlyBudget : maxYearExpense,
-                (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.80,
-                (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.60,
-                (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.40,
-                (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.20,
-                0
-              ].map((val, idx) => (
-                <AppText key={idx} style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', textAlign: 'right' }}>
-                  {isAllYearsBarChartHidden ? '•••••' : `${currency}${formatCompact(val)}`}
-                </AppText>
-              ))}
+          {/* All Years Bar Chart */}
+          <PremiumCardBackground color={colors.primary}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
+              <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
+                Yearly Spending Chart
+              </AppText>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => setIsAllYearsBarChartHidden(!isAllYearsBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name={isAllYearsBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', position: 'relative' }}>
-              <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between', paddingBottom: 20, paddingTop: 14, zIndex: -1 }}>
-                {[1, 2, 3, 4, 5, 6].map((_, i) => (
-                  <View key={i} style={{ height: 12, justifyContent: 'center' }}>
-                    <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)' }} />
-                  </View>
+            <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
+              <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
+                {[
+                  yearlyBudget > 0 ? yearlyBudget : maxYearExpense,
+                  (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.80,
+                  (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.60,
+                  (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.40,
+                  (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.20,
+                  0
+                ].map((val, idx) => (
+                  <AppText key={idx} style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', textAlign: 'right' }}>
+                    {isAllYearsBarChartHidden ? '•••••' : `${currency}${formatCompact(val)}`}
+                  </AppText>
                 ))}
               </View>
-              {yearlyDataForChart.map((item, index) => {
-                const yAxisMax = yearlyBudget > 0 ? yearlyBudget : maxYearExpense;
-                const heightPercentage = Math.min((item.amount / yAxisMax) * 100, 100);
-                const barColor = item.amount === 0
-                  ? 'rgba(255,255,255,0.2)'
-                  : (yearlyBudget > 0
-                    ? (item.amount > yearlyBudget ? '#ff4444' : (item.amount >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF'))
-                    : '#FFF');
-                return (
-                  <View key={index} style={{ alignItems: 'center', flex: 1, marginHorizontal: 2, maxWidth: 50, height: '100%', justifyContent: 'flex-end' }}>
-                    <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
-                      {!isAllYearsBarChartHidden && item.amount > 0 && (
-                        <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                          {`${currency}${formatCompact(item.amount)}`}
-                        </AppText>
-                      )}
-                      <View style={{ width: '100%', height: isAllYearsBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
+
+              <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', position: 'relative' }}>
+                <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between', paddingBottom: 20, paddingTop: 14, zIndex: -1 }}>
+                  {[1, 2, 3, 4, 5, 6].map((_, i) => (
+                    <View key={i} style={{ height: 12, justifyContent: 'center' }}>
+                      <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)' }} />
                     </View>
-                    <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
-                      {item.year}
-                    </AppText>
-                  </View>
-                );
-              })}
+                  ))}
+                </View>
+                {yearlyDataForChart.map((item, index) => {
+                  const yAxisMax = yearlyBudget > 0 ? yearlyBudget : maxYearExpense;
+                  const heightPercentage = Math.min((item.amount / yAxisMax) * 100, 100);
+                  const barColor = item.amount === 0
+                    ? 'rgba(255,255,255,0.2)'
+                    : (yearlyBudget > 0
+                      ? (item.amount > yearlyBudget ? '#ff4444' : (item.amount >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF'))
+                      : '#FFF');
+                  return (
+                    <View key={index} style={{ alignItems: 'center', flex: 1, marginHorizontal: 2, maxWidth: 50, height: '100%', justifyContent: 'flex-end' }}>
+                      <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
+                        {!isAllYearsBarChartHidden && item.amount > 0 && (
+                          <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                            {`${currency}${formatCompact(item.amount)}`}
+                          </AppText>
+                        )}
+                        <View style={{ width: '100%', height: isAllYearsBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
+                      </View>
+                      <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
+                        {item.year}
+                      </AppText>
+                    </View>
+                  );
+                })}
+              </View>
             </View>
-          </View>
-        </PremiumCardBackground>
+          </PremiumCardBackground>
 
 
         </ScrollView>
@@ -1807,7 +1807,7 @@ export default function DashboardScreen({ navigation }: any) {
             }}
             onPress={() => setActiveView(view)}
           >
-            <AppText style={{ 
+            <AppText style={{
               color: activeView === view ? '#fff' : colors.text,
               fontWeight: activeView === view ? 'bold' : 'normal',
               textTransform: 'capitalize',
