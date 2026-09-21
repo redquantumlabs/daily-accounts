@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, Platform } from 'react-native';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
@@ -12,6 +12,17 @@ import SingleFilterModal from '../components/SingleFilterModal';
 import DayExpensesModal from '../components/DayExpensesModal';
 import MonthExpensesModal from '../components/MonthExpensesModal';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
+import { useTransactionContext } from '../context/TransactionContext';
+import EmptyState from '../components/EmptyState';
+import { generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
+import { generatePDF } from 'react-native-html-to-pdf';
+import SAF from 'react-native-saf-x';
+import notifee from '@notifee/react-native';
+import { useAlert } from '../context/AlertContext';
+import DownloadProgressModal from '../components/DownloadProgressModal';
+import { getCustomCardStyle } from '../utils/customCardStyles';
 
 const formatCompact = (num: number) => {
   if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
@@ -293,10 +304,381 @@ const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPres
   );
 };
 
-export default function DashboardScreen() {
+export default function DashboardScreen({ navigation }: any) {
   const colors = useThemeColors();
-  const { isDarkTheme } = useThemeContext();
-  const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed, categories } = useExpenseContext();
+  const { isDarkTheme, useCustomCardUI } = useThemeContext();
+  const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed, categories, downloadPathUri } = useExpenseContext();
+  const { showAlert } = useAlert();
+  
+  const [showAccountsView, setShowAccountsView] = useState(false);
+  
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setShowAccountsView(prev => !prev)} style={{ marginRight: 15 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="swap-horizontal" size={24} color={colors.text} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, colors]);
+
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { accounts, getAccountStats, updateAccountOrder, deleteAccount, excludedFromTotal, showCardStats, transactions } = useTransactionContext();
+
+  const [isTotalBalanceHidden, setIsTotalBalanceHidden] = React.useState(!isAmountsVisible);
+  const [hiddenAccounts, setHiddenAccounts] = React.useState<Record<string, boolean>>({});
+
+  React.useEffect(() => {
+    setIsTotalBalanceHidden(!isAmountsVisible);
+    setHiddenAccounts({});
+  }, [isAmountsVisible]);
+
+  React.useEffect(() => {
+    const checkPendingAutoDownload = async () => {
+      try {
+        const pending = await AsyncStorage.getItem('@app_pending_auto_download');
+        if (pending === 'true') {
+          await AsyncStorage.removeItem('@app_pending_auto_download');
+          const { performAutoDownloadTask } = require('../tasks/autoDownloadTask');
+          await performAutoDownloadTask('Auto');
+        }
+      } catch (e) {
+        console.warn('Error checking pending auto download:', e);
+      }
+    };
+    checkPendingAutoDownload();
+  }, []);
+
+  const toggleAccountHidden = (acc: string) => {
+    setHiddenAccounts(prev => {
+      const current = prev[acc] ?? !isAmountsVisible;
+      return { ...prev, [acc]: !current };
+    });
+  };
+
+  let totalBalance = 0;
+  let totalCredit = 0;
+  let totalDebit = 0;
+
+  accounts.forEach(acc => {
+    if (!excludedFromTotal.includes(acc)) {
+      const stats = getAccountStats(acc);
+      totalBalance += stats.balance;
+      totalCredit += stats.totalCredit;
+      totalDebit += stats.totalDebit;
+    }
+  });
+
+  const handleDragEnd = async ({ data }: { data: string[] }) => {
+    await updateAccountOrder(data);
+  };
+
+  const handleDeleteAccount = (accountName: string) => {
+    setActiveDropdown(null);
+    showAlert(
+      "Delete Account",
+      `Are you sure you want to delete "${accountName}" and ALL of its transactions? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => deleteAccount(accountName) }
+      ]
+    );
+  };
+
+  const handleDownloadAllAccountsPDF = async () => {
+    setActiveDropdown(null);
+    setIsDownloading(true);
+    try {
+      const accountGroups = accounts.map((acc: string) => ({
+        accountName: acc,
+        transactions: transactions.filter((t: any) => t.account === acc)
+      })).filter(group => group.transactions.length > 0);
+
+      if (accountGroups.length === 0) {
+        showAlert('No Transactions', 'There are no transactions to download.');
+        return;
+      }
+
+      const html = generateAccountTransactionsPDFHTML(accountGroups, currency);
+      const fileName = 'Transactional Accounts';
+
+      const options = {
+        html,
+        fileName: fileName + `_${new Date().getTime()}`,
+        directory: 'Documents',
+        base64: true
+      };
+
+      const file = await generatePDF(options);
+
+      if (file.base64 && downloadPathUri && Platform.OS === 'android') {
+        const fullFileName = `${fileName}.pdf`;
+        const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+
+        const fileExists = await SAF.exists(fileUriString);
+        if (fileExists) {
+          await SAF.unlink(fileUriString);
+        }
+
+        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
+          mimeType: 'application/pdf'
+        });
+        await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
+
+        if (notifee) {
+          await notifee.displayNotification({
+            title: "Download Complete",
+            body: "Account report saved.",
+            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
+          });
+        }
+        showAlert('Success', 'PDF saved successfully.');
+      } else {
+        throw new Error("Failed to generate PDF or download path not set.");
+      }
+    } catch (error) {
+      showAlert('Error', 'Failed to generate or save PDF report. ' + error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadSingleAccountPDF = async (accountName: string) => {
+    setActiveDropdown(null);
+    setIsDownloading(true);
+    try {
+      const accountTransactions = transactions.filter((t: any) => t.account === accountName);
+      if (accountTransactions.length === 0) {
+        showAlert('No Transactions', `There are no transactions in ${accountName} to download.`);
+        return;
+      }
+
+      const accountGroups = [{
+        accountName,
+        transactions: accountTransactions
+      }];
+
+      const html = generateAccountTransactionsPDFHTML(accountGroups, currency);
+      const fileName = `Account_${accountName}`;
+
+      const options = {
+        html,
+        fileName: fileName + `_${new Date().getTime()}`,
+        directory: 'Documents',
+        base64: true
+      };
+
+      const file = await generatePDF(options);
+
+      if (file.base64 && downloadPathUri && Platform.OS === 'android') {
+        const fullFileName = `${fileName}.pdf`;
+        const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+
+        const fileExists = await SAF.exists(fileUriString);
+        if (fileExists) {
+          await SAF.unlink(fileUriString);
+        }
+
+        const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
+          mimeType: 'application/pdf'
+        });
+        await SAF.writeFile(fileUri.uri, file.base64, { encoding: 'base64' });
+
+        if (notifee) {
+          await notifee.displayNotification({
+            title: "Download Complete",
+            body: `${accountName} report saved.`,
+            android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true }
+          });
+        }
+        showAlert('Success', 'PDF saved successfully.');
+      } else {
+        throw new Error("Failed to generate PDF or download path not set.");
+      }
+    } catch (error) {
+      showAlert('Error', 'Failed to generate or save PDF report. ' + error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const renderAccountItem = ({ item: acc, drag, isActive }: RenderItemParams<string>) => {
+    const stats = getAccountStats(acc);
+    const customCardStyle = getCustomCardStyle(useCustomCardUI ? acc : '', colors.primary);
+    return (
+      <ScaleDecorator>
+        <TouchableOpacity
+          style={[isActive && { transform: [{ scale: 1.05 }], elevation: 8, zIndex: activeDropdown === acc ? 100 : 1 }]}
+          onPress={() => {
+            if (activeDropdown) {
+              setActiveDropdown(null);
+            } else {
+              navigation.navigate('AccountTransactions', { account: acc });
+            }
+          }}
+          onLongPress={drag}
+          activeOpacity={0.8}
+        >
+          <PremiumCardBackground color={colors.primary} customGradient={customCardStyle.colors || undefined}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                {customCardStyle.icon.type === 'image' ? (
+                  <View style={{ width: 28, height: 28, marginRight: 8, borderRadius: 14, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+                    <Image source={typeof customCardStyle.icon.source === 'string' ? { uri: customCardStyle.icon.source } : customCardStyle.icon.source} style={{ width: 20, height: 20 }} resizeMode="contain" />
+                  </View>
+                ) : (
+                  <Ionicons name={customCardStyle.icon.source} size={24} color="#fff" style={{ marginRight: 8 }} />
+                )}
+                <AppText style={[{ fontSize: 18, fontWeight: 'bold' }, { color: '#fff' }]}>{acc}</AppText>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => toggleAccountHidden(acc)} style={{ padding: 4, marginRight: 8 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name={(hiddenAccounts[acc] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setActiveDropdown(activeDropdown === acc ? null : acc)}
+                  style={{ padding: 4 }}
+                >
+                  <Ionicons name="ellipsis-vertical" size={20} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+
+                {activeDropdown === acc && (
+                  <View style={[{ position: 'absolute', top: 30, right: 0, borderRadius: 8, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, minWidth: 120, zIndex: 1000 }, { backgroundColor: colors.surface }]}>
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
+                      onPress={() => {
+                        setActiveDropdown(null);
+                        navigation.navigate('AccountTransactions', { account: acc });
+                      }}
+                    >
+                      <Ionicons name="eye-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                      <AppText style={{ color: colors.text }}>View</AppText>
+                    </TouchableOpacity>
+
+                    <View style={{ height: 1, backgroundColor: colors.border }} />
+
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
+                      onPress={() => handleDownloadSingleAccountPDF(acc)}
+                      disabled={isDownloading}
+                    >
+                      {isDownloading ? (
+                        <ActivityIndicator size="small" color={colors.text} style={{ marginRight: 8 }} />
+                      ) : (
+                        <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                      )}
+                      <AppText style={{ color: colors.text }}>Download</AppText>
+                    </TouchableOpacity>
+
+                    <View style={{ height: 1, backgroundColor: colors.border }} />
+
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
+                      onPress={() => handleDeleteAccount(acc)}
+                    >
+                      <Ionicons name="trash-outline" size={18} color="#ff4444" style={{ marginRight: 8 }} />
+                      <AppText style={{ color: '#ff4444' }}>Delete</AppText>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+            <View style={{ marginTop: 4 }}>
+              <AppText style={[{ fontSize: 14, color: '#888', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }, { color: 'rgba(255,255,255,0.8)' }]}>Available Balance</AppText>
+              <AppText style={[{ fontSize: 28, fontWeight: 'bold' }, { color: '#fff' }]}>
+                {(hiddenAccounts[acc] ?? !isAmountsVisible) ? '••••••' : `${currency}${formatAmount(stats.balance)}`}
+              </AppText>
+
+              {showCardStats && (
+                <View style={{ flexDirection: 'row', marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)' }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                      <Ionicons name="arrow-down-circle" size={16} color="#4CAF50" style={{ marginRight: 4 }} />
+                      <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>CREDIT</AppText>
+                    </View>
+                    <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>{(hiddenAccounts[acc] ?? !isAmountsVisible) ? '•••••' : `${currency}${formatAmount(stats.totalCredit)}`}</AppText>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                      <Ionicons name="arrow-up-circle" size={16} color="#F44336" style={{ marginRight: 4 }} />
+                      <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>DEBIT</AppText>
+                    </View>
+                    <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#F44336' }}>{(hiddenAccounts[acc] ?? !isAmountsVisible) ? '•••••' : `${currency}${formatAmount(stats.totalDebit)}`}</AppText>
+                  </View>
+                </View>
+              )}
+            </View>
+          </PremiumCardBackground>
+        </TouchableOpacity>
+      </ScaleDecorator>
+    );
+  };
+
+  const listHeader = accounts.length > 0 ? (
+    <View style={{ marginBottom: 20 }}>
+      <PremiumCardBackground color={colors.primary} style={{ marginBottom: 20 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <Ionicons name="wallet" size={24} color="#fff" style={{ marginRight: 8 }} />
+            <AppText style={[{ fontSize: 18, fontWeight: 'bold' }, { color: '#fff' }]}>Total Balance</AppText>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => setIsTotalBalanceHidden(!isTotalBalanceHidden)} style={{ padding: 4, marginRight: 8 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name={isTotalBalanceHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setActiveDropdown(activeDropdown === 'TOTAL_CARD' ? null : 'TOTAL_CARD')} style={{ padding: 4 }}>
+              <Ionicons name="ellipsis-vertical" size={20} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+
+            {activeDropdown === 'TOTAL_CARD' && (
+              <View style={[{ position: 'absolute', top: 30, right: 0, borderRadius: 8, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, minWidth: 120, zIndex: 1000 }, { backgroundColor: colors.surface }]}>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
+                  onPress={handleDownloadAllAccountsPDF}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <ActivityIndicator size="small" color={colors.text} style={{ marginRight: 8 }} />
+                  ) : (
+                    <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
+                  )}
+                  <AppText style={{ color: colors.text }}>Download</AppText>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+        <View style={{ marginTop: 4 }}>
+          <AppText style={[{ fontSize: 14, color: '#888', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }, { color: 'rgba(255,255,255,0.8)' }]}>Overall Available Balance</AppText>
+          <AppText style={[{ fontSize: 28, fontWeight: 'bold' }, { color: '#fff', fontSize: 32 }]}>
+            {isTotalBalanceHidden ? '••••••' : `${currency}${formatAmount(totalBalance)}`}
+          </AppText>
+
+          {showCardStats && (
+            <View style={{ flexDirection: 'row', marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)' }}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                  <Ionicons name="arrow-down-circle" size={16} color="#4CAF50" style={{ marginRight: 4 }} />
+                  <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>TOTAL CREDIT</AppText>
+                </View>
+                <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>{isTotalBalanceHidden ? '•••••' : `${currency}${formatAmount(totalCredit)}`}</AppText>
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                  <Ionicons name="arrow-up-circle" size={16} color="#F44336" style={{ marginRight: 4 }} />
+                  <AppText style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>TOTAL DEBIT</AppText>
+                </View>
+                <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#F44336' }}>{isTotalBalanceHidden ? '•••••' : `${currency}${formatAmount(totalDebit)}`}</AppText>
+              </View>
+            </View>
+          )}
+        </View>
+      </PremiumCardBackground>
+      <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1 }} />
+    </View>
+  ) : null;
 
   const currentMonthIndex = new Date().getMonth();
   const currentYearVal = new Date().getFullYear();
@@ -722,6 +1104,30 @@ export default function DashboardScreen() {
   const handleNextYear = () => {
     setSelectedYear(selectedYear + 1);
   };
+
+  if (showAccountsView) {
+    return (
+      <View style={[{ flex: 1 }, { backgroundColor: colors.background }]}>
+        <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
+        <DraggableFlatList
+          data={accounts}
+          keyExtractor={item => item}
+          onDragEnd={handleDragEnd}
+          renderItem={renderAccountItem}
+          ListHeaderComponent={listHeader}
+          ListEmptyComponent={
+            <EmptyState
+              icon="business-outline"
+              title="No Accounts"
+              message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
+            />
+          }
+          contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 10 }}
+          activationDistance={20}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>

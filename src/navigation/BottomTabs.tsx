@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import AppText from '../components/AppText';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import DashboardScreen from '../screens/DashboardScreen';
+import DashboardStack from './DashboardStack';
 import HomeStack from './HomeStack';
 import ExpensesScreen from '../screens/ExpensesScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
@@ -74,7 +74,11 @@ export default function BottomTabs() {
         component={HomeStack} 
         options={{ headerShown: false }}
       />
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen 
+        name="Dashboard" 
+        component={DashboardStack} 
+        options={{ headerShown: false }}
+      />
       <Tab.Screen name="Expenses" component={ExpensesScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
       <Tab.Screen
