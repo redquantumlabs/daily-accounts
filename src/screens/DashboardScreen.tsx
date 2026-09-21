@@ -319,6 +319,10 @@ export default function DashboardScreen({ navigation }: any) {
 
   const [activeView, setActiveView] = useState<'expenses' | 'accounts' | 'income'>('expenses');
 
+  const handleTabPress = (view: 'expenses' | 'accounts' | 'income') => {
+    setActiveView(view);
+  };
+
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const incomeStartYear = 2022;
@@ -1294,33 +1298,33 @@ export default function DashboardScreen({ navigation }: any) {
   };
 
   const renderContent = () => {
-    if (activeView === 'accounts') {
-      return (
-        <>
-          <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
-          <DraggableFlatList
-            data={accounts}
-            keyExtractor={item => item}
-            onDragEnd={handleDragEnd}
-            renderItem={renderAccountItem}
-            ListHeaderComponent={listHeader}
-            ListEmptyComponent={
-              <EmptyState
-                icon="business-outline"
-                title="No Accounts"
-                message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
-              />
-            }
-            contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
-            activationDistance={20}
-          />
-        </>
-      );
-    }
+    return (
+      <View style={{ flex: 1 }}>
+        {/* Accounts View */}
+        <View style={{ flex: 1, display: activeView === 'accounts' ? 'flex' : 'none' }}>
+          <>
+            <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
+            <DraggableFlatList
+              data={accounts}
+              keyExtractor={item => item}
+              onDragEnd={handleDragEnd}
+              renderItem={renderAccountItem}
+              ListHeaderComponent={listHeader}
+              ListEmptyComponent={
+                <EmptyState
+                  icon="business-outline"
+                  title="No Accounts"
+                  message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
+                />
+              }
+              contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
+              activationDistance={20}
+            />
+          </>
+        </View>
 
-    if (activeView === 'income') {
-      return (
-        <View style={{ flex: 1 }}>
+        {/* Income View */}
+        <View style={{ flex: 1, display: activeView === 'income' ? 'flex' : 'none' }}>
           <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.incomeYearScroll}>
               {(['All', ...incomeYears] as (number | 'All')[]).map(year => (
@@ -1562,13 +1566,11 @@ export default function DashboardScreen({ navigation }: any) {
             </TouchableWithoutFeedback>
           </Modal>
         </View>
-      );
-    }
 
-    // Default: 'Expenses'
-    return (
-      <>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
+        {/* Expenses View */}
+        <View style={{ flex: 1, display: activeView === 'expenses' ? 'flex' : 'none' }}>
+          <>
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
           {renderCards()}
           <MonthlySpendingCalendar
             expenses={expenses}
@@ -1785,8 +1787,10 @@ export default function DashboardScreen({ navigation }: any) {
           selectedMonth={selectedMonthForModal}
           selectedYear={selectedYear}
           isHidden={isYearlyCalendarHidden}
-        />
-      </>
+            />
+          </>
+        </View>
+      </View>
     );
   };
 
@@ -1805,7 +1809,7 @@ export default function DashboardScreen({ navigation }: any) {
               borderWidth: 1,
               borderColor: activeView === view ? colors.primary : colors.border,
             }}
-            onPress={() => setActiveView(view)}
+            onPress={() => handleTabPress(view)}
           >
             <AppText style={{
               color: activeView === view ? '#fff' : colors.text,
