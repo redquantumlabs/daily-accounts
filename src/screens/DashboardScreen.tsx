@@ -1428,7 +1428,7 @@ export default function DashboardScreen({ navigation }: any) {
                       </AppText>
                     </View>
                   </View>
-                  {renderIncomeProgressBar(incomeOverallTotals.net, incomeOverallTotals.expense, incomeOverallTotals.balance, `Yearly Avg: ${currency}${String(formatAmount(incomeOverallTotals.yearlyAverage)).padStart(5, '0')}`)}
+                  {renderIncomeProgressBar(incomeOverallTotals.net, incomeOverallTotals.expense, incomeOverallTotals.balance)}
                 </PremiumCardBackground>
 
                 <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
@@ -1488,7 +1488,7 @@ export default function DashboardScreen({ navigation }: any) {
                             </AppText>
                           </View>
                         </View>
-                        {renderIncomeProgressBar(stat.net, stat.expense, stat.balance, `Monthly Avg: ${currency}${String(formatAmount(stat.monthlyAverage)).padStart(5, '0')}`)}
+                        {renderIncomeProgressBar(stat.net, stat.expense, stat.balance)}
                       </PremiumCardBackground>
                     </TouchableOpacity>
                   ))}
@@ -1537,7 +1537,7 @@ export default function DashboardScreen({ navigation }: any) {
                       </AppText>
                     </View>
                   </View>
-                  {renderIncomeProgressBar(incomeYearlyTotals.net, incomeYearlyTotals.expense, incomeYearlyTotals.balance, `Monthly Avg: ${currency}${String(formatAmount(incomeYearlyTotals.monthlyAverage)).padStart(5, '0')}`)}
+                  {renderIncomeProgressBar(incomeYearlyTotals.net, incomeYearlyTotals.expense, incomeYearlyTotals.balance)}
                 </PremiumCardBackground>
 
                 <View style={{ height: 2, backgroundColor: colors.accent, borderRadius: 1, marginBottom: 16 }} />
@@ -1599,7 +1599,7 @@ export default function DashboardScreen({ navigation }: any) {
                             </AppText>
                           </View>
                         </View>
-                        {renderIncomeProgressBar(stat.net, stat.expense, stat.balance, `Daily Avg: ${currency}${String(formatAmount(stat.dailyAverage)).padStart(5, '0')}`)}
+                        {renderIncomeProgressBar(stat.net, stat.expense, stat.balance)}
                       </PremiumCardBackground>
                     </TouchableOpacity>
                   ))}
