@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, TouchableOpacity, Pressable, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,7 @@ import DayExpensesModal from '../components/DayExpensesModal';
 import MonthExpensesModal from '../components/MonthExpensesModal';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import { useTransactionContext } from '../context/TransactionContext';
 import EmptyState from '../components/EmptyState';
@@ -321,11 +322,19 @@ export default function DashboardScreen({ navigation }: any) {
 
   const [activeView, setActiveView] = useState<'expenses' | 'accounts' | 'income'>('expenses');
 
-  const handleTabPress = (view: 'expenses' | 'accounts' | 'income') => {
-    setActiveView(view);
-  };
-
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const handleTabPress = useCallback((view: 'expenses' | 'accounts' | 'income') => {
+    setActiveDropdown(null);
+    setActiveView(view);
+  }, []);
+
+  // Reset dropdown state when this screen gains focus (e.g. after navigating back from Expenses tab)
+  useFocusEffect(
+    useCallback(() => {
+      setActiveDropdown(null);
+    }, [])
+  );
 
   const incomeStartYear = 2022;
   const incomeCurrentYearVal = new Date().getFullYear();
@@ -1342,6 +1351,7 @@ export default function DashboardScreen({ navigation }: any) {
             <>
               {isDownloading && <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />}
               <DraggableFlatList
+                key={`accounts-list-${accounts.length}`}
                 data={accounts}
                 keyExtractor={item => item}
                 onDragEnd={handleDragEnd}
