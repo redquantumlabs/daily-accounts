@@ -1783,12 +1783,15 @@ export default function DashboardScreen({ navigation }: any) {
                       return (
                         <View key={index} style={{ alignItems: 'center', width: '6.9%', height: '100%', justifyContent: 'flex-end' }}>
                           <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
-                            {!isYearlyBarChartHidden && amount > 0 && (
-                              <AppText style={{ fontSize: 6, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                                {`${currency}${formatCompact(amount)}`}
-                              </AppText>
-                            )}
-                            <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
+                            <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4, position: 'relative' }}>
+                              {!isYearlyBarChartHidden && amount > 0 && (
+                                <View style={{ position: 'absolute', top: -16, width: '100%', alignItems: 'center', left: -20, right: -20, minWidth: 40 }}>
+                                  <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                                    {`${currency}${formatCompact(amount)}`}
+                                  </AppText>
+                                </View>
+                              )}
+                            </View>
                           </View>
                           <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
                             {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
@@ -1848,12 +1851,15 @@ export default function DashboardScreen({ navigation }: any) {
                       return (
                         <View key={index} style={{ alignItems: 'center', flex: 1, marginHorizontal: 2, maxWidth: 50, height: '100%', justifyContent: 'flex-end' }}>
                           <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
-                            {!isAllYearsBarChartHidden && item.amount > 0 && (
-                              <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                                {`${currency}${formatCompact(item.amount)}`}
-                              </AppText>
-                            )}
-                            <View style={{ width: '100%', height: isAllYearsBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
+                            <View style={{ width: '100%', height: isAllYearsBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4, position: 'relative' }}>
+                              {!isAllYearsBarChartHidden && item.amount > 0 && (
+                                <View style={{ position: 'absolute', top: -16, width: '100%', alignItems: 'center', left: -20, right: -20, minWidth: 40 }}>
+                                  <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                                    {`${currency}${formatCompact(item.amount)}`}
+                                  </AppText>
+                                </View>
+                              )}
+                            </View>
                           </View>
                           <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
                             {item.year}
