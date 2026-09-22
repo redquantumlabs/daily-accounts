@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,7 +14,6 @@ import DayExpensesModal from '../components/DayExpensesModal';
 import MonthExpensesModal from '../components/MonthExpensesModal';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import { useTransactionContext } from '../context/TransactionContext';
 import EmptyState from '../components/EmptyState';
@@ -25,7 +24,6 @@ import notifee from '@notifee/react-native';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
 import { getCustomCardStyle } from '../utils/customCardStyles';
-
 
 const INCOME_MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -313,7 +311,6 @@ const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPres
 };
 
 export default function DashboardScreen({ navigation }: any) {
-
   const colors = useThemeColors();
   const { isDarkTheme, useCustomCardUI } = useThemeContext();
   const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed, categories, downloadPathUri, monthlyIncomes, updateMonthlyIncome } = useExpenseContext();
@@ -322,19 +319,11 @@ export default function DashboardScreen({ navigation }: any) {
 
   const [activeView, setActiveView] = useState<'expenses' | 'accounts' | 'income'>('expenses');
 
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
-  const handleTabPress = useCallback((view: 'expenses' | 'accounts' | 'income') => {
-    setActiveDropdown(null);
+  const handleTabPress = (view: 'expenses' | 'accounts' | 'income') => {
     setActiveView(view);
-  }, []);
+  };
 
-  // Reset dropdown state when this screen gains focus (e.g. after navigating back from Expenses tab)
-  useFocusEffect(
-    useCallback(() => {
-      setActiveDropdown(null);
-    }, [])
-  );
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const incomeStartYear = 2022;
   const incomeCurrentYearVal = new Date().getFullYear();
@@ -1265,35 +1254,32 @@ export default function DashboardScreen({ navigation }: any) {
         </PremiumCardBackground>
       )}
 
-      {isMonthFilterVisible && (
-        <SingleFilterModal
-          visible={isMonthFilterVisible}
-          onClose={() => setIsMonthFilterVisible(false)}
-          availableYears={availableYears}
-          availableMonths={availableMonths}
-          selectedYear={selectedYear}
-          setSelectedYear={setSelectedYear}
-          selectedMonth={selectedMonth}
-          setSelectedMonth={setSelectedMonth}
-          onClearAll={() => {
-            setSelectedMonth(currentMonthIndex);
-            setSelectedYear(currentYearVal);
-          }}
-        />
-      )}
 
-      {isYearFilterVisible && (
-        <SingleFilterModal
-          visible={isYearFilterVisible}
-          onClose={() => setIsYearFilterVisible(false)}
-          availableYears={availableYears}
-          selectedYear={selectedYear}
-          setSelectedYear={setSelectedYear}
-          onClearAll={() => {
-            setSelectedYear(currentYearVal);
-          }}
-        />
-      )}
+      <SingleFilterModal
+        visible={isMonthFilterVisible}
+        onClose={() => setIsMonthFilterVisible(false)}
+        availableYears={availableYears}
+        availableMonths={availableMonths}
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        onClearAll={() => {
+          setSelectedMonth(currentMonthIndex);
+          setSelectedYear(currentYearVal);
+        }}
+      />
+
+      <SingleFilterModal
+        visible={isYearFilterVisible}
+        onClose={() => setIsYearFilterVisible(false)}
+        availableYears={availableYears}
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        onClearAll={() => {
+          setSelectedYear(currentYearVal);
+        }}
+      />
     </View>
   );
 
@@ -1346,35 +1332,31 @@ export default function DashboardScreen({ navigation }: any) {
     return (
       <View style={{ flex: 1 }}>
         {/* Accounts View */}
-        {activeView === 'accounts' && (
-          <View key="accounts-view" style={{ flex: 1 }}>
-            <>
-              {isDownloading && <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />}
-              <DraggableFlatList
-                key={`accounts-list-${accounts.length}`}
-                data={accounts}
-                keyExtractor={item => item}
-                onDragEnd={handleDragEnd}
-                renderItem={renderAccountItem}
-                ListHeaderComponent={listHeader}
-                ListEmptyComponent={
-                  <EmptyState
-                    icon="business-outline"
-                    title="No Accounts"
-                    message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
-                  />
-                }
-                contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
-                activationDistance={20}
-              />
-            </>
-          </View>
-        )}
+        <View style={{ flex: 1, display: activeView === 'accounts' ? 'flex' : 'none' }}>
+          <>
+            <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
+            <DraggableFlatList
+              data={accounts}
+              keyExtractor={item => item}
+              onDragEnd={handleDragEnd}
+              renderItem={renderAccountItem}
+              ListHeaderComponent={listHeader}
+              ListEmptyComponent={
+                <EmptyState
+                  icon="business-outline"
+                  title="No Accounts"
+                  message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
+                />
+              }
+              contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
+              activationDistance={20}
+            />
+          </>
+        </View>
 
         {/* Income View */}
-        {activeView === 'income' && (
-          <View key="income-view" style={{ flex: 1 }}>
-            <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={{ flex: 1, display: activeView === 'income' ? 'flex' : 'none' }}>
+          <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.incomeYearScroll}>
               {(['All', ...incomeYears] as (number | 'All')[]).map(year => (
                 <TouchableOpacity
@@ -1626,70 +1608,66 @@ export default function DashboardScreen({ navigation }: any) {
             )}
           </ScrollView>
 
-          {isIncomeModalVisible && (
-            <Modal visible={isIncomeModalVisible} transparent animationType="slide" onRequestClose={() => setIsIncomeModalVisible(false)}>
-              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View style={styles.incomeModalOverlay}>
-                  <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                    style={[styles.incomeModalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
-                  >
-                    <View style={styles.incomeModalHeader}>
-                      <AppText style={[styles.incomeModalTitle, { color: colors.text }]}>
-                        Income for {incomeSelectedMonth?.monthName} {incomeSelectedYear}
-                      </AppText>
-                      <TouchableOpacity onPress={() => setIsIncomeModalVisible(false)}>
-                        <Ionicons name="close" size={24} color={colors.text} />
-                      </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.incomeInputWrapper}>
-                      <AppText style={[styles.incomeLabel, { color: colors.text }]}>Gross Income</AppText>
-                      <TextInput
-                        style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                        placeholder="0.00"
-                        placeholderTextColor={colors.textMuted}
-                        keyboardType="numeric"
-                        value={grossIncomeInput}
-                        onChangeText={(text) => {
-                          setGrossIncomeInput(text);
-                          setIncomeError('');
-                        }}
-                        autoFocus
-                      />
-                    </View>
-
-                    <View style={styles.incomeInputWrapper}>
-                      <AppText style={[styles.incomeLabel, { color: colors.text }]}>Deduction</AppText>
-                      <TextInput
-                        style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                        placeholder="0.00"
-                        placeholderTextColor={colors.textMuted}
-                        keyboardType="numeric"
-                        value={deductionInput}
-                        onChangeText={(text) => {
-                          setDeductionInput(text);
-                          setIncomeError('');
-                        }}
-                      />
-                      {incomeError ? <AppText style={styles.incomeErrorText}>{incomeError}</AppText> : null}
-                    </View>
-
-                    <TouchableOpacity style={[styles.incomeSaveButton, { backgroundColor: colors.primary }]} onPress={handleSaveIncome}>
-                      <AppText style={styles.incomeSaveButtonText}>Save Income</AppText>
+          <Modal visible={isIncomeModalVisible} transparent animationType="slide" onRequestClose={() => setIsIncomeModalVisible(false)}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.incomeModalOverlay}>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                  style={[styles.incomeModalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
+                >
+                  <View style={styles.incomeModalHeader}>
+                    <AppText style={[styles.incomeModalTitle, { color: colors.text }]}>
+                      Income for {incomeSelectedMonth?.monthName} {incomeSelectedYear}
+                    </AppText>
+                    <TouchableOpacity onPress={() => setIsIncomeModalVisible(false)}>
+                      <Ionicons name="close" size={24} color={colors.text} />
                     </TouchableOpacity>
-                  </KeyboardAvoidingView>
-                </View>
-              </TouchableWithoutFeedback>
-            </Modal>
-          )}
+                  </View>
+
+                  <View style={styles.incomeInputWrapper}>
+                    <AppText style={[styles.incomeLabel, { color: colors.text }]}>Gross Income</AppText>
+                    <TextInput
+                      style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                      placeholder="0.00"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="numeric"
+                      value={grossIncomeInput}
+                      onChangeText={(text) => {
+                        setGrossIncomeInput(text);
+                        setIncomeError('');
+                      }}
+                      autoFocus
+                    />
+                  </View>
+
+                  <View style={styles.incomeInputWrapper}>
+                    <AppText style={[styles.incomeLabel, { color: colors.text }]}>Deduction</AppText>
+                    <TextInput
+                      style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                      placeholder="0.00"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="numeric"
+                      value={deductionInput}
+                      onChangeText={(text) => {
+                        setDeductionInput(text);
+                        setIncomeError('');
+                      }}
+                    />
+                    {incomeError ? <AppText style={styles.incomeErrorText}>{incomeError}</AppText> : null}
+                  </View>
+
+                  <TouchableOpacity style={[styles.incomeSaveButton, { backgroundColor: colors.primary }]} onPress={handleSaveIncome}>
+                    <AppText style={styles.incomeSaveButtonText}>Save Income</AppText>
+                  </TouchableOpacity>
+                </KeyboardAvoidingView>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
         </View>
-        )}
 
         {/* Expenses View */}
-        {activeView === 'expenses' && (
-          <View key="expenses-view" style={{ flex: 1 }}>
-            <>
+        <View style={{ flex: 1, display: activeView === 'expenses' ? 'flex' : 'none' }}>
+          <>
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
               {renderCards()}
               <MonthlySpendingCalendar
@@ -1793,15 +1771,12 @@ export default function DashboardScreen({ navigation }: any) {
                       return (
                         <View key={index} style={{ alignItems: 'center', width: '6.9%', height: '100%', justifyContent: 'flex-end' }}>
                           <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
-                            <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4, position: 'relative' }}>
-                              {!isYearlyBarChartHidden && amount > 0 && (
-                                <View style={{ position: 'absolute', top: -16, width: '100%', alignItems: 'center', left: -20, right: -20, minWidth: 40 }}>
-                                  <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                                    {`${currency}${formatCompact(amount)}`}
-                                  </AppText>
-                                </View>
-                              )}
-                            </View>
+                            {!isYearlyBarChartHidden && amount > 0 && (
+                              <AppText style={{ fontSize: 6, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                                {`${currency}${formatCompact(amount)}`}
+                              </AppText>
+                            )}
+                            <View style={{ width: '100%', height: isYearlyBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
                           </View>
                           <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
                             {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
@@ -1861,15 +1836,12 @@ export default function DashboardScreen({ navigation }: any) {
                       return (
                         <View key={index} style={{ alignItems: 'center', flex: 1, marginHorizontal: 2, maxWidth: 50, height: '100%', justifyContent: 'flex-end' }}>
                           <View style={{ flex: 1, justifyContent: 'flex-end', width: '100%', paddingBottom: 4 }}>
-                            <View style={{ width: '100%', height: isAllYearsBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4, position: 'relative' }}>
-                              {!isAllYearsBarChartHidden && item.amount > 0 && (
-                                <View style={{ position: 'absolute', top: -16, width: '100%', alignItems: 'center', left: -20, right: -20, minWidth: 40 }}>
-                                  <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
-                                    {`${currency}${formatCompact(item.amount)}`}
-                                  </AppText>
-                                </View>
-                              )}
-                            </View>
+                            {!isAllYearsBarChartHidden && item.amount > 0 && (
+                              <AppText style={{ fontSize: 9, color: '#FFF', opacity: 0.8, marginBottom: 4, textAlign: 'center' }} numberOfLines={1} adjustsFontSizeToFit>
+                                {`${currency}${formatCompact(item.amount)}`}
+                              </AppText>
+                            )}
+                            <View style={{ width: '100%', height: isAllYearsBarChartHidden ? 0 : `${heightPercentage}%`, backgroundColor: barColor, borderRadius: 4, minHeight: 4 }} />
                           </View>
                           <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, height: 16 }} numberOfLines={1} adjustsFontSizeToFit>
                             {item.year}
@@ -1900,6 +1872,13 @@ export default function DashboardScreen({ navigation }: any) {
               </Animated.View>
             )}
 
+            <DayExpensesModal
+              visible={isDayModalVisible}
+              onClose={() => setIsDayModalVisible(false)}
+              selectedDate={selectedDayDate}
+              isHidden={isMonthlyCalendarHidden}
+            />
+
             <MonthExpensesModal
               visible={isMonthModalVisible}
               onClose={() => setIsMonthModalVisible(false)}
@@ -1909,18 +1888,16 @@ export default function DashboardScreen({ navigation }: any) {
             />
           </>
         </View>
-        )}
       </View>
     );
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }} collapsable={false}>
-      <View collapsable={false} style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
         {(['expenses', 'accounts', 'income'] as const).map((view) => (
           <TouchableOpacity
             key={view}
-            activeOpacity={0.7}
             style={{
               flex: 1,
               paddingVertical: 10,
