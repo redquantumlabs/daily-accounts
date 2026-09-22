@@ -1332,31 +1332,34 @@ export default function DashboardScreen({ navigation }: any) {
     return (
       <View style={{ flex: 1 }}>
         {/* Accounts View */}
-        <View style={{ flex: 1, display: activeView === 'accounts' ? 'flex' : 'none' }}>
-          <>
-            <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
-            <DraggableFlatList
-              data={accounts}
-              keyExtractor={item => item}
-              onDragEnd={handleDragEnd}
-              renderItem={renderAccountItem}
-              ListHeaderComponent={listHeader}
-              ListEmptyComponent={
-                <EmptyState
-                  icon="business-outline"
-                  title="No Accounts"
-                  message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
-                />
-              }
-              contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
-              activationDistance={20}
-            />
-          </>
-        </View>
+        {activeView === 'accounts' && (
+          <View style={{ flex: 1 }}>
+            <>
+              <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
+              <DraggableFlatList
+                data={accounts}
+                keyExtractor={item => item}
+                onDragEnd={handleDragEnd}
+                renderItem={renderAccountItem}
+                ListHeaderComponent={listHeader}
+                ListEmptyComponent={
+                  <EmptyState
+                    icon="business-outline"
+                    title="No Accounts"
+                    message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
+                  />
+                }
+                contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
+                activationDistance={20}
+              />
+            </>
+          </View>
+        )}
 
         {/* Income View */}
-        <View style={{ flex: 1, display: activeView === 'income' ? 'flex' : 'none' }}>
-          <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        {activeView === 'income' && (
+          <View style={{ flex: 1 }}>
+            <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.incomeYearScroll}>
               {(['All', ...incomeYears] as (number | 'All')[]).map(year => (
                 <TouchableOpacity
@@ -1664,10 +1667,12 @@ export default function DashboardScreen({ navigation }: any) {
             </TouchableWithoutFeedback>
           </Modal>
         </View>
+        )}
 
         {/* Expenses View */}
-        <View style={{ flex: 1, display: activeView === 'expenses' ? 'flex' : 'none' }}>
-          <>
+        {activeView === 'expenses' && (
+          <View style={{ flex: 1 }}>
+            <>
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
               {renderCards()}
               <MonthlySpendingCalendar
@@ -1888,6 +1893,7 @@ export default function DashboardScreen({ navigation }: any) {
             />
           </>
         </View>
+        )}
       </View>
     );
   };
