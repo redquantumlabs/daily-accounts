@@ -1335,7 +1335,7 @@ export default function DashboardScreen({ navigation }: any) {
       <View style={{ flex: 1 }}>
         {/* Accounts View */}
         {activeView === 'accounts' && (
-          <View style={{ flex: 1 }}>
+          <View key="accounts-view" style={{ flex: 1 }}>
             <>
               <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
               <DraggableFlatList
@@ -1360,7 +1360,7 @@ export default function DashboardScreen({ navigation }: any) {
 
         {/* Income View */}
         {activeView === 'income' && (
-          <View style={{ flex: 1 }}>
+          <View key="income-view" style={{ flex: 1 }}>
             <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.incomeYearScroll}>
               {(['All', ...incomeYears] as (number | 'All')[]).map(year => (
@@ -1673,7 +1673,7 @@ export default function DashboardScreen({ navigation }: any) {
 
         {/* Expenses View */}
         {activeView === 'expenses' && (
-          <View style={{ flex: 1 }}>
+          <View key="expenses-view" style={{ flex: 1 }}>
             <>
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
               {renderCards()}
