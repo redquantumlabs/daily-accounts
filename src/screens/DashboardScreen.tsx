@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Pressable, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
@@ -24,6 +24,7 @@ import notifee from '@notifee/react-native';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
 import { getCustomCardStyle } from '../utils/customCardStyles';
+import { useIsFocused } from '@react-navigation/native';
 
 const INCOME_MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -311,6 +312,7 @@ const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPres
 };
 
 export default function DashboardScreen({ navigation }: any) {
+  const isFocused = useIsFocused();
   const colors = useThemeColors();
   const { isDarkTheme, useCustomCardUI } = useThemeContext();
   const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed, categories, downloadPathUri, monthlyIncomes, updateMonthlyIncome } = useExpenseContext();
@@ -1899,12 +1901,12 @@ export default function DashboardScreen({ navigation }: any) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }} collapsable={false}>
+      <View collapsable={false} style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
         {(['expenses', 'accounts', 'income'] as const).map((view) => (
-          <TouchableOpacity
+          <Pressable
             key={view}
-            style={{
+            style={({ pressed }) => ({
               flex: 1,
               paddingVertical: 10,
               alignItems: 'center',
@@ -1912,7 +1914,8 @@ export default function DashboardScreen({ navigation }: any) {
               borderRadius: 24,
               borderWidth: 1,
               borderColor: activeView === view ? colors.primary : colors.border,
-            }}
+              opacity: pressed ? 0.7 : 1,
+            })}
             onPress={() => handleTabPress(view)}
           >
             <AppText style={{
@@ -1923,10 +1926,10 @@ export default function DashboardScreen({ navigation }: any) {
             }}>
               {view}
             </AppText>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
-      {renderContent()}
+      {isFocused ? renderContent() : null}
     </View>
   );
 }
