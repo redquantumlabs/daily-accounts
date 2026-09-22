@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, Pressable, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
@@ -1918,9 +1918,10 @@ export default function DashboardScreen({ navigation }: any) {
     <View style={{ flex: 1, backgroundColor: colors.background }} collapsable={false}>
       <View collapsable={false} style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
         {(['expenses', 'accounts', 'income'] as const).map((view) => (
-          <Pressable
+          <TouchableOpacity
             key={view}
-            style={({ pressed }) => ({
+            activeOpacity={0.7}
+            style={{
               flex: 1,
               paddingVertical: 10,
               alignItems: 'center',
@@ -1928,8 +1929,7 @@ export default function DashboardScreen({ navigation }: any) {
               borderRadius: 24,
               borderWidth: 1,
               borderColor: activeView === view ? colors.primary : colors.border,
-              opacity: pressed ? 0.7 : 1,
-            })}
+            }}
             onPress={() => handleTabPress(view)}
           >
             <AppText style={{
@@ -1940,7 +1940,7 @@ export default function DashboardScreen({ navigation }: any) {
             }}>
               {view}
             </AppText>
-          </Pressable>
+          </TouchableOpacity>
         ))}
       </View>
       {renderContent()}
