@@ -24,7 +24,7 @@ import notifee from '@notifee/react-native';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
 import { getCustomCardStyle } from '../utils/customCardStyles';
-import { useIsFocused } from '@react-navigation/native';
+
 
 const INCOME_MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -312,7 +312,7 @@ const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPres
 };
 
 export default function DashboardScreen({ navigation }: any) {
-  const isFocused = useIsFocused();
+
   const colors = useThemeColors();
   const { isDarkTheme, useCustomCardUI } = useThemeContext();
   const { expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, isPreciseTimeElapsed, categories, downloadPathUri, monthlyIncomes, updateMonthlyIncome } = useExpenseContext();
@@ -1933,7 +1933,7 @@ export default function DashboardScreen({ navigation }: any) {
           </Pressable>
         ))}
       </View>
-      {isFocused ? renderContent() : null}
+      {renderContent()}
     </View>
   );
 }
