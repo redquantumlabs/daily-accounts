@@ -1737,7 +1737,7 @@ export default function DashboardScreen({ navigation }: any) {
                 </View>
 
                 <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
-                  <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
+                  <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20 }}>
                     {[
                       monthlyBudget > 0 ? monthlyBudget : maxExpense,
                       (monthlyBudget > 0 ? monthlyBudget : maxExpense) * 0.80,
@@ -1753,7 +1753,7 @@ export default function DashboardScreen({ navigation }: any) {
                   </View>
 
                   <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', position: 'relative' }}>
-                    <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between', paddingBottom: 20, paddingTop: 14, zIndex: -1 }}>
+                    <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between', paddingBottom: 20, zIndex: -1 }}>
                       {[1, 2, 3, 4, 5, 6].map((_, i) => (
                         <View key={i} style={{ height: 12, justifyContent: 'center' }}>
                           <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)' }} />
@@ -1802,7 +1802,7 @@ export default function DashboardScreen({ navigation }: any) {
                 </View>
 
                 <View style={{ flexDirection: 'row', height: 180, marginTop: 4 }}>
-                  <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20, paddingTop: 14 }}>
+                  <View style={{ justifyContent: 'space-between', paddingRight: 8, paddingBottom: 20 }}>
                     {[
                       yearlyBudget > 0 ? yearlyBudget : maxYearExpense,
                       (yearlyBudget > 0 ? yearlyBudget : maxYearExpense) * 0.80,
@@ -1818,7 +1818,7 @@ export default function DashboardScreen({ navigation }: any) {
                   </View>
 
                   <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', position: 'relative' }}>
-                    <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between', paddingBottom: 20, paddingTop: 14, zIndex: -1 }}>
+                    <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between', paddingBottom: 20, zIndex: -1 }}>
                       {[1, 2, 3, 4, 5, 6].map((_, i) => (
                         <View key={i} style={{ height: 12, justifyContent: 'center' }}>
                           <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.2)' }} />
