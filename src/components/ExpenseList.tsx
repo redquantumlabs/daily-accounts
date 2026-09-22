@@ -6,7 +6,7 @@ import Reanimated, { SharedValue, useAnimatedStyle, interpolate, Extrapolation }
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
-import { useTheme, useNavigation } from '@react-navigation/native';
+import { useTheme, useNavigation, useIsFocused } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Expense } from '../context/ExpenseContext';
@@ -47,6 +47,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
   const navigation = useNavigation<any>();
   const { isDarkTheme } = useThemeContext();
   const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget, downloadPathUri, reorderExpensesByDate, isAmountsVisible, isLoading } = useExpenseContext();
+  const isFocused = useIsFocused();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [displayCount, setDisplayCount] = useState(10);
@@ -473,7 +474,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
         <Swipeable
           renderRightActions={renderRightActions}
           renderLeftActions={renderLeftActions}
-          enabled={!(isSelectMode || isReorderMode)}
+          enabled={isFocused && !(isSelectMode || isReorderMode)}
         >
           <TouchableOpacity
             style={[styles.expenseRow, { backgroundColor: isActive ? colors.surface : colors.card, elevation: isActive ? 10 : 0 }]}
@@ -709,7 +710,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
         ListFooterComponent={listFooter}
         ListEmptyComponent={listEmpty}
         contentContainerStyle={[styles.scrollContent, isExpensesScreen && { paddingTop: 0 }]}
-        activationDistance={20}
+        activationDistance={isFocused ? 20 : 9999}
       />
 
       {/* Floating Action Button */}
