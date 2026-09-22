@@ -58,6 +58,8 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
             base64: true
           };
 
+          // Add a small delay to allow the WebView to clean up from previous generation
+          await delay(1000);
           const expenseFile = await generatePDFWithTimeout(expenseOptions);
 
           if (expenseFile.base64) {
