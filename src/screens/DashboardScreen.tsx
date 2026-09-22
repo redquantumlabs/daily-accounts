@@ -1256,32 +1256,35 @@ export default function DashboardScreen({ navigation }: any) {
         </PremiumCardBackground>
       )}
 
+      {isMonthFilterVisible && (
+        <SingleFilterModal
+          visible={isMonthFilterVisible}
+          onClose={() => setIsMonthFilterVisible(false)}
+          availableYears={availableYears}
+          availableMonths={availableMonths}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+          onClearAll={() => {
+            setSelectedMonth(currentMonthIndex);
+            setSelectedYear(currentYearVal);
+          }}
+        />
+      )}
 
-      <SingleFilterModal
-        visible={isMonthFilterVisible}
-        onClose={() => setIsMonthFilterVisible(false)}
-        availableYears={availableYears}
-        availableMonths={availableMonths}
-        selectedYear={selectedYear}
-        setSelectedYear={setSelectedYear}
-        selectedMonth={selectedMonth}
-        setSelectedMonth={setSelectedMonth}
-        onClearAll={() => {
-          setSelectedMonth(currentMonthIndex);
-          setSelectedYear(currentYearVal);
-        }}
-      />
-
-      <SingleFilterModal
-        visible={isYearFilterVisible}
-        onClose={() => setIsYearFilterVisible(false)}
-        availableYears={availableYears}
-        selectedYear={selectedYear}
-        setSelectedYear={setSelectedYear}
-        onClearAll={() => {
-          setSelectedYear(currentYearVal);
-        }}
-      />
+      {isYearFilterVisible && (
+        <SingleFilterModal
+          visible={isYearFilterVisible}
+          onClose={() => setIsYearFilterVisible(false)}
+          availableYears={availableYears}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          onClearAll={() => {
+            setSelectedYear(currentYearVal);
+          }}
+        />
+      )}
     </View>
   );
 
@@ -1337,7 +1340,7 @@ export default function DashboardScreen({ navigation }: any) {
         {activeView === 'accounts' && (
           <View key="accounts-view" style={{ flex: 1 }}>
             <>
-              <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
+              {isDownloading && <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />}
               <DraggableFlatList
                 data={accounts}
                 keyExtractor={item => item}
@@ -1613,61 +1616,63 @@ export default function DashboardScreen({ navigation }: any) {
             )}
           </ScrollView>
 
-          <Modal visible={isIncomeModalVisible} transparent animationType="slide" onRequestClose={() => setIsIncomeModalVisible(false)}>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <View style={styles.incomeModalOverlay}>
-                <KeyboardAvoidingView
-                  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                  style={[styles.incomeModalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
-                >
-                  <View style={styles.incomeModalHeader}>
-                    <AppText style={[styles.incomeModalTitle, { color: colors.text }]}>
-                      Income for {incomeSelectedMonth?.monthName} {incomeSelectedYear}
-                    </AppText>
-                    <TouchableOpacity onPress={() => setIsIncomeModalVisible(false)}>
-                      <Ionicons name="close" size={24} color={colors.text} />
+          {isIncomeModalVisible && (
+            <Modal visible={isIncomeModalVisible} transparent animationType="slide" onRequestClose={() => setIsIncomeModalVisible(false)}>
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.incomeModalOverlay}>
+                  <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={[styles.incomeModalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
+                  >
+                    <View style={styles.incomeModalHeader}>
+                      <AppText style={[styles.incomeModalTitle, { color: colors.text }]}>
+                        Income for {incomeSelectedMonth?.monthName} {incomeSelectedYear}
+                      </AppText>
+                      <TouchableOpacity onPress={() => setIsIncomeModalVisible(false)}>
+                        <Ionicons name="close" size={24} color={colors.text} />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.incomeInputWrapper}>
+                      <AppText style={[styles.incomeLabel, { color: colors.text }]}>Gross Income</AppText>
+                      <TextInput
+                        style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                        placeholder="0.00"
+                        placeholderTextColor={colors.textMuted}
+                        keyboardType="numeric"
+                        value={grossIncomeInput}
+                        onChangeText={(text) => {
+                          setGrossIncomeInput(text);
+                          setIncomeError('');
+                        }}
+                        autoFocus
+                      />
+                    </View>
+
+                    <View style={styles.incomeInputWrapper}>
+                      <AppText style={[styles.incomeLabel, { color: colors.text }]}>Deduction</AppText>
+                      <TextInput
+                        style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+                        placeholder="0.00"
+                        placeholderTextColor={colors.textMuted}
+                        keyboardType="numeric"
+                        value={deductionInput}
+                        onChangeText={(text) => {
+                          setDeductionInput(text);
+                          setIncomeError('');
+                        }}
+                      />
+                      {incomeError ? <AppText style={styles.incomeErrorText}>{incomeError}</AppText> : null}
+                    </View>
+
+                    <TouchableOpacity style={[styles.incomeSaveButton, { backgroundColor: colors.primary }]} onPress={handleSaveIncome}>
+                      <AppText style={styles.incomeSaveButtonText}>Save Income</AppText>
                     </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.incomeInputWrapper}>
-                    <AppText style={[styles.incomeLabel, { color: colors.text }]}>Gross Income</AppText>
-                    <TextInput
-                      style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                      placeholder="0.00"
-                      placeholderTextColor={colors.textMuted}
-                      keyboardType="numeric"
-                      value={grossIncomeInput}
-                      onChangeText={(text) => {
-                        setGrossIncomeInput(text);
-                        setIncomeError('');
-                      }}
-                      autoFocus
-                    />
-                  </View>
-
-                  <View style={styles.incomeInputWrapper}>
-                    <AppText style={[styles.incomeLabel, { color: colors.text }]}>Deduction</AppText>
-                    <TextInput
-                      style={[styles.incomeInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-                      placeholder="0.00"
-                      placeholderTextColor={colors.textMuted}
-                      keyboardType="numeric"
-                      value={deductionInput}
-                      onChangeText={(text) => {
-                        setDeductionInput(text);
-                        setIncomeError('');
-                      }}
-                    />
-                    {incomeError ? <AppText style={styles.incomeErrorText}>{incomeError}</AppText> : null}
-                  </View>
-
-                  <TouchableOpacity style={[styles.incomeSaveButton, { backgroundColor: colors.primary }]} onPress={handleSaveIncome}>
-                    <AppText style={styles.incomeSaveButtonText}>Save Income</AppText>
-                  </TouchableOpacity>
-                </KeyboardAvoidingView>
-              </View>
-            </TouchableWithoutFeedback>
-          </Modal>
+                  </KeyboardAvoidingView>
+                </View>
+              </TouchableWithoutFeedback>
+            </Modal>
+          )}
         </View>
         )}
 
@@ -1878,13 +1883,6 @@ export default function DashboardScreen({ navigation }: any) {
                 <AppText style={{ color: 'white', fontSize: 14 }}>{toastMessage}</AppText>
               </Animated.View>
             )}
-
-            <DayExpensesModal
-              visible={isDayModalVisible}
-              onClose={() => setIsDayModalVisible(false)}
-              selectedDate={selectedDayDate}
-              isHidden={isMonthlyCalendarHidden}
-            />
 
             <MonthExpensesModal
               visible={isMonthModalVisible}
