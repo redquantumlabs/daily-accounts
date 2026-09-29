@@ -33,7 +33,7 @@ export const performBackgroundTasks = async (backupLabel: string = 'Auto Backup'
 
     const allFiles = await SAF.listFiles(backupPathUri!);
     const backupFiles = allFiles.filter((file: any) => {
-      return file.name.includes('DailyAccountsBackup_') && file.name.endsWith('.json');
+      return file.name && file.name.includes('DailyAccountsBackup_') && file.name.endsWith('.json');
     });
 
     backupFiles.sort((a: any, b: any) => {
@@ -47,13 +47,15 @@ export const performBackgroundTasks = async (backupLabel: string = 'Auto Backup'
     const maxBackups = 5;
     if (backupFiles.length > maxBackups) {
       const filesToDelete = backupFiles.slice(0, backupFiles.length - maxBackups);
-      for (const fileToDelete of filesToDelete) {
-        try {
-          await SAF.unlink(fileToDelete.uri);
-        } catch (e) {
-          console.warn('Failed to delete old backup file:', e);
-        }
-      }
+      await Promise.all(
+        filesToDelete.map(async (fileToDelete) => {
+          try {
+            await SAF.unlink(fileToDelete.uri);
+          } catch (e) {
+            console.warn('Failed to delete old backup file:', e);
+          }
+        })
+      );
     }
 
     await notifee.displayNotification({

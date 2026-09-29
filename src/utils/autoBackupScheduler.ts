@@ -1,4 +1,4 @@
-import notifee, { TriggerType, TimestampTrigger, AndroidImportance } from '@notifee/react-native';
+import notifee, { TriggerType, TimestampTrigger, AndroidImportance, RepeatFrequency } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BACKUP_TRIGGER_PREFIX } from './backupConstants';
 
@@ -52,6 +52,7 @@ export const scheduleAutoBackupTriggers = async () => {
       const trigger: TimestampTrigger = {
         type: TriggerType.TIMESTAMP,
         timestamp: target.getTime(),
+        repeatFrequency: RepeatFrequency.DAILY,
         alarmManager: { allowWhileIdle: true },
       };
 

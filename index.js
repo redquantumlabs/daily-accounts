@@ -33,14 +33,14 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
   if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(BACKUP_TRIGGER_PREFIX)) {
     const triggerIndex = notificationId.replace(BACKUP_TRIGGER_PREFIX, '');
     const label = `Auto Backup`;
-    await performBackgroundTasks(label);
     await notifee.cancelNotification(notificationId);
+    await performBackgroundTasks(label);
     await scheduleAutoBackupTriggers();
   } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(DOWNLOAD_TRIGGER_PREFIX)) {
     const triggerIndex = notificationId.replace(DOWNLOAD_TRIGGER_PREFIX, '');
     const label = `Auto Download`;
-    await performAutoDownloadTask(label);
     await notifee.cancelNotification(notificationId);
+    await performAutoDownloadTask(label);
     await scheduleAutoDownloadTriggers();
   } else if (type === EventType.ACTION_PRESS && detail.pressAction?.id === 'retry_auto_download') {
     const label = `Auto Download (Retry)`;
