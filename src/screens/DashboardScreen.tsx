@@ -318,6 +318,17 @@ export default function DashboardScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
 
   const [activeView, setActiveView] = useState<'expenses' | 'accounts' | 'income'>('expenses');
+  const [isTabsVisible, setIsTabsVisible] = useState(false);
+
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setIsTabsVisible(prev => !prev)} style={{ padding: 4 }}>
+          <Ionicons name={isTabsVisible ? 'chevron-up' : 'chevron-down'} size={24} color={colors.text} />
+        </TouchableOpacity>
+      )
+    });
+  }, [navigation, isTabsVisible, colors.text]);
 
   const handleTabPress = (view: 'expenses' | 'accounts' | 'income') => {
     setActiveView(view);
@@ -1894,32 +1905,34 @@ export default function DashboardScreen({ navigation }: any) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
-        {(['expenses', 'accounts', 'income'] as const).map((view) => (
-          <TouchableOpacity
-            key={view}
-            style={{
-              flex: 1,
-              paddingVertical: 10,
-              alignItems: 'center',
-              backgroundColor: activeView === view ? colors.primary : colors.card,
-              borderRadius: 24,
-              borderWidth: 1,
-              borderColor: activeView === view ? colors.primary : colors.border,
-            }}
-            onPress={() => handleTabPress(view)}
-          >
-            <AppText style={{
-              color: activeView === view ? '#fff' : colors.text,
-              fontWeight: activeView === view ? 'bold' : 'normal',
-              textTransform: 'capitalize',
-              fontSize: 14,
-            }}>
-              {view}
-            </AppText>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {isTabsVisible && (
+        <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
+          {(['expenses', 'accounts', 'income'] as const).map((view) => (
+            <TouchableOpacity
+              key={view}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                alignItems: 'center',
+                backgroundColor: activeView === view ? colors.primary : colors.card,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: activeView === view ? colors.primary : colors.border,
+              }}
+              onPress={() => handleTabPress(view)}
+            >
+              <AppText style={{
+                color: activeView === view ? '#fff' : colors.text,
+                fontWeight: activeView === view ? 'bold' : 'normal',
+                textTransform: 'capitalize',
+                fontSize: 14,
+              }}>
+                {view}
+              </AppText>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
       {renderContent()}
     </View>
   );
