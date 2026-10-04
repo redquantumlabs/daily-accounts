@@ -1132,7 +1132,7 @@ export default function DashboardScreen({ navigation }: any) {
             </AppText>
             {monthlyBudget > 0 && remainingDaysInMonth > 0 && (
               <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
-                Daily Left: {isMonthlyCardHidden ? '•••••' : `${currency}${formatAmount(remainingDailyBudget)}`}
+                {total > monthlyBudget ? 'Overspent: ' : 'Daily Left: '}{isMonthlyCardHidden ? '•••••' : `${currency}${formatAmount(total > monthlyBudget ? (total - monthlyBudget) : remainingDailyBudget)}`}
               </AppText>
             )}
             {monthlyBudget > 0 && remainingDaysInMonth === 0 && (
@@ -1209,7 +1209,7 @@ export default function DashboardScreen({ navigation }: any) {
               </AppText>
               {yearlyBudget > 0 && remainingMonthsInYear > 0 && (
                 <AppText style={{ fontSize: 13, color: '#FFF', opacity: 0.8, marginTop: 4 }}>
-                  Monthly Left: {isYearlyCardHidden ? '•••••' : `${currency}${formatAmount(remainingMonthlyBudget)}`}
+                  {currentYearTotal > yearlyBudget ? 'Overspent: ' : 'Monthly Left: '}{isYearlyCardHidden ? '•••••' : `${currency}${formatAmount(currentYearTotal > yearlyBudget ? (currentYearTotal - yearlyBudget) : remainingMonthlyBudget)}`}
                 </AppText>
               )}
               {yearlyBudget > 0 && remainingMonthsInYear === 0 && (
