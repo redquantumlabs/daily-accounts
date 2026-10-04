@@ -1332,7 +1332,7 @@ export default function DashboardScreen({ navigation }: any) {
     return (
       <View style={{ flex: 1 }}>
         {/* Accounts View */}
-        <View style={{ flex: 1, display: activeView === 'accounts' ? 'flex' : 'none' }}>
+        <View style={[{ flex: 1 }, activeView !== 'accounts' && { position: 'absolute', opacity: 0, pointerEvents: 'none', zIndex: -1, width: '100%', height: '100%' }]}>
           <>
             <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
             <DraggableFlatList
@@ -1355,7 +1355,7 @@ export default function DashboardScreen({ navigation }: any) {
         </View>
 
         {/* Income View */}
-        <View style={{ flex: 1, display: activeView === 'income' ? 'flex' : 'none' }}>
+        <View style={[{ flex: 1 }, activeView !== 'income' && { position: 'absolute', opacity: 0, pointerEvents: 'none', zIndex: -1, width: '100%', height: '100%' }]}>
           <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.incomeYearScroll}>
               {(['All', ...incomeYears] as (number | 'All')[]).map(year => (
@@ -1666,7 +1666,7 @@ export default function DashboardScreen({ navigation }: any) {
         </View>
 
         {/* Expenses View */}
-        <View style={{ flex: 1, display: activeView === 'expenses' ? 'flex' : 'none' }}>
+        <View style={[{ flex: 1 }, activeView !== 'expenses' && { position: 'absolute', opacity: 0, pointerEvents: 'none', zIndex: -1, width: '100%', height: '100%' }]}>
           <>
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
               {renderCards()}
