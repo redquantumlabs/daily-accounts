@@ -59,10 +59,17 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
           };
 
           // Add a small delay to allow the WebView to clean up from previous generation
-          await delay(5000);
-          const expenseFile = await generatePDFWithTimeout(expenseOptions);
+          await delay(1000);
+          
+          let expenseFile: any = null;
+          try {
+            expenseFile = await generatePDFWithTimeout(expenseOptions);
+          } catch (e) {
+            console.warn(`[AutoDownloadTask] Failed to generate PDF for year ${year}:`, e);
+            continue; // Skip this year but continue with others
+          }
 
-          if (expenseFile.base64) {
+          if (expenseFile && expenseFile.base64) {
             const fullFileName = `${fileName}.pdf`;
             const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
 
@@ -120,9 +127,15 @@ export const performAutoDownloadTask = async (downloadLabel: string = 'Auto') =>
 
         // Add a small delay to allow the WebView to clean up from previous generation
         await delay(1000);
-        const accFile = await generatePDFWithTimeout(accOptions);
+        
+        let accFile: any = null;
+        try {
+          accFile = await generatePDFWithTimeout(accOptions);
+        } catch (e) {
+          console.warn(`[AutoDownloadTask] Failed to generate Transactional Accounts PDF:`, e);
+        }
 
-        if (accFile.base64) {
+        if (accFile && accFile.base64) {
           const fullFileName = `${fileName}.pdf`;
           const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
 
