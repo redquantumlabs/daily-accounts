@@ -9,10 +9,11 @@ import { TransactionProvider } from './src/context/TransactionContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import BootSplash from 'react-native-bootsplash';
 import { Platform, AppState } from 'react-native';
-import notifee, { AndroidImportance } from '@notifee/react-native';
-import { scheduleAutoBackupTriggers } from './src/utils/autoBackupScheduler';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import { scheduleAutoBackupTriggers, BACKUP_TRIGGER_PREFIX } from './src/utils/autoBackupScheduler';
 import { performBackgroundTasks } from './src/tasks/backgroundTask';
-import { scheduleAutoDownloadTriggers } from './src/utils/autoDownloadScheduler';
+import { scheduleAutoDownloadTriggers, DOWNLOAD_TRIGGER_PREFIX } from './src/utils/autoDownloadScheduler';
+import { performAutoDownloadTask } from './src/tasks/autoDownloadTask';
 
 
 
@@ -33,6 +34,17 @@ export default function App() {
     scheduleAutoBackupTriggers().catch(console.error);
     scheduleAutoDownloadTriggers().catch(console.error);
 
+    const unsubscribeForeground = notifee.onForegroundEvent(async ({ type, detail }) => {
+      const notificationId = detail.notification?.id;
+      if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(BACKUP_TRIGGER_PREFIX)) {
+        await performBackgroundTasks('Auto Backup', notificationId);
+        await scheduleAutoBackupTriggers();
+      } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(DOWNLOAD_TRIGGER_PREFIX)) {
+        await performAutoDownloadTask('Auto Download', notificationId);
+        await scheduleAutoDownloadTriggers();
+      }
+    });
+
     const subscription = AppState.addEventListener('change', nextAppState => {
       // Background checks or syncing can be added here if needed
     });
@@ -42,8 +54,10 @@ export default function App() {
 
     return () => {
       subscription.remove();
+      unsubscribeForeground();
     };
   }, []);
+
 
   return (
     <SafeAreaProvider>

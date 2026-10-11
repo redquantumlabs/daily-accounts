@@ -31,23 +31,19 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
   const notificationId = detail.notification?.id;
 
   if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(BACKUP_TRIGGER_PREFIX)) {
-    const triggerIndex = notificationId.replace(BACKUP_TRIGGER_PREFIX, '');
     const label = `Auto Backup`;
-    await notifee.cancelNotification(notificationId);
-    await performBackgroundTasks(label);
+    await performBackgroundTasks(label, notificationId);
     await scheduleAutoBackupTriggers();
   } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(DOWNLOAD_TRIGGER_PREFIX)) {
-    const triggerIndex = notificationId.replace(DOWNLOAD_TRIGGER_PREFIX, '');
     const label = `Auto Download`;
-    await notifee.cancelNotification(notificationId);
-    await performAutoDownloadTask(label);
+    await performAutoDownloadTask(label, notificationId);
     await scheduleAutoDownloadTriggers();
   } else if (type === EventType.ACTION_PRESS && detail.pressAction?.id === 'retry_auto_download') {
-    const label = `Auto Download (Retry)`;
-    await performAutoDownloadTask(label);
     if (notificationId) {
       await notifee.cancelNotification(notificationId);
     }
+    const label = `Auto Download (Retry)`;
+    await performAutoDownloadTask(label);
   }
 });
 

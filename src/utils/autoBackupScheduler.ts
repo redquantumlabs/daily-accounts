@@ -1,10 +1,8 @@
 import notifee, { TriggerType, TimestampTrigger, AndroidImportance, RepeatFrequency } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BACKUP_TRIGGER_PREFIX } from './backupConstants';
+import { BACKUP_TRIGGER_PREFIX, BACKUP_SILENT_CHANNEL_ID } from './backupConstants';
 
-export { BACKUP_TRIGGER_PREFIX } from './backupConstants';
-
-const BACKUP_SILENT_CHANNEL_ID = 'daily_accounts_backup_silent';
+export { BACKUP_TRIGGER_PREFIX, BACKUP_SILENT_CHANNEL_ID } from './backupConstants';
 
 export const scheduleAutoBackupTriggers = async () => {
   try {
@@ -22,7 +20,7 @@ export const scheduleAutoBackupTriggers = async () => {
     await notifee.createChannel({
       id: BACKUP_SILENT_CHANNEL_ID,
       name: 'Auto Backup (Silent)',
-      importance: AndroidImportance.MIN,
+      importance: AndroidImportance.LOW,
       sound: '',
     });
 
@@ -60,15 +58,22 @@ export const scheduleAutoBackupTriggers = async () => {
         {
           id: `${BACKUP_TRIGGER_PREFIX}${i}`,
           title: 'Auto Backup',
-          body: `Running backup...`,
+          body: `Running backup... (0%)`,
           android: {
             channelId: BACKUP_SILENT_CHANNEL_ID,
-            importance: AndroidImportance.MIN,
+            importance: AndroidImportance.LOW,
             smallIcon: 'ic_notification',
             largeIcon: 'ic_launcher',
             circularLargeIcon: true,
             showTimestamp: true,
             autoCancel: true,
+            ongoing: true,
+            onlyAlertOnce: true,
+            progress: {
+              max: 100,
+              current: 0,
+              indeterminate: false,
+            },
           },
         },
         trigger,
@@ -78,3 +83,4 @@ export const scheduleAutoBackupTriggers = async () => {
     console.warn('[AutoBackupScheduler] Failed to schedule triggers:', err);
   }
 };
+

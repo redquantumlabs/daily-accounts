@@ -1,10 +1,8 @@
 import notifee, { TriggerType, TimestampTrigger, AndroidImportance, RepeatFrequency } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DOWNLOAD_TRIGGER_PREFIX } from './autoDownloadConstants';
+import { DOWNLOAD_TRIGGER_PREFIX, DOWNLOAD_SILENT_CHANNEL_ID } from './autoDownloadConstants';
 
-export { DOWNLOAD_TRIGGER_PREFIX } from './autoDownloadConstants';
-
-const DOWNLOAD_SILENT_CHANNEL_ID = 'daily_accounts_download_silent';
+export { DOWNLOAD_TRIGGER_PREFIX, DOWNLOAD_SILENT_CHANNEL_ID } from './autoDownloadConstants';
 
 export const scheduleAutoDownloadTriggers = async () => {
   try {
@@ -22,7 +20,7 @@ export const scheduleAutoDownloadTriggers = async () => {
     await notifee.createChannel({
       id: DOWNLOAD_SILENT_CHANNEL_ID,
       name: 'Auto Download (Silent)',
-      importance: AndroidImportance.MIN,
+      importance: AndroidImportance.LOW,
       sound: '',
     });
 
@@ -60,16 +58,23 @@ export const scheduleAutoDownloadTriggers = async () => {
         {
           id: `${DOWNLOAD_TRIGGER_PREFIX}${i}`,
           title: 'Auto Download',
-          body: `Running report generation...`,
+          body: `Running report generation... (0%)`,
           android: {
             channelId: DOWNLOAD_SILENT_CHANNEL_ID,
-            importance: AndroidImportance.MIN,
+            importance: AndroidImportance.LOW,
             smallIcon: 'ic_notification',
             largeIcon: 'ic_launcher',
             circularLargeIcon: true,
             showTimestamp: true,
             autoCancel: true,
             timeoutAfter: 60000,
+            ongoing: true,
+            onlyAlertOnce: true,
+            progress: {
+              max: 100,
+              current: 0,
+              indeterminate: false,
+            },
           },
         },
         trigger,
@@ -79,3 +84,4 @@ export const scheduleAutoDownloadTriggers = async () => {
     console.warn('[AutoDownloadScheduler] Failed to schedule triggers:', err);
   }
 };
+
