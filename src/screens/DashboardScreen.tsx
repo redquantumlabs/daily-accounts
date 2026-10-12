@@ -1940,10 +1940,12 @@ export default function DashboardScreen({ navigation }: any) {
               key={view}
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              containerStyle={{ flex: 1 }}
               style={{
-                flex: 1,
+                width: '100%',
                 paddingVertical: 10,
                 alignItems: 'center',
+                justifyContent: 'center',
                 backgroundColor: activeView === view ? colors.primary : colors.card,
                 borderRadius: 24,
                 borderWidth: 1,
@@ -1951,14 +1953,16 @@ export default function DashboardScreen({ navigation }: any) {
               }}
               onPress={() => handleTabPress(view)}
             >
-              <AppText style={{
-                color: activeView === view ? '#fff' : colors.text,
-                fontWeight: activeView === view ? 'bold' : 'normal',
-                textTransform: 'capitalize',
-                fontSize: 14,
-              }}>
-                {view}
-              </AppText>
+              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <AppText style={{
+                  color: activeView === view ? '#fff' : colors.text,
+                  fontWeight: activeView === view ? 'bold' : 'normal',
+                  textTransform: 'capitalize',
+                  fontSize: 14,
+                }}>
+                  {view}
+                </AppText>
+              </View>
             </GHTouchableOpacity>
           ))}
         </View>
