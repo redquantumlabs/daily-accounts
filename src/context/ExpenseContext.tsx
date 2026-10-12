@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { InteractionManager } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthContext } from './AuthContext';
 import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
@@ -423,17 +424,23 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     if (isLoading) return;
 
-    const timeoutId = setTimeout(() => {
-      scheduleAllNotifications(expenses, currency, summaryTime, reminderTimes);
-      
-      const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
-      const { scheduleAutoDownloadTriggers } = require('../utils/autoDownloadScheduler');
-      
-      scheduleAutoBackupTriggers().catch(console.warn);
-      scheduleAutoDownloadTriggers().catch(console.warn);
-    }, 1000);
+    let timeoutId: any;
+    const task = InteractionManager.runAfterInteractions(() => {
+      timeoutId = setTimeout(() => {
+        scheduleAllNotifications(expenses, currency, summaryTime, reminderTimes);
+        
+        const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
+        const { scheduleAutoDownloadTriggers } = require('../utils/autoDownloadScheduler');
+        
+        scheduleAutoBackupTriggers().catch(console.warn);
+        scheduleAutoDownloadTriggers().catch(console.warn);
+      }, 1500);
+    });
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      task.cancel();
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [expenses, currency, isLoading, summaryTime, reminderTimes]);
 
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthContext } from './AuthContext';
 
@@ -210,13 +210,13 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     await AsyncStorage.setItem(storageKey, JSON.stringify(newTransactions));
   };
 
-  const getAccountBalance = (account: string) => {
+  const getAccountBalance = useCallback((account: string) => {
     return transactions
       .filter(t => t.account === account)
       .reduce((sum, t) => sum + (t.type === 'Credit' ? t.amount : -t.amount), 0);
-  };
+  }, [transactions]);
 
-  const getAccountStats = (account: string) => {
+  const getAccountStats = useCallback((account: string) => {
     return transactions
       .filter(t => t.account === account)
       .reduce((acc, t) => {
@@ -229,7 +229,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
         return acc;
       }, { balance: 0, totalCredit: 0, totalDebit: 0 });
-  };
+  }, [transactions]);
 
   const updateAccountOrder = async (newOrder: string[]) => {
     setAccountOrder(newOrder);

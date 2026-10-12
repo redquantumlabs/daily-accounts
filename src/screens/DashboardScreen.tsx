@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
@@ -38,7 +39,7 @@ const formatCompact = (num: number) => {
 
 
 
-const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors, onPrevMonth, onNextMonth, onDayPress, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
+const MonthlySpendingCalendar = React.memo(({ expenses, selectedMonth, selectedYear, colors, onPrevMonth, onNextMonth, onDayPress, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1).getDay();
@@ -147,9 +148,9 @@ const MonthlySpendingCalendar = ({ expenses, selectedMonth, selectedYear, colors
       </View>
     </PremiumCardBackground>
   );
-};
+});
 
-const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, onPrevYear, onNextYear, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
+const YearlySpendingCalendar = React.memo(({ expenses, selectedYear, colors, onMonthPress, onPrevYear, onNextYear, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const today = new Date();
@@ -239,9 +240,9 @@ const YearlySpendingCalendar = ({ expenses, selectedYear, colors, onMonthPress, 
       </View>
     </PremiumCardBackground>
   );
-};
+});
 
-const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPress, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
+const AllYearsSpendingCalendar = React.memo(({ expenses, availableYears, colors, onYearPress, isCalendarHidden, setIsCalendarHidden, currency }: any) => {
   const currentYearVal = new Date().getFullYear();
 
   const yearTotals = useMemo(() => {
@@ -308,7 +309,7 @@ const AllYearsSpendingCalendar = ({ expenses, availableYears, colors, onYearPres
       </View>
     </PremiumCardBackground>
   );
-};
+});
 
 export default function DashboardScreen({ navigation }: any) {
   const colors = useThemeColors();
@@ -318,21 +319,27 @@ export default function DashboardScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
 
   const [activeView, setActiveView] = useState<'expenses' | 'accounts' | 'income'>('expenses');
+  const [visitedViews, setVisitedViews] = useState<Record<string, boolean>>(() => ({
+    expenses: true,
+    accounts: false,
+    income: false,
+  }));
   const [isTabsVisible, setIsTabsVisible] = useState(false);
 
   React.useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={() => setIsTabsVisible(prev => !prev)} style={{ padding: 4 }}>
+        <GHTouchableOpacity onPress={() => setIsTabsVisible(prev => !prev)} style={{ padding: 4 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name={isTabsVisible ? 'chevron-up' : 'chevron-down'} size={24} color={colors.text} />
-        </TouchableOpacity>
+        </GHTouchableOpacity>
       )
     });
   }, [navigation, isTabsVisible, colors.text]);
 
-  const handleTabPress = (view: 'expenses' | 'accounts' | 'income') => {
+  const handleTabPress = useCallback((view: 'expenses' | 'accounts' | 'income') => {
     setActiveView(view);
-  };
+    setVisitedViews(prev => prev[view] ? prev : { ...prev, [view]: true });
+  }, []);
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -591,18 +598,22 @@ export default function DashboardScreen({ navigation }: any) {
     });
   };
 
-  let totalBalance = 0;
-  let totalCredit = 0;
-  let totalDebit = 0;
+  const { totalBalance, totalCredit, totalDebit } = useMemo(() => {
+    let balance = 0;
+    let credit = 0;
+    let debit = 0;
 
-  accounts.forEach(acc => {
-    if (!excludedFromTotal.includes(acc)) {
-      const stats = getAccountStats(acc);
-      totalBalance += stats.balance;
-      totalCredit += stats.totalCredit;
-      totalDebit += stats.totalDebit;
-    }
-  });
+    accounts.forEach(acc => {
+      if (!excludedFromTotal.includes(acc)) {
+        const stats = getAccountStats(acc);
+        balance += stats.balance;
+        credit += stats.totalCredit;
+        debit += stats.totalDebit;
+      }
+    });
+
+    return { totalBalance: balance, totalCredit: credit, totalDebit: debit };
+  }, [accounts, excludedFromTotal, getAccountStats]);
 
   const handleDragEnd = async ({ data }: { data: string[] }) => {
     await updateAccountOrder(data);
@@ -1343,30 +1354,34 @@ export default function DashboardScreen({ navigation }: any) {
     return (
       <View style={{ flex: 1 }}>
         {/* Accounts View */}
-        <View style={[{ flex: 1 }, activeView !== 'accounts' && { position: 'absolute', opacity: 0, pointerEvents: 'none', zIndex: -1, width: '100%', height: '100%' }]}>
-          <>
-            <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
-            <DraggableFlatList
-              data={accounts}
-              keyExtractor={item => item}
-              onDragEnd={handleDragEnd}
-              renderItem={renderAccountItem}
-              ListHeaderComponent={listHeader}
-              ListEmptyComponent={
-                <EmptyState
-                  icon="business-outline"
-                  title="No Accounts"
-                  message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
-                />
-              }
-              contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
-              activationDistance={20}
-            />
-          </>
+        <View style={[{ flex: 1 }, activeView !== 'accounts' && { display: 'none' }]}>
+          {visitedViews.accounts && (
+            <View style={{ flex: 1 }}>
+          <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
+          <DraggableFlatList
+            data={accounts}
+            keyExtractor={item => item}
+            onDragEnd={handleDragEnd}
+            renderItem={renderAccountItem}
+            ListHeaderComponent={listHeader}
+            ListEmptyComponent={
+              <EmptyState
+                icon="business-outline"
+                title="No Accounts"
+                message="You don't have any accounts set up yet. Accounts are automatically created when you add your first transaction!"
+              />
+            }
+            contentContainerStyle={{ padding: 20, paddingTop: 0, paddingBottom: 10 }}
+            activationDistance={20}
+          />
+            </View>
+          )}
         </View>
 
         {/* Income View */}
-        <View style={[{ flex: 1 }, activeView !== 'income' && { position: 'absolute', opacity: 0, pointerEvents: 'none', zIndex: -1, width: '100%', height: '100%' }]}>
+        <View style={[{ flex: 1 }, activeView !== 'income' && { display: 'none' }]}>
+          {visitedViews.income && (
+            <View style={{ flex: 1 }}>
           <View style={[styles.incomeYearSelectorContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.incomeYearScroll}>
               {(['All', ...incomeYears] as (number | 'All')[]).map(year => (
@@ -1674,11 +1689,14 @@ export default function DashboardScreen({ navigation }: any) {
               </View>
             </TouchableWithoutFeedback>
           </Modal>
+            </View>
+          )}
         </View>
 
         {/* Expenses View */}
-        <View style={[{ flex: 1 }, activeView !== 'expenses' && { position: 'absolute', opacity: 0, pointerEvents: 'none', zIndex: -1, width: '100%', height: '100%' }]}>
-          <>
+        <View style={[{ flex: 1 }, activeView !== 'expenses' && { display: 'none' }]}>
+          {visitedViews.expenses && (
+            <View style={{ flex: 1 }}>
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
               {renderCards()}
               <MonthlySpendingCalendar
@@ -1897,7 +1915,8 @@ export default function DashboardScreen({ navigation }: any) {
               selectedYear={selectedYear}
               isHidden={isYearlyCalendarHidden}
             />
-          </>
+            </View>
+          )}
         </View>
       </View>
     );
@@ -1906,10 +1925,21 @@ export default function DashboardScreen({ navigation }: any) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {isTabsVisible && (
-        <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background, gap: 8 }}>
+        <View style={{
+          flexDirection: 'row',
+          paddingHorizontal: 16,
+          paddingTop: 8,
+          paddingBottom: 8,
+          backgroundColor: colors.background,
+          gap: 8,
+          zIndex: 9999,
+          elevation: 10,
+        }}>
           {(['expenses', 'accounts', 'income'] as const).map((view) => (
-            <TouchableOpacity
+            <GHTouchableOpacity
               key={view}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
               style={{
                 flex: 1,
                 paddingVertical: 10,
@@ -1929,7 +1959,7 @@ export default function DashboardScreen({ navigation }: any) {
               }}>
                 {view}
               </AppText>
-            </TouchableOpacity>
+            </GHTouchableOpacity>
           ))}
         </View>
       )}
