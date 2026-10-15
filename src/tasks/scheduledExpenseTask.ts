@@ -33,10 +33,10 @@ export const performScheduledExpenseTask = async (targetNotificationId?: string)
     const newlyAddedExpenses: any[] = [];
 
     const updatedScheduledList = scheduledList.map(item => {
-      const isTarget = targetId ? item.id === targetId : true;
+      const isTarget = targetId ? item.id === targetId : false;
       const isDue = new Date(item.scheduleDate).getTime() <= now + 60000;
 
-      if (!item.isProcessed && isTarget && isDue) {
+      if (!item.isProcessed && (isTarget || isDue)) {
         updated = true;
         const newExpense = {
           id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
@@ -63,21 +63,23 @@ export const performScheduledExpenseTask = async (targetNotificationId?: string)
       await AsyncStorage.setItem(expensesKey, JSON.stringify(mergedExpenses));
       await AsyncStorage.setItem(scheduledKey, JSON.stringify(updatedScheduledList));
 
-      // Show notification for added expenses if triggered in background
-      for (const exp of newlyAddedExpenses) {
-        await notifee.displayNotification({
-          id: `added_sched_${exp.id}`,
-          title: 'Scheduled Expense Added',
-          body: `${exp.description} (${currency}${exp.amount}) has been recorded for ${exp.formattedExpenseDate}.`,
-          android: {
-            channelId: SCHEDULED_EXPENSES_CHANNEL_ID,
-            smallIcon: 'ic_notification',
-            largeIcon: 'ic_launcher',
-            circularLargeIcon: true,
-            showTimestamp: true,
-            pressAction: { id: 'default' },
-          },
-        }).catch(err => console.warn('[performScheduledExpenseTask] Notification failed:', err));
+      // Show notification for added expenses if triggered without an existing notification
+      if (!targetNotificationId) {
+        for (const exp of newlyAddedExpenses) {
+          await notifee.displayNotification({
+            id: `added_sched_${exp.id}`,
+            title: 'Scheduled Expense Added',
+            body: `${exp.description} (${currency}${exp.amount}) has been recorded for ${exp.formattedExpenseDate}.`,
+            android: {
+              channelId: SCHEDULED_EXPENSES_CHANNEL_ID,
+              smallIcon: 'ic_notification',
+              largeIcon: 'ic_launcher',
+              circularLargeIcon: true,
+              showTimestamp: true,
+              pressAction: { id: 'default' },
+            },
+          }).catch(err => console.warn('[performScheduledExpenseTask] Notification failed:', err));
+        }
       }
     }
   } catch (error) {

@@ -1,11 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { InteractionManager } from 'react-native';
+import { InteractionManager, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthContext } from './AuthContext';
 import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
 import { scheduleAllNotifications } from '../utils/notificationScheduler';
 import { roundAmount } from '../utils/format';
-import { scheduleExpenseTrigger, cancelScheduledExpenseTrigger } from '../utils/scheduledExpenseScheduler';
+import { scheduleExpenseTrigger, cancelScheduledExpenseTrigger, notifyScheduledExpenseAdded } from '../utils/scheduledExpenseScheduler';
 
 export interface Expense {
   id: string;
@@ -655,18 +655,21 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const now = Date.now();
       let changed = false;
       const newItems: Expense[] = [];
+      const processedScheduledItems: ScheduledExpense[] = [];
 
       const updated = list.map(item => {
         if (!item.isProcessed && new Date(item.scheduleDate).getTime() <= now) {
           changed = true;
-          newItems.push({
+          const newExp: Expense = {
             id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
             amount: roundAmount(item.amount),
             description: item.description,
             date: new Date(item.expenseDate).toISOString(),
             categoryId: item.categoryId,
             paymentModeId: item.paymentModeId,
-          });
+          };
+          newItems.push(newExp);
+          processedScheduledItems.push(item);
           return {
             ...item,
             isProcessed: true,
@@ -681,16 +684,63 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
 
         const storedExps = await AsyncStorage.getItem(storageKey);
-        const current: Expense[] = storedExps ? JSON.parse(storedExps) : expenses;
+        const current: Expense[] = storedExps ? JSON.parse(storedExps) : [];
         const merged = [...newItems, ...current];
         merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setExpenses(merged);
         await AsyncStorage.setItem(storageKey, JSON.stringify(merged));
+
+        // Cancel background alarm triggers & display notification for newly processed items
+        for (const item of processedScheduledItems) {
+          cancelScheduledExpenseTrigger(item.id).catch(() => {});
+          notifyScheduledExpenseAdded(item, currency).catch(() => {});
+        }
+      } else {
+        // Sync state if background task or storage processed items
+        const pendingInStorage = list.filter(i => !i.isProcessed);
+        setScheduledExpenses(prev => {
+          const pendingInPrev = prev.filter(i => !i.isProcessed);
+          if (pendingInStorage.length !== pendingInPrev.length) {
+            return list;
+          }
+          return prev;
+        });
+
+        const storedExps = await AsyncStorage.getItem(storageKey);
+        if (storedExps) {
+          const parsed = JSON.parse(storedExps);
+          setExpenses(prev => {
+            if (parsed.length !== prev.length) {
+              return parsed;
+            }
+            return prev;
+          });
+        }
       }
-    } catch (e) {
-      console.warn('[processPendingScheduledExpenses] Error:', e);
+    } catch {
+      // silent catch
     }
   };
+
+  // Foreground periodic check & AppState active listener
+  useEffect(() => {
+    processPendingScheduledExpenses();
+
+    const interval = setInterval(() => {
+      processPendingScheduledExpenses();
+    }, 5000);
+
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        processPendingScheduledExpenses();
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      sub.remove();
+    };
+  }, [currency]);
 
   const reorderExpensesByDate = async (dateStr: string, reorderedDayExpenses: Expense[]) => {
     const otherExpenses = expenses.filter(e => new Date(e.date).toDateString() !== dateStr);

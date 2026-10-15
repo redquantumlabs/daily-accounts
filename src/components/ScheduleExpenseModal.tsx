@@ -42,7 +42,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
   const [expenseDate, setExpenseDate] = useState(new Date());
   const [scheduleDate, setScheduleDate] = useState(() => {
     const d = new Date();
-    d.setHours(9, 0, 0, 0);
+    d.setMinutes(d.getMinutes() + 10);
     return d;
   });
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
@@ -82,11 +82,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
         setDescription('');
         setExpenseDate(new Date());
         const defaultSched = new Date();
-        defaultSched.setHours(9, 0, 0, 0);
-        // If 9 AM today already passed, default to tomorrow 9 AM
-        if (defaultSched.getTime() <= Date.now()) {
-          defaultSched.setDate(defaultSched.getDate() + 1);
-        }
+        defaultSched.setMinutes(defaultSched.getMinutes() + 10);
         setScheduleDate(defaultSched);
         setCategoryId(undefined);
         setPaymentModeId(undefined);
@@ -117,6 +113,10 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
     const isValidPaymentMode = paymentModeId && paymentModes.some(p => p.id === paymentModeId);
     if (!isValidPaymentMode) {
       setPaymentModeError('Please select a payment mode.');
+      hasError = true;
+    }
+    if (scheduleDate.getTime() <= Date.now()) {
+      setScheduleDateError('Auto-add date and time must be in the future.');
       hasError = true;
     }
 
@@ -176,6 +176,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
   // Date/Time Change Handlers
   const onChangeExpenseDate = (event: any, selectedDate?: Date) => {
     setShowExpenseDatePicker(Platform.OS === 'ios');
+    if (event?.type === 'dismissed') return;
     if (selectedDate) {
       setExpenseDate(selectedDate);
     }
@@ -183,6 +184,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
 
   const onChangeScheduleDate = (event: any, selectedDate?: Date) => {
     setShowScheduleDatePicker(Platform.OS === 'ios');
+    if (event?.type === 'dismissed') return;
     if (selectedDate) {
       // Retain the existing hours and minutes of scheduleDate
       const updated = new Date(selectedDate);
@@ -194,6 +196,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
 
   const onChangeScheduleTime = (event: any, selectedTime?: Date) => {
     setShowScheduleTimePicker(Platform.OS === 'ios');
+    if (event?.type === 'dismissed') return;
     if (selectedTime) {
       const updated = new Date(scheduleDate);
       updated.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);

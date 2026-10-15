@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -25,10 +25,20 @@ export default function ScheduledExpensesScreen() {
     isAmountsVisible,
     executeScheduledExpenseNow,
     deleteScheduledExpense,
+    processPendingScheduledExpenses,
   } = useExpenseContext();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedItemToEdit, setSelectedItemToEdit] = useState<ScheduledExpense | null>(null);
+
+  // Poll for due scheduled items every 5 seconds while on this screen
+  useEffect(() => {
+    processPendingScheduledExpenses();
+    const interval = setInterval(() => {
+      processPendingScheduledExpenses();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Filter pending vs processed
   const pendingItems = useMemo(() => {
@@ -89,21 +99,31 @@ export default function ScheduledExpensesScreen() {
     );
   };
 
+  const isSameDay = (d1: Date, d2: Date) =>
+    d1.getDate() === d2.getDate() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getFullYear() === d2.getFullYear();
+
   // Helper for human-readable schedule countdown
   const getScheduleRelativeLabel = (scheduleDateStr: string) => {
     const target = new Date(scheduleDateStr);
     const now = new Date();
     const diffMs = target.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const timeFormatted = target.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     if (diffMs <= 0) {
-      return 'Due to post';
-    } else if (diffDays <= 1) {
-      return `Auto-adds today at ${target.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else if (diffDays === 2) {
-      return `Auto-adds tomorrow at ${target.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      return 'Processing...';
+    } else if (isSameDay(target, now)) {
+      return `Auto-adds today at ${timeFormatted}`;
+    } else if (isSameDay(target, tomorrow)) {
+      return `Auto-adds tomorrow at ${timeFormatted}`;
     } else {
-      return `Auto-adds in ${diffDays} days`;
+      const dateFormatted = target.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+      return `Auto-adds on ${dateFormatted} at ${timeFormatted}`;
     }
   };
 

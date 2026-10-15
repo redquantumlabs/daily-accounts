@@ -75,3 +75,31 @@ export const cancelScheduledExpenseTrigger = async (id: string) => {
     console.warn('[cancelScheduledExpenseTrigger] Failed to cancel trigger:', error);
   }
 };
+
+export const notifyScheduledExpenseAdded = async (
+  item: { description: string; amount: number; expenseDate: string },
+  currency: string = '$'
+) => {
+  try {
+    await ensureScheduledExpenseChannel();
+    const expenseDateFormatted = new Date(item.expenseDate).toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+    await notifee.displayNotification({
+      title: 'Scheduled Expense Added',
+      body: `${item.description} (${currency}${item.amount}) has been recorded for ${expenseDateFormatted}.`,
+      android: {
+        channelId: SCHEDULED_EXPENSES_CHANNEL_ID,
+        smallIcon: 'ic_notification',
+        largeIcon: 'ic_launcher',
+        circularLargeIcon: true,
+        showTimestamp: true,
+        pressAction: { id: 'default' },
+      },
+    });
+  } catch (error) {
+    console.warn('[notifyScheduledExpenseAdded] Failed to display notification:', error);
+  }
+};
