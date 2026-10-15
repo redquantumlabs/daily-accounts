@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Platform, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
@@ -403,7 +403,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         throw new Error("Failed to generate PDF");
       }
 
-      if (downloadPathUri && Platform.OS === 'android') {
+      if (downloadPathUri) {
         const fullFileName = `${baseFileName}.pdf`;
         const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
 
@@ -571,7 +571,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         maxToRenderPerBatch={15}
         windowSize={5}
         updateCellsBatchingPeriod={30}
-        removeClippedSubviews={Platform.OS === 'android'}
+        removeClippedSubviews={true}
         ListEmptyComponent={
           isLoading ? (
             <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center' }}>
@@ -641,7 +641,7 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
             <TouchableWithoutFeedback>
               <View style={{
                 position: 'absolute',
-                top: Platform.OS === 'ios' ? 140 : 100,
+                top: 100,
                 right: 20,
                 backgroundColor: colors.surface,
                 borderRadius: 8,

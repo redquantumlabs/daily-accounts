@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, ActivityIndicator } from 'react-native';
 import AppText from '../components/AppText';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { PieChart as GiftedPieChart } from 'react-native-gifted-charts';
@@ -193,7 +193,7 @@ export default function AnalyticsScreen() {
         throw new Error("Failed to generate PDF");
       }
 
-      if (downloadPathUri && Platform.OS === 'android') {
+      if (downloadPathUri) {
         const fileName = `Analytics_Report_${new Date().getTime()}.pdf`;
         const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fileName), {
           mimeType: 'application/pdf'

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Switch } from 'react-native';
+import { View, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Switch } from 'react-native';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
@@ -41,8 +41,7 @@ export default function BudgetScreen({ navigation }: any) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView 
-        style={[styles.container, { backgroundColor: colors.background }]} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.container, { backgroundColor: colors.background }]}
       >
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
           
@@ -82,7 +81,6 @@ export default function BudgetScreen({ navigation }: any) {
               <Switch
                 trackColor={{ false: '#767577', true: colors.primary }}
                 thumbColor={showMonthlyBudget ? '#ffffff' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
                 onValueChange={toggleShowMonthlyBudget}
                 value={showMonthlyBudget}
               />
@@ -93,7 +91,6 @@ export default function BudgetScreen({ navigation }: any) {
               <Switch
                 trackColor={{ false: '#767577', true: colors.primary }}
                 thumbColor={showYearlyBudget ? '#ffffff' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
                 onValueChange={toggleShowYearlyBudget}
                 value={showYearlyBudget}
               />
@@ -104,7 +101,6 @@ export default function BudgetScreen({ navigation }: any) {
               <Switch
                 trackColor={{ false: '#767577', true: colors.primary }}
                 thumbColor={showYearCard ? '#ffffff' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
                 onValueChange={toggleShowYearCard}
                 value={showYearCard}
               />

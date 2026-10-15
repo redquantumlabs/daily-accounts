@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Modal,
   KeyboardAvoidingView,
-  Platform,
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
@@ -175,7 +174,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
 
   // Date/Time Change Handlers
   const onChangeExpenseDate = (event: any, selectedDate?: Date) => {
-    setShowExpenseDatePicker(Platform.OS === 'ios');
+    setShowExpenseDatePicker(false);
     if (event?.type === 'dismissed') return;
     if (selectedDate) {
       setExpenseDate(selectedDate);
@@ -183,7 +182,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
   };
 
   const onChangeScheduleDate = (event: any, selectedDate?: Date) => {
-    setShowScheduleDatePicker(Platform.OS === 'ios');
+    setShowScheduleDatePicker(false);
     if (event?.type === 'dismissed') return;
     if (selectedDate) {
       // Retain the existing hours and minutes of scheduleDate
@@ -195,7 +194,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
   };
 
   const onChangeScheduleTime = (event: any, selectedTime?: Date) => {
-    setShowScheduleTimePicker(Platform.OS === 'ios');
+    setShowScheduleTimePicker(false);
     if (event?.type === 'dismissed') return;
     if (selectedTime) {
       const updated = new Date(scheduleDate);
@@ -215,7 +214,6 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
             <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
               style={[
                 styles.modalContent,
                 { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) },

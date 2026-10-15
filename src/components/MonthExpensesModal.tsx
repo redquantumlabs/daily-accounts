@@ -1,6 +1,6 @@
 import React from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, Modal, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, Modal, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
@@ -26,7 +26,7 @@ export default function MonthExpensesModal({ visible, onClose, selectedMonth, se
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: StatusBar.currentHeight }]}>
         <View style={[styles.header, { borderBottomColor: isDarkTheme ? '#333' : '#eee' }]}>
           <View style={styles.headerButton} />
           <AppText style={[styles.headerTitle, { color: colors.text }]}>{formattedDate}</AppText>

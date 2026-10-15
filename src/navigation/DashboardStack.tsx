@@ -4,7 +4,7 @@ import DashboardScreen from '../screens/DashboardScreen';
 import AccountTransactionsScreen from '../screens/AccountTransactionsScreen';
 import { useThemeColors } from '../hooks/useThemeColors';
 import AppText from '../components/AppText';
-import { View, Platform } from 'react-native';
+import { View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Stack = createNativeStackNavigator();
@@ -41,14 +41,13 @@ export default function DashboardStack() {
         component={AccountTransactionsScreen} 
         options={({ route }: any) => ({
           headerTitle: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: Platform.OS === 'android' ? -20 : 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -20 }}>
               <Ionicons name="card" size={22} color={colors.text} style={{ marginRight: 8 }} />
               <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>
                 {route.params.account} Transactions
               </AppText>
             </View>
           ),
-          headerBackTitleVisible: false,
         })}
       />
     </Stack.Navigator>

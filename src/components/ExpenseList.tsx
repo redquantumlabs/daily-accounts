@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, TextInput, Platform, ActivityIndicator, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
@@ -283,7 +283,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
           continue;
         }
 
-        if (downloadPathUri && Platform.OS === 'android') {
+        if (downloadPathUri) {
           const fullFileName = `${fileName}.pdf`;
           const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
 
@@ -307,7 +307,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
         }
       }
 
-      if (downloadPathUri && Platform.OS === 'android' && notifee) {
+      if (downloadPathUri && notifee) {
         await notifee.displayNotification({ title: "Download Complete", body: "Expense reports saved.", android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true } });
         showAlert('Success', 'PDFs saved successfully.');
       }
@@ -754,7 +754,7 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
         <TouchableWithoutFeedback onPress={() => setIsMenuVisible(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.1)' }}>
             <TouchableWithoutFeedback>
-              <View style={{ position: 'absolute', top: Platform.OS === 'ios' ? 140 : 100, right: 20, backgroundColor: colors.surface, borderRadius: 8, elevation: 5, padding: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, minWidth: 150 }}>
+              <View style={{ position: 'absolute', top: 100, right: 20, backgroundColor: colors.surface, borderRadius: 8, elevation: 5, padding: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, minWidth: 150 }}>
                 <TouchableOpacity style={{ padding: 12, flexDirection: 'row', alignItems: 'center' }} onPress={() => { setIsSelectMode(true); setIsMenuVisible(false); }}>
                   <Ionicons name="checkmark-circle-outline" size={20} color={colors.text} style={{ marginRight: 8 }} />
                   <AppText style={{ color: colors.text, fontSize: 16 }}>Select</AppText>

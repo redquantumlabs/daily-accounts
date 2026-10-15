@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, Switch, TouchableOpacity, ScrollView, Platform, ActivityIndicator, Modal } from 'react-native';
+import { View, StyleSheet, Switch, TouchableOpacity, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import AppText from '../components/AppText';
 import { useThemeContext, ACCENT_COLORS } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
@@ -54,10 +54,6 @@ export default function SettingsScreen({ navigation }: any) {
   };
 
   const handleSetDownloadPath = async () => {
-    if (Platform.OS !== 'android') {
-      showAlert('Unsupported', 'Setting a default download path is only available on Android devices due to system limitations.');
-      return;
-    }
     try {
       const doc = await SAF.openDocumentTree(true);
       if (doc && doc.uri) {
@@ -70,10 +66,6 @@ export default function SettingsScreen({ navigation }: any) {
   };
 
   const handleSetBackupPath = async () => {
-    if (Platform.OS !== 'android') {
-      showAlert('Unsupported', 'Setting a default backup path is only available on Android devices due to system limitations.');
-      return;
-    }
     try {
       const doc = await SAF.openDocumentTree(true);
       if (doc && doc.uri) {
@@ -92,7 +84,7 @@ export default function SettingsScreen({ navigation }: any) {
       const backupData = await AsyncStorage.getMany(keys);
       const backupString = JSON.stringify(backupData);
 
-      if (backupPathUri && Platform.OS === 'android') {
+      if (backupPathUri) {
         const timestamp = new Date().getTime();
         const filename = `DailyAccountsBackup_${timestamp}.json`;
         const fileUri = await SAF.createFile(backupPathUri + '%2F' + encodeURIComponent(filename), {
@@ -657,9 +649,7 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
-        {Platform.OS === 'android' && (
-          <>
-            <View style={styles.divider} />
+        <View style={styles.divider} />
             <TouchableOpacity
               style={styles.row}
               onPress={handleSetDownloadPath}
@@ -703,8 +693,6 @@ export default function SettingsScreen({ navigation }: any) {
                 )}
               </View>
             </TouchableOpacity>
-          </>
-        )}
       </View>
 
       <ImportSheetModal

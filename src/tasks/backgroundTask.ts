@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SAF from 'react-native-saf-x';
-import { Platform } from 'react-native';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { BACKUP_SILENT_CHANNEL_ID } from '../utils/backupConstants';
 
@@ -50,7 +49,7 @@ export const performBackgroundTasks = async (
     const backupPathKey = '@app_backup_path';
     const backupPathUri = await AsyncStorage.getItem(backupPathKey);
 
-    if (!backupPathUri || Platform.OS !== 'android') {
+    if (!backupPathUri) {
       if (progressNotificationId) {
         await notifee.cancelNotification(progressNotificationId).catch(() => {});
       }

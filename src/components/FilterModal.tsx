@@ -1,6 +1,6 @@
 import React from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, Modal, TouchableOpacity, ScrollView, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, Modal, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -91,7 +91,7 @@ export default function FilterModal(props: FilterModalProps) {
 
   return (
     <Modal visible={props.visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={props.onClose}>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: StatusBar.currentHeight }]}>
         <View style={[styles.header, { borderBottomColor: isDarkTheme ? '#333' : '#eee' }]}>
           <TouchableOpacity onPress={handleClearAll} style={styles.headerButton}>
             <AppText style={{ color: '#ff4444', fontSize: 16, fontWeight: 'bold' }}>Clear</AppText>

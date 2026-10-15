@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
 import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -129,7 +129,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
   };
 
   const onChangeDate = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios'); // iOS keeps it open, Android closes
+    setShowDatePicker(false);
     if (selectedDate) {
       setDate(selectedDate);
     }
@@ -141,7 +141,6 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalOverlay}>
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, Platform, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
@@ -657,7 +657,7 @@ export default function DashboardScreen({ navigation }: any) {
 
       const file = await generatePDF(options);
 
-      if (file.base64 && downloadPathUri && Platform.OS === 'android') {
+      if (file.base64 && downloadPathUri) {
         const fullFileName = `${fileName}.pdf`;
         const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
 
@@ -716,7 +716,7 @@ export default function DashboardScreen({ navigation }: any) {
 
       const file = await generatePDF(options);
 
-      if (file.base64 && downloadPathUri && Platform.OS === 'android') {
+      if (file.base64 && downloadPathUri) {
         const fullFileName = `${fileName}.pdf`;
         const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
 
@@ -1638,7 +1638,6 @@ export default function DashboardScreen({ navigation }: any) {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={styles.incomeModalOverlay}>
                 <KeyboardAvoidingView
-                  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                   style={[styles.incomeModalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
                 >
                   <View style={styles.incomeModalHeader}>

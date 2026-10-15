@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SAF from 'react-native-saf-x';
-import { Platform } from 'react-native';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { generateDashboardPDFHTML, generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
 import { generatePDF } from 'react-native-html-to-pdf';
@@ -59,7 +58,7 @@ export const performAutoDownloadTask = async (
 
   try {
     const downloadPathUri = await AsyncStorage.getItem('@app_download_path');
-    if (!downloadPathUri || Platform.OS !== 'android') {
+    if (!downloadPathUri) {
       if (progressNotificationId) {
         await notifee.cancelNotification(progressNotificationId).catch(() => {});
       }
