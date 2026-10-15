@@ -72,7 +72,7 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
           </View>
 
           <View style={styles.countBadge}>
-            <Ionicons name="calendar-outline" size={14} color="#fff" style={{ marginRight: 4 }} />
+            <Ionicons name="calendar-outline" size={12} color="#fff" style={{ marginRight: 4 }} />
             <AppText style={styles.countBadgeText}>
               {pendingCount} {pendingCount === 1 ? 'Pending' : 'Pending'}
             </AppText>
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   countBadgeText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   footerSnippet: {

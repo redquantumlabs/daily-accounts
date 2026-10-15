@@ -221,7 +221,7 @@ export default function ScheduledExpensesScreen() {
                   <View style={styles.metadataContainer}>
                     {/* Expense Date Pill */}
                     <View style={[styles.datePill, { backgroundColor: colors.surface }]}>
-                      <Ionicons name="calendar-outline" size={14} color={colors.primary} style={{ marginRight: 6 }} />
+                      <Ionicons name="calendar-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
                       <View>
                         <AppText style={[styles.datePillLabel, { color: colors.textMuted }]}>Expense Date</AppText>
                         <AppText style={[styles.datePillValue, { color: colors.text }]}>{formattedExpDate}</AppText>
@@ -230,7 +230,7 @@ export default function ScheduledExpensesScreen() {
 
                     {/* Schedule Date Pill */}
                     <View style={[styles.datePill, { backgroundColor: colors.surface }]}>
-                      <Ionicons name="alarm-outline" size={14} color="#F59E0B" style={{ marginRight: 6 }} />
+                      <Ionicons name="alarm-outline" size={16} color="#F59E0B" style={{ marginRight: 6 }} />
                       <View>
                         <AppText style={[styles.datePillLabel, { color: colors.textMuted }]}>Auto-Add Date</AppText>
                         <AppText style={[styles.datePillValue, { color: colors.text }]}>
@@ -299,10 +299,10 @@ export default function ScheduledExpensesScreen() {
                         },
                       ]}
                       onPress={() => handleExecuteNow(item)}
-                      activeOpacity={0.7}
+                      activeOpacity={0.8}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                      <Ionicons name="flash-outline" size={14} color={colors.primary} style={{ marginRight: 5 }} />
+                      <Ionicons name="flash-outline" size={16} color={colors.primary} style={{ marginRight: 5 }} />
                       <AppText style={[styles.actionBtnText, { color: colors.primary }]}>Add Now</AppText>
                     </TouchableOpacity>
 
@@ -316,7 +316,7 @@ export default function ScheduledExpensesScreen() {
                           },
                         ]}
                         onPress={() => handleOpenEdit(item)}
-                        activeOpacity={0.7}
+                        activeOpacity={0.8}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
                         <Ionicons name="pencil-outline" size={15} color={colors.text} />
@@ -331,7 +331,7 @@ export default function ScheduledExpensesScreen() {
                           },
                         ]}
                         onPress={() => handleDelete(item)}
-                        activeOpacity={0.7}
+                        activeOpacity={0.8}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
                         <Ionicons name="trash-outline" size={15} color="#ff4444" />
@@ -458,8 +458,8 @@ const styles = StyleSheet.create({
   },
   badgesRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
     gap: 8,
     marginBottom: 10,
   },
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    flexShrink: 1,
+    marginLeft: 'auto',
   },
   statusBadgeText: {
     fontSize: 11,
