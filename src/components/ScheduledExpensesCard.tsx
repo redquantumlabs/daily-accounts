@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import AppText from './AppText';
 import PremiumCardBackground from './PremiumCardBackground';
 import { useExpenseContext } from '../context/ExpenseContext';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { formatAmount } from '../utils/format';
 
 interface ScheduledExpensesCardProps {
@@ -12,6 +13,7 @@ interface ScheduledExpensesCardProps {
 
 export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCardProps) {
   const { scheduledExpenses, currency, isAmountsVisible } = useExpenseContext();
+  const colors = useThemeColors();
 
   const pendingItems = useMemo(() => {
     return scheduledExpenses
@@ -34,12 +36,16 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
       day: 'numeric',
       month: 'short',
     });
-    return `Next: ${nextItem.description} • Auto-adds on ${dateFormatted}`;
+    const timeFormatted = target.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return `Next: Auto-adds on ${dateFormatted} at ${timeFormatted}`;
   }, [nextItem]);
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.container}>
-      <PremiumCardBackground color="#6366F1" customGradient={['#4F46E5', '#6366F1', '#8B5CF6']}>
+      <PremiumCardBackground color={colors.accent}>
         {/* Header: Title + Icon + Chevron */}
         <View style={styles.headerRow}>
           <View style={styles.titleWrap}>
