@@ -27,13 +27,7 @@ export default function HomeStack() {
         name="HomeScreen" 
         component={HomeScreen} 
         options={{ 
-          headerShown: true,
-          headerTitle: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="home" size={22} color={colors.text} style={{ marginRight: 8 }} />
-              <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>Home</AppText>
-            </View>
-          )
+          headerShown: false,
         }} 
       />
       <Stack.Screen 
