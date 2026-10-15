@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../hooks/useThemeColors';
 import HomeGreeting from '../components/HomeGreeting';
+import ScheduledExpensesCard from '../components/ScheduledExpensesCard';
 
 export default function HomeScreen({ navigation }: any) {
   const colors = useThemeColors();
@@ -10,6 +11,10 @@ export default function HomeScreen({ navigation }: any) {
 
   const handleProfilePress = () => {
     navigation.navigate('Settings', { screen: 'Profile' });
+  };
+
+  const handleScheduledPress = () => {
+    navigation.navigate('ScheduledExpenses');
   };
 
   return (
@@ -20,6 +25,9 @@ export default function HomeScreen({ navigation }: any) {
       >
         {/* Top Greeting Section */}
         <HomeGreeting onProfilePress={handleProfilePress} />
+
+        {/* Scheduled Expenses Card */}
+        <ScheduledExpensesCard onPress={handleScheduledPress} />
       </ScrollView>
     </View>
   );

@@ -12,6 +12,8 @@ import { BACKUP_TRIGGER_PREFIX } from './src/utils/backupConstants';
 import { performAutoDownloadTask } from './src/tasks/autoDownloadTask';
 import { scheduleAutoDownloadTriggers } from './src/utils/autoDownloadScheduler';
 import { DOWNLOAD_TRIGGER_PREFIX } from './src/utils/autoDownloadConstants';
+import { SCHEDULED_EXPENSES_TRIGGER_PREFIX } from './src/utils/scheduledExpenseConstants';
+import { performScheduledExpenseTask } from './src/tasks/scheduledExpenseTask';
 
 /**
  * Notifee background event handler.
@@ -38,6 +40,8 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
     const label = `Auto Download`;
     await performAutoDownloadTask(label, notificationId);
     await scheduleAutoDownloadTriggers();
+  } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(SCHEDULED_EXPENSES_TRIGGER_PREFIX)) {
+    await performScheduledExpenseTask(notificationId);
   } else if (type === EventType.ACTION_PRESS && detail.pressAction?.id === 'retry_auto_download') {
     if (notificationId) {
       await notifee.cancelNotification(notificationId);

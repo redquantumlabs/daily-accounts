@@ -14,8 +14,8 @@ import { scheduleAutoBackupTriggers, BACKUP_TRIGGER_PREFIX } from './src/utils/a
 import { performBackgroundTasks } from './src/tasks/backgroundTask';
 import { scheduleAutoDownloadTriggers, DOWNLOAD_TRIGGER_PREFIX } from './src/utils/autoDownloadScheduler';
 import { performAutoDownloadTask } from './src/tasks/autoDownloadTask';
-
-
+import { SCHEDULED_EXPENSES_TRIGGER_PREFIX } from './src/utils/scheduledExpenseConstants';
+import { performScheduledExpenseTask } from './src/tasks/scheduledExpenseTask';
 
 export default function App() {
   useEffect(() => {
@@ -42,6 +42,8 @@ export default function App() {
       } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(DOWNLOAD_TRIGGER_PREFIX)) {
         await performAutoDownloadTask('Auto Download', notificationId);
         await scheduleAutoDownloadTriggers();
+      } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(SCHEDULED_EXPENSES_TRIGGER_PREFIX)) {
+        await performScheduledExpenseTask(notificationId);
       }
     });
 

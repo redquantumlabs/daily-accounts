@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import AccountTransactionsScreen from '../screens/AccountTransactionsScreen';
+import ScheduledExpensesScreen from '../screens/ScheduledExpensesScreen';
 import { useThemeColors } from '../hooks/useThemeColors';
 import AppText from '../components/AppText';
 import { View, Platform } from 'react-native';
@@ -44,6 +45,20 @@ export default function HomeStack() {
           ),
           headerBackTitleVisible: false,
         })}
+      />
+      <Stack.Screen 
+        name="ScheduledExpenses" 
+        component={ScheduledExpensesScreen} 
+        options={{
+          headerTitle: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: Platform.OS === 'android' ? -20 : 0 }}>
+              <Ionicons name="time" size={22} color={colors.text} style={{ marginRight: 8 }} />
+              <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>
+                Scheduled Expenses
+              </AppText>
+            </View>
+          ),
+        }}
       />
     </Stack.Navigator>
   );

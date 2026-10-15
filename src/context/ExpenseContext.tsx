@@ -5,6 +5,7 @@ import { useAuthContext } from './AuthContext';
 import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
 import { scheduleAllNotifications } from '../utils/notificationScheduler';
 import { roundAmount } from '../utils/format';
+import { scheduleExpenseTrigger, cancelScheduledExpenseTrigger } from '../utils/scheduledExpenseScheduler';
 
 export interface Expense {
   id: string;
@@ -13,6 +14,19 @@ export interface Expense {
   date: string; // ISO string
   categoryId?: string;
   paymentModeId?: string;
+}
+
+export interface ScheduledExpense {
+  id: string;
+  amount: number;
+  description: string;
+  expenseDate: string; // ISO string
+  scheduleDate: string; // ISO string
+  categoryId?: string;
+  paymentModeId?: string;
+  isProcessed: boolean;
+  processedAt?: string;
+  createdAt: string;
 }
 
 export interface Category {
@@ -31,6 +45,7 @@ export interface PaymentMode {
 
 interface ExpenseContextType {
   expenses: Expense[];
+  scheduledExpenses: ScheduledExpense[];
   categories: Category[];
   paymentModes: PaymentMode[];
   currency: string;
@@ -49,6 +64,12 @@ interface ExpenseContextType {
   deleteExpense: (id: string) => Promise<void>;
   bulkDeleteExpenses: (ids: string[]) => Promise<void>;
   reorderExpensesByDate: (dateStr: string, reorderedDayExpenses: Expense[]) => Promise<void>;
+
+  scheduleExpense: (amount: number, description: string, expenseDate: Date, scheduleDate: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
+  updateScheduledExpense: (id: string, amount: number, description: string, expenseDate: Date, scheduleDate: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
+  deleteScheduledExpense: (id: string) => Promise<void>;
+  executeScheduledExpenseNow: (id: string) => Promise<void>;
+  processPendingScheduledExpenses: () => Promise<void>;
   
   updateMonthlyIncome: (monthYear: string, gross: number, deduction: number) => Promise<void>;
   
@@ -97,6 +118,7 @@ interface ExpenseContextType {
 
 const ExpenseContext = createContext<ExpenseContextType>({
   expenses: [],
+  scheduledExpenses: [],
   categories: [],
   paymentModes: [],
   currency: '$',
@@ -116,6 +138,11 @@ const ExpenseContext = createContext<ExpenseContextType>({
   deleteExpense: async () => {},
   bulkDeleteExpenses: async () => {},
   reorderExpensesByDate: async () => {},
+  scheduleExpense: async () => {},
+  updateScheduledExpense: async () => {},
+  deleteScheduledExpense: async () => {},
+  executeScheduledExpenseNow: async () => {},
+  processPendingScheduledExpenses: async () => {},
   updateMonthlyIncome: async () => {},
   addCategory: async () => {},
   updateCategory: async () => {},
@@ -159,6 +186,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
 export const useExpenseContext = () => useContext(ExpenseContext);
 
 const EXPENSES_KEY = '@app_expenses';
+const SCHEDULED_EXPENSES_KEY = '@app_scheduled_expenses';
 const CATEGORIES_KEY = '@app_categories';
 const PAYMENT_MODES_KEY = '@app_payment_modes';
 const AMOUNTS_VISIBLE_KEY = '@app_amounts_visible';
@@ -179,6 +207,7 @@ const PRECISE_TIME_ELAPSED_KEY = '@app_precise_time_elapsed';
 
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [scheduledExpenses, setScheduledExpenses] = useState<ScheduledExpense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentModes, setPaymentModes] = useState<PaymentMode[]>([]);
   const [currency, setCurrency] = useState('$');
@@ -202,6 +231,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { user } = useAuthContext();
 
   const storageKey = EXPENSES_KEY;
+  const scheduledExpensesStorageKey = SCHEDULED_EXPENSES_KEY;
   const categoriesStorageKey = CATEGORIES_KEY;
   const paymentModesStorageKey = PAYMENT_MODES_KEY;
   const currencyStorageKey = CURRENCY_KEY;
@@ -225,13 +255,61 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const keys = [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
+      const keys = [storageKey, scheduledExpensesStorageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
       const data = await AsyncStorage.getMany(keys);
       const storedExpenses = data[storageKey];
+      let initialExpenses: Expense[] = [];
       if (storedExpenses) {
-        setExpenses(JSON.parse(storedExpenses));
+        initialExpenses = JSON.parse(storedExpenses);
+      }
+
+      // Load scheduled expenses and check for any due items
+      const storedScheduled = data[scheduledExpensesStorageKey];
+      let currentScheduled: ScheduledExpense[] = [];
+      if (storedScheduled) {
+        try {
+          currentScheduled = JSON.parse(storedScheduled);
+        } catch {
+          currentScheduled = [];
+        }
+      }
+
+      const nowTime = Date.now();
+      let hasDueItems = false;
+      const newlyCommittedExpenses: Expense[] = [];
+
+      const updatedScheduled = currentScheduled.map(item => {
+        if (!item.isProcessed && new Date(item.scheduleDate).getTime() <= nowTime) {
+          hasDueItems = true;
+          const newExp: Expense = {
+            id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
+            amount: roundAmount(item.amount),
+            description: item.description,
+            date: new Date(item.expenseDate).toISOString(),
+            categoryId: item.categoryId,
+            paymentModeId: item.paymentModeId,
+          };
+          newlyCommittedExpenses.push(newExp);
+          return {
+            ...item,
+            isProcessed: true,
+            processedAt: new Date().toISOString(),
+          };
+        }
+        return item;
+      });
+
+      if (hasDueItems && newlyCommittedExpenses.length > 0) {
+        setScheduledExpenses(updatedScheduled);
+        await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updatedScheduled));
+
+        const merged = [...newlyCommittedExpenses, ...initialExpenses];
+        merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setExpenses(merged);
+        await AsyncStorage.setItem(storageKey, JSON.stringify(merged));
       } else {
-        setExpenses([]);
+        setScheduledExpenses(currentScheduled);
+        setExpenses(initialExpenses);
       }
 
       const storedCategories = data[categoriesStorageKey];
@@ -484,6 +562,134 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updatedExpenses = expenses.filter(exp => !ids.includes(exp.id));
     setExpenses(updatedExpenses);
     await AsyncStorage.setItem(storageKey, JSON.stringify(updatedExpenses));
+  };
+
+  const scheduleExpense = async (
+    amount: number,
+    description: string,
+    expenseDate: Date,
+    scheduleDate: Date,
+    categoryId?: string,
+    paymentModeId?: string
+  ) => {
+    const newItem: ScheduledExpense = {
+      id: `sched_${Date.now()}`,
+      amount: roundAmount(amount),
+      description,
+      expenseDate: expenseDate.toISOString(),
+      scheduleDate: scheduleDate.toISOString(),
+      categoryId,
+      paymentModeId,
+      isProcessed: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = [newItem, ...scheduledExpenses];
+    updated.sort((a, b) => new Date(a.scheduleDate).getTime() - new Date(b.scheduleDate).getTime());
+    setScheduledExpenses(updated);
+    await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
+
+    await scheduleExpenseTrigger(newItem, currency);
+  };
+
+  const updateScheduledExpense = async (
+    id: string,
+    amount: number,
+    description: string,
+    expenseDate: Date,
+    scheduleDate: Date,
+    categoryId?: string,
+    paymentModeId?: string
+  ) => {
+    const updated = scheduledExpenses.map(item =>
+      item.id === id
+        ? {
+            ...item,
+            amount: roundAmount(amount),
+            description,
+            expenseDate: expenseDate.toISOString(),
+            scheduleDate: scheduleDate.toISOString(),
+            categoryId,
+            paymentModeId,
+          }
+        : item
+    );
+    updated.sort((a, b) => new Date(a.scheduleDate).getTime() - new Date(b.scheduleDate).getTime());
+    setScheduledExpenses(updated);
+    await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
+
+    const updatedItem = updated.find(i => i.id === id);
+    if (updatedItem) {
+      await scheduleExpenseTrigger(updatedItem, currency);
+    }
+  };
+
+  const deleteScheduledExpense = async (id: string) => {
+    const updated = scheduledExpenses.filter(item => item.id !== id);
+    setScheduledExpenses(updated);
+    await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
+    await cancelScheduledExpenseTrigger(id);
+  };
+
+  const executeScheduledExpenseNow = async (id: string) => {
+    const item = scheduledExpenses.find(i => i.id === id);
+    if (!item) return;
+
+    await addExpense(item.amount, item.description, new Date(item.expenseDate), item.categoryId, item.paymentModeId);
+    await cancelScheduledExpenseTrigger(id);
+
+    const updated = scheduledExpenses.map(i =>
+      i.id === id
+        ? { ...i, isProcessed: true, processedAt: new Date().toISOString() }
+        : i
+    );
+    setScheduledExpenses(updated);
+    await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
+  };
+
+  const processPendingScheduledExpenses = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(scheduledExpensesStorageKey);
+      if (!stored) return;
+      const list: ScheduledExpense[] = JSON.parse(stored);
+      const now = Date.now();
+      let changed = false;
+      const newItems: Expense[] = [];
+
+      const updated = list.map(item => {
+        if (!item.isProcessed && new Date(item.scheduleDate).getTime() <= now) {
+          changed = true;
+          newItems.push({
+            id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
+            amount: roundAmount(item.amount),
+            description: item.description,
+            date: new Date(item.expenseDate).toISOString(),
+            categoryId: item.categoryId,
+            paymentModeId: item.paymentModeId,
+          });
+          return {
+            ...item,
+            isProcessed: true,
+            processedAt: new Date().toISOString(),
+          };
+        }
+        return item;
+      });
+
+      if (changed && newItems.length > 0) {
+        setScheduledExpenses(updated);
+        await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
+
+        const storedExps = await AsyncStorage.getItem(storageKey);
+        const current: Expense[] = storedExps ? JSON.parse(storedExps) : expenses;
+        const merged = [...newItems, ...current];
+        merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setExpenses(merged);
+        await AsyncStorage.setItem(storageKey, JSON.stringify(merged));
+      }
+    } catch (e) {
+      console.warn('[processPendingScheduledExpenses] Error:', e);
+    }
   };
 
   const reorderExpensesByDate = async (dateStr: string, reorderedDayExpenses: Expense[]) => {
@@ -773,7 +979,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const migrateUserEmail = async (oldEmail: string, newEmail: string) => {
     const keys = [
-      EXPENSES_KEY, CATEGORIES_KEY, PAYMENT_MODES_KEY, CURRENCY_KEY,
+      EXPENSES_KEY, SCHEDULED_EXPENSES_KEY, CATEGORIES_KEY, PAYMENT_MODES_KEY, CURRENCY_KEY,
       BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY, SHOW_YEAR_CARD_KEY,
       ANALYTICS_CHART_TYPE_KEY, CHART_STYLE_KEY, DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY,
       SUMMARY_TIME_KEY, REMINDER_TIME_KEY, AUTO_BACKUP_TIMES_KEY, AUTO_DOWNLOAD_TIMES_KEY,
@@ -793,11 +999,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <ExpenseContext.Provider value={{ 
-      expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
+      expenses, scheduledExpenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
       showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, analyticsChartType, chartStyle,
       isPreciseTimeElapsed, togglePreciseTimeElapsed,
       monthlyIncomes,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses, reorderExpensesByDate,
+      scheduleExpense, updateScheduledExpense, deleteScheduledExpense, executeScheduledExpenseNow, processPendingScheduledExpenses,
       updateMonthlyIncome,
       addCategory, updateCategory, deleteCategory, bulkDeleteCategories,
       addPaymentMode, updatePaymentMode, deletePaymentMode, bulkDeletePaymentModes,
