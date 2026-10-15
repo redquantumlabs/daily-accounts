@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Platform, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Platform, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
@@ -29,6 +29,8 @@ interface TransactionListItemProps {
   isActive: boolean;
   isSelected: boolean;
   isSelectMode: boolean;
+  isReorderMode: boolean;
+  multiTxDates: Set<string>;
   colors: any;
   currency: string;
   accountFilter?: string;
@@ -90,6 +92,8 @@ const TransactionListItem = React.memo(({
   isActive,
   isSelected,
   isSelectMode,
+  isReorderMode,
+  multiTxDates,
   colors,
   currency,
   accountFilter,
@@ -113,19 +117,31 @@ const TransactionListItem = React.memo(({
       <Swipeable
         renderRightActions={renderRightActions}
         renderLeftActions={renderLeftActions}
-        enabled={!isSelectMode}
+        enabled={!(isSelectMode || isReorderMode)}
       >
         <TouchableOpacity
           style={[styles.expenseRow, { backgroundColor: isSelected ? colors.surface : colors.card, elevation: isSelected ? 4 : (isActive ? 8 : 0) }]}
           onPress={() => handleRowPress(tx)}
           onLongPress={() => {
-            if (isSelectMode) return;
+            if (isSelectMode || isReorderMode) return;
             draggedItemDateRef.current = new Date(tx.date).toDateString();
             drag();
           }}
+          disabled={isActive}
           activeOpacity={0.8}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            {isReorderMode && multiTxDates.has(new Date(tx.date).toDateString()) && (
+              <TouchableOpacity
+                onPressIn={() => {
+                  draggedItemDateRef.current = new Date(tx.date).toDateString();
+                  drag();
+                }}
+                style={{ marginRight: 12 }}
+              >
+                <Ionicons name="reorder-two" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            )}
             {isSelectMode && (
               <View style={[styles.checkbox, { borderColor: colors.primary, backgroundColor: isSelected ? colors.primary : 'transparent' }]}>
                 {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
@@ -160,6 +176,7 @@ const TransactionListItem = React.memo(({
     prevProps.isActive === nextProps.isActive &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isSelectMode === nextProps.isSelectMode &&
+    prevProps.isReorderMode === nextProps.isReorderMode &&
     prevProps.currency === nextProps.currency &&
     prevProps.accountFilter === nextProps.accountFilter &&
     prevProps.isAmountsVisible === nextProps.isAmountsVisible
@@ -182,6 +199,12 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
 
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [isListHidden, setIsListHidden] = useState(!isAmountsVisible);
+  useEffect(() => {
+    setIsListHidden(!isAmountsVisible);
+  }, [isAmountsVisible]);
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -202,6 +225,19 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
     if (!accountFilter) return transactions;
     return transactions.filter(t => t.account === accountFilter);
   }, [transactions, accountFilter]);
+
+  const multiTxDates = useMemo(() => {
+    const counts: Record<string, number> = {};
+    baseTransactions.forEach(t => {
+      const d = new Date(t.date).toDateString();
+      counts[d] = (counts[d] || 0) + 1;
+    });
+    const multiDates = new Set<string>();
+    Object.keys(counts).forEach(k => {
+      if (counts[k] > 1) multiDates.add(k);
+    });
+    return multiDates;
+  }, [baseTransactions]);
 
   const availableYears = useMemo(() => {
     const years = new Set(baseTransactions.map(e => new Date(e.date).getFullYear()));
@@ -400,17 +436,19 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         isActive={isActive}
         isSelected={selectedIds.includes(tx.id)}
         isSelectMode={isSelectMode}
+        isReorderMode={isReorderMode}
+        multiTxDates={multiTxDates}
         colors={colors}
         currency={currency}
         accountFilter={accountFilter}
         handleRowPress={handleRowPress}
         draggedItemDateRef={draggedItemDateRef}
         onDelete={(id) => bulkDeleteTransactions([id])}
-        isAmountsVisible={isAmountsVisible}
+        isAmountsVisible={!isListHidden}
         showAlert={showAlert}
       />
     );
-  }, [selectedIds, isSelectMode, colors, currency, accountFilter, handleRowPress, bulkDeleteTransactions, isAmountsVisible]);
+  }, [selectedIds, isSelectMode, isReorderMode, multiTxDates, colors, currency, accountFilter, handleRowPress, bulkDeleteTransactions, isListHidden]);
 
   const listHeader = (
     <View style={{ marginBottom: 16 }}>
@@ -434,18 +472,6 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
 
           <>
             <TouchableOpacity
-              style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginRight: 10 }]}
-              onPress={handleDownloadPDF}
-              disabled={isDownloading}
-            >
-              {isDownloading ? (
-                <ActivityIndicator size="small" color={colors.text} />
-              ) : (
-                <Ionicons name="download-outline" size={22} color={colors.text} />
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
               style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => setIsFilterModalVisible(true)}
             >
@@ -461,22 +487,35 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
 
             <TouchableOpacity
               style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginLeft: 10 }]}
-              onPress={() => {
-                if (isSelectMode) {
-                  setIsSelectMode(false);
-                  setSelectedIds([]);
-                } else {
-                  setIsSelectMode(true);
-                }
-              }}
+              onPress={() => setIsListHidden(!isListHidden)}
             >
               <Ionicons
-                name={isSelectMode ? "checkmark-circle" : "checkmark-circle-outline"}
+                name={isListHidden ? "eye-off-outline" : "eye-outline"}
                 size={22}
-                color={isSelectMode ? colors.primary : colors.text}
+                color={colors.text}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginLeft: 10 }]}
+              onPress={() => setIsMenuVisible(true)}
+            >
+              <Ionicons
+                name="ellipsis-vertical"
+                size={22}
+                color={colors.text}
               />
             </TouchableOpacity>
           </>
+        </View>
+      )}
+
+      {/* ACTION BAR FOR REORDER */}
+      {isReorderMode && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16, paddingHorizontal: 4 }}>
+          <TouchableOpacity onPress={() => setIsReorderMode(false)} style={{ backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 20 }}>
+            <AppText style={{ color: '#FFF', fontWeight: 'bold' }}>Done Reordering</AppText>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -583,6 +622,62 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         selectedTypes={selectedTypes}
         setSelectedTypes={setSelectedTypes}
       />
+      <Modal
+        visible={isMenuVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsMenuVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setIsMenuVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.1)' }}>
+            <TouchableWithoutFeedback>
+              <View style={{
+                position: 'absolute',
+                top: Platform.OS === 'ios' ? 140 : 100,
+                right: 20,
+                backgroundColor: colors.surface,
+                borderRadius: 8,
+                elevation: 5,
+                padding: 8,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                minWidth: 150
+              }}>
+                <TouchableOpacity
+                  style={{ padding: 12, flexDirection: 'row', alignItems: 'center' }}
+                  onPress={() => { setIsSelectMode(true); setIsMenuVisible(false); }}
+                >
+                  <Ionicons name="checkmark-circle-outline" size={20} color={colors.text} style={{ marginRight: 8 }} />
+                  <AppText style={{ color: colors.text, fontSize: 16 }}>Select</AppText>
+                </TouchableOpacity>
+                <View style={{ height: 1, backgroundColor: colors.border }} />
+                <TouchableOpacity
+                  style={{ padding: 12, flexDirection: 'row', alignItems: 'center' }}
+                  onPress={() => { setIsReorderMode(true); setIsMenuVisible(false); }}
+                >
+                  <Ionicons name="reorder-two-outline" size={20} color={colors.text} style={{ marginRight: 8 }} />
+                  <AppText style={{ color: colors.text, fontSize: 16 }}>Reorder</AppText>
+                </TouchableOpacity>
+                <View style={{ height: 1, backgroundColor: colors.border }} />
+                <TouchableOpacity
+                  style={{ padding: 12, flexDirection: 'row', alignItems: 'center' }}
+                  onPress={() => { setIsMenuVisible(false); handleDownloadPDF(); }}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
+                  ) : (
+                    <Ionicons name="download-outline" size={20} color={colors.text} style={{ marginRight: 8 }} />
+                  )}
+                  <AppText style={{ color: colors.text, fontSize: 16 }}>Download</AppText>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
