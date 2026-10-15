@@ -35,6 +35,7 @@ interface TransactionListItemProps {
   currency: string;
   accountFilter?: string;
   handleRowPress: (tx: AccountTransaction) => void;
+  handleRowLongPress: (tx: AccountTransaction) => void;
   draggedItemDateRef: React.MutableRefObject<string | null>;
   onDelete: (id: string) => void;
   isAmountsVisible: boolean;
@@ -98,6 +99,7 @@ const TransactionListItem = React.memo(({
   currency,
   accountFilter,
   handleRowPress,
+  handleRowLongPress,
   draggedItemDateRef,
   onDelete,
   isAmountsVisible,
@@ -124,8 +126,7 @@ const TransactionListItem = React.memo(({
           onPress={() => handleRowPress(tx)}
           onLongPress={() => {
             if (isSelectMode || isReorderMode) return;
-            draggedItemDateRef.current = new Date(tx.date).toDateString();
-            drag();
+            handleRowLongPress(tx);
           }}
           disabled={isActive}
           activeOpacity={0.8}
@@ -346,6 +347,12 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
     }
   }, []);
 
+  const handleRowLongPress = useCallback((tx: AccountTransaction) => {
+    if (isSelectModeRef.current || isReorderMode) return;
+    setIsSelectMode(true);
+    setSelectedIds([tx.id]);
+  }, [isReorderMode]);
+
   const handleSelectAll = () => {
     const currentlyDisplayedIds = flatDataState.map(t => t.id);
     if (selectedIds.length === currentlyDisplayedIds.length && currentlyDisplayedIds.length > 0) {
@@ -442,13 +449,14 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
         currency={currency}
         accountFilter={accountFilter}
         handleRowPress={handleRowPress}
+        handleRowLongPress={handleRowLongPress}
         draggedItemDateRef={draggedItemDateRef}
         onDelete={(id) => bulkDeleteTransactions([id])}
         isAmountsVisible={!isListHidden}
         showAlert={showAlert}
       />
     );
-  }, [selectedIds, isSelectMode, isReorderMode, multiTxDates, colors, currency, accountFilter, handleRowPress, bulkDeleteTransactions, isListHidden]);
+  }, [selectedIds, isSelectMode, isReorderMode, multiTxDates, colors, currency, accountFilter, handleRowPress, handleRowLongPress, bulkDeleteTransactions, isListHidden]);
 
   const listHeader = (
     <View style={{ marginBottom: 16 }}>
