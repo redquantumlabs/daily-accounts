@@ -52,7 +52,7 @@ export default function HomeGreeting({ onProfilePress }: HomeGreetingProps) {
     }
   }, [hours]);
 
-  // Formatted date string (e.g., "Thursday, 15 Oct")
+  // Formatted date string
   const formattedDate = React.useMemo(() => {
     return now.toLocaleDateString(undefined, {
       weekday: 'long',
