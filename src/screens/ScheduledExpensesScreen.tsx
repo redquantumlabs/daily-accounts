@@ -173,6 +173,7 @@ export default function ScheduledExpensesScreen() {
                 minute: '2-digit',
               });
               const relativeLabel = getScheduleRelativeLabel(item.scheduleDate);
+              const isDueOrPast = new Date(item.scheduleDate).getTime() <= Date.now();
 
               return (
                 <View
@@ -239,52 +240,101 @@ export default function ScheduledExpensesScreen() {
                     </View>
                   </View>
 
-                  {/* Relative Status & Payment Mode Footer */}
-                  <View style={styles.footerRow}>
-                    <View style={styles.footerLeft}>
-                      {paymentMode && (
-                        <View style={[styles.paymentBadge, { backgroundColor: `${paymentMode.color || colors.primary}18` }]}>
-                          <Ionicons
-                            name={(paymentMode.icon as any) || 'card-outline'}
-                            size={12}
-                            color={paymentMode.color || colors.primary}
-                            style={{ marginRight: 4 }}
-                          />
-                          <AppText style={[styles.paymentBadgeText, { color: paymentMode.color || colors.primary }]}>
-                            {paymentMode.name}
-                          </AppText>
-                        </View>
-                      )}
-                      <View style={[styles.statusBadge, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
-                        <AppText style={styles.statusBadgeText}>{relativeLabel}</AppText>
+                  {/* Badges Row: Payment Mode & Auto-Add Status */}
+                  <View style={styles.badgesRow}>
+                    {paymentMode && (
+                      <View
+                        style={[
+                          styles.paymentBadge,
+                          {
+                            backgroundColor: `${paymentMode.color || colors.primary}15`,
+                            borderColor: `${paymentMode.color || colors.primary}30`,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={(paymentMode.icon as any) || 'card-outline'}
+                          size={12}
+                          color={paymentMode.color || colors.primary}
+                          style={{ marginRight: 5 }}
+                        />
+                        <AppText style={[styles.paymentBadgeText, { color: paymentMode.color || colors.primary }]}>
+                          {paymentMode.name}
+                        </AppText>
                       </View>
+                    )}
+
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        {
+                          backgroundColor: isDueOrPast ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                          borderColor: isDueOrPast ? 'rgba(239, 68, 68, 0.25)' : 'rgba(245, 158, 11, 0.25)',
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name={isDueOrPast ? 'alert-circle-outline' : 'time-outline'}
+                        size={12}
+                        color={isDueOrPast ? '#EF4444' : '#D97706'}
+                        style={{ marginRight: 5 }}
+                      />
+                      <AppText
+                        style={[styles.statusBadgeText, isDueOrPast && { color: '#EF4444' }]}
+                        numberOfLines={1}
+                      >
+                        {relativeLabel}
+                      </AppText>
                     </View>
+                  </View>
 
-                    {/* Action Buttons */}
-                    <View style={styles.actionsRow}>
-                      <TouchableOpacity
-                        style={[styles.actionBtn, { backgroundColor: `${colors.primary}15` }]}
-                        onPress={() => handleExecuteNow(item)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Ionicons name="flash-outline" size={16} color={colors.primary} />
-                        <AppText style={[styles.actionBtnText, { color: colors.primary }]}>Add Now</AppText>
-                      </TouchableOpacity>
+                  {/* Actions Footer */}
+                  <View style={[styles.actionsFooter, { borderTopColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={[
+                        styles.actionBtn,
+                        {
+                          backgroundColor: `${colors.primary}15`,
+                          borderColor: `${colors.primary}30`,
+                        },
+                      ]}
+                      onPress={() => handleExecuteNow(item)}
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Ionicons name="flash-outline" size={14} color={colors.primary} style={{ marginRight: 5 }} />
+                      <AppText style={[styles.actionBtnText, { color: colors.primary }]}>Add Now</AppText>
+                    </TouchableOpacity>
 
+                    <View style={styles.iconActions}>
                       <TouchableOpacity
-                        style={[styles.iconActionBtn, { backgroundColor: colors.surface }]}
+                        style={[
+                          styles.iconActionBtn,
+                          {
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                          },
+                        ]}
                         onPress={() => handleOpenEdit(item)}
+                        activeOpacity={0.7}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
-                        <Ionicons name="pencil-outline" size={16} color={colors.text} />
+                        <Ionicons name="pencil-outline" size={15} color={colors.text} />
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={[styles.iconActionBtn, { backgroundColor: 'rgba(255, 68, 68, 0.1)' }]}
+                        style={[
+                          styles.iconActionBtn,
+                          {
+                            backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                            borderColor: 'rgba(255, 68, 68, 0.25)',
+                          },
+                        ]}
                         onPress={() => handleDelete(item)}
+                        activeOpacity={0.7}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
-                        <Ionicons name="trash-outline" size={16} color="#ff4444" />
+                        <Ionicons name="trash-outline" size={15} color="#ff4444" />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -386,7 +436,7 @@ const styles = StyleSheet.create({
   metadataContainer: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   datePill: {
     flex: 1,
@@ -406,63 +456,68 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 1,
   },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(150, 150, 150, 0.15)',
-  },
-  footerLeft: {
+  badgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 6,
-    flex: 1,
+    gap: 8,
+    marginBottom: 10,
   },
   paymentBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderRadius: 8,
+    borderWidth: 1,
   },
   paymentBadgeText: {
     fontSize: 11,
     fontWeight: '600',
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderRadius: 8,
+    borderWidth: 1,
+    flexShrink: 1,
   },
   statusBadgeText: {
     fontSize: 11,
     color: '#D97706',
     fontWeight: '600',
   },
-  actionsRow: {
+  actionsFooter: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    paddingTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    gap: 4,
+    borderWidth: 1,
   },
   actionBtnText: {
     fontSize: 12,
     fontWeight: 'bold',
   },
+  iconActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   iconActionBtn: {
     width: 32,
     height: 32,
     borderRadius: 8,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
