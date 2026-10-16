@@ -296,9 +296,7 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
 
               {/* Expense Date */}
               <View style={styles.inputWrapper}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                  <AppText style={styles.label}>Date</AppText>
-                </View>
+                <AppText style={styles.label}>Date</AppText>
                 <TouchableOpacity
                   style={[styles.dateButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
                   onPress={() => setShowExpenseDatePicker(true)}
@@ -386,9 +384,21 @@ export default function ScheduleExpenseModal({ visible, onClose, itemToEdit }: S
 
               {/* Scheduled Date & Time */}
               <View style={styles.inputWrapper}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                  <Ionicons name="alarm" size={14} color={colors.primary} style={{ marginRight: 4 }} />
-                  <AppText style={[styles.label, { color: colors.primary, fontWeight: 'bold' }]}>
+                <View style={styles.labelRow}>
+                  <Ionicons name="alarm" size={15} color={colors.primary} style={{ marginRight: 6 }} />
+                  <AppText
+                    style={[
+                      styles.label,
+                      {
+                        color: colors.primary,
+                        fontWeight: 'bold',
+                        marginBottom: 0,
+                        marginLeft: 0,
+                        includeFontPadding: false,
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
                     Auto-Add Date & Time (When to post)
                   </AppText>
                 </View>
@@ -529,6 +539,12 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     marginBottom: 16,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    marginLeft: 2,
   },
   label: {
     fontSize: 13,
