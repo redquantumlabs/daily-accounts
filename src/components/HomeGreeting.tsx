@@ -64,7 +64,9 @@ export default function HomeGreeting({ onProfilePress }: HomeGreetingProps) {
   const firstName = profileName?.firstName?.trim();
   const lastName = profileName?.lastName?.trim();
   const fullName = [firstName, lastName].filter(Boolean).join(' ');
-  const initial = firstName ? firstName.charAt(0).toUpperCase() : null;
+  const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+  const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+  const initials = `${firstInitial}${lastInitial}` || null;
 
   return (
     <View style={styles.container}>
@@ -131,8 +133,10 @@ export default function HomeGreeting({ onProfilePress }: HomeGreetingProps) {
             end={{ x: 1, y: 1 }}
             style={styles.avatarGradient}
           >
-            {initial ? (
-              <AppText style={styles.avatarText}>{initial}</AppText>
+            {initials ? (
+              <AppText style={[styles.avatarText, initials.length > 1 && styles.avatarTextMulti]}>
+                {initials}
+              </AppText>
             ) : (
               <Ionicons name="person" size={17} color="#FFFFFF" />
             )}
@@ -229,5 +233,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '700',
+  },
+  avatarTextMulti: {
+    fontSize: 14,
+    letterSpacing: 0.5,
   },
 });
