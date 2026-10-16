@@ -6,6 +6,7 @@ import PremiumCardBackground from './PremiumCardBackground';
 import { useExpenseContext } from '../context/ExpenseContext';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { formatAmount } from '../utils/format';
+import { MONTH_NAMES } from '../utils/dateUtils';
 
 interface ScheduledExpensesCardProps {
   onPress: (tab?: 'pending' | 'archived') => void;
@@ -15,6 +16,14 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
   const { scheduledExpenses, currency, isAmountsVisible } = useExpenseContext();
   const colors = useThemeColors();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedYears, setExpandedYears] = useState<Record<number, boolean>>({});
+
+  const toggleYear = (year: number) => {
+    setExpandedYears((prev) => ({
+      ...prev,
+      [year]: !prev[year],
+    }));
+  };
 
   const pendingItems = useMemo(() => {
     return scheduledExpenses
@@ -35,22 +44,44 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
   }, [pendingItems]);
 
   const yearlyTotals = useMemo(() => {
-    const map: Record<number, number> = {};
+    const yearMap: Record<number, { total: number; months: Record<number, number> }> = {};
+
     pendingItems.forEach((item) => {
-      let year = new Date().getFullYear();
-      if (item.expenseDate) {
-        const d = new Date(item.expenseDate);
-        if (!isNaN(d.getTime())) year = d.getFullYear();
+      if (!item.expenseDate) return;
+      const d = new Date(item.expenseDate);
+      if (isNaN(d.getTime())) return;
+
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const amt = Number(item.amount) || 0;
+
+      if (!yearMap[year]) {
+        yearMap[year] = { total: 0, months: {} };
       }
-      map[year] = (map[year] || 0) + (Number(item.amount) || 0);
+      yearMap[year].total += amt;
+      yearMap[year].months[month] = (yearMap[year].months[month] || 0) + amt;
     });
-    return Object.keys(map)
+
+    return Object.keys(yearMap)
       .map(Number)
       .sort((a, b) => a - b)
-      .map((year) => ({
-        year,
-        total: map[year],
-      }));
+      .map((year) => {
+        const monthMap = yearMap[year].months;
+        const months = Object.keys(monthMap)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .map((monthIndex) => ({
+            monthIndex,
+            monthName: MONTH_NAMES[monthIndex],
+            total: monthMap[monthIndex],
+          }));
+
+        return {
+          year,
+          total: yearMap[year].total,
+          months,
+        };
+      });
   }, [pendingItems]);
 
   const nextItem = pendingItems[0];
@@ -123,22 +154,64 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
               {yearlyTotals.length === 0 ? (
                 <AppText style={styles.noYearlyText}>No pending scheduled expenses</AppText>
               ) : (
-                yearlyTotals.map((item, index) => (
-                  <View
-                    key={item.year}
-                    style={[
-                      styles.yearlyRow,
-                      index < yearlyTotals.length - 1 && styles.yearlyRowDivider,
-                    ]}
-                  >
-                    <AppText style={styles.yearlyLabel}>
-                      Upcoming Total of {item.year}:
-                    </AppText>
-                    <AppText style={styles.yearlyValue}>
-                      {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(item.total)}`}
-                    </AppText>
-                  </View>
-                ))
+                yearlyTotals.map((item, index) => {
+                  const isYearExpanded = !!expandedYears[item.year];
+                  const isLastYear = index === yearlyTotals.length - 1;
+
+                  return (
+                    <View
+                      key={item.year}
+                      style={[
+                        styles.yearItemBlock,
+                        !isLastYear && styles.yearlyRowDivider,
+                      ]}
+                    >
+                      {/* Year Row Button */}
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => toggleYear(item.year)}
+                        style={styles.yearlyRow}
+                      >
+                        <AppText style={styles.yearlyLabel}>
+                          Upcoming Total of {item.year}:
+                        </AppText>
+                        <View style={styles.yearlyValueWrap}>
+                          <AppText style={styles.yearlyValue}>
+                            {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(item.total)}`}
+                          </AppText>
+                          <Ionicons
+                            name={isYearExpanded ? 'chevron-up' : 'chevron-down'}
+                            size={14}
+                            color="rgba(255, 255, 255, 0.85)"
+                            style={styles.yearChevron}
+                          />
+                        </View>
+                      </TouchableOpacity>
+
+                      {/* Month Breakdown when Year is Expanded */}
+                      {isYearExpanded && (
+                        <View style={styles.monthlyListContainer}>
+                          {item.months.map((m, mIdx) => (
+                            <View
+                              key={m.monthIndex}
+                              style={[
+                                styles.monthlyRow,
+                                mIdx < item.months.length - 1 && styles.monthlyRowDivider,
+                              ]}
+                            >
+                              <AppText style={styles.monthlyLabel}>
+                                Upcoming Total of {m.monthName}:
+                              </AppText>
+                              <AppText style={styles.monthlyValue}>
+                                {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(m.total)}`}
+                              </AppText>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })
               )}
             </View>
           )}
@@ -272,6 +345,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 7,
   },
+  yearItemBlock: {
+    paddingVertical: 2,
+  },
+  yearlyValueWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  yearChevron: {
+    marginLeft: 6,
+  },
   yearlyRowDivider: {
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.12)',
@@ -283,6 +366,36 @@ const styles = StyleSheet.create({
   },
   yearlyValue: {
     fontSize: 13,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  monthlyListContainer: {
+    marginTop: 4,
+    marginBottom: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.16)',
+    borderRadius: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  monthlyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 5,
+  },
+  monthlyRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  monthlyLabel: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '500',
+    flex: 1,
+    marginRight: 8,
+  },
+  monthlyValue: {
+    fontSize: 12,
     color: '#FFFFFF',
     fontWeight: '700',
   },
