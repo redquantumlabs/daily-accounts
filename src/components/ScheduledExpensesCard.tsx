@@ -106,10 +106,14 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
   }, [nextItem, archivedCount]);
 
   return (
-    <TouchableOpacity onPress={() => onPress()} activeOpacity={0.85} style={styles.container}>
+    <View style={styles.container}>
       <PremiumCardBackground color={colors.accent}>
-        {/* Header: Title + Icon + Chevron */}
-        <View style={styles.headerRow}>
+        {/* Header: Title + Icon + Chevron (navigates to screen) */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => onPress()}
+          style={styles.headerRow}
+        >
           <View style={styles.titleWrap}>
             <View style={styles.iconCircle}>
               <Ionicons name="time" size={20} color="#fff" />
@@ -122,31 +126,30 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
           <View style={styles.chevronWrap}>
             <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
           </View>
-        </View>
+        </TouchableOpacity>
 
-        {/* Amount Section */}
-        <View style={styles.amountSection}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setIsExpanded((prev) => !prev)}
-            style={styles.amountLabelRow}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <AppText style={styles.amountLabel}>Upcoming Total</AppText>
+        {/* Main Upcoming Total Row: Single Line, Expand/Collapse ONLY */}
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={() => setIsExpanded((prev) => !prev)}
+          style={[styles.upcomingTotalRow, isExpanded && { marginBottom: 10 }]}
+        >
+          <AppText style={styles.upcomingTotalLabel}>Upcoming Total:</AppText>
+          <View style={styles.upcomingTotalValueWrap}>
+            <AppText style={styles.upcomingTotalValue}>
+              {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(upcomingTotal)}`}
+            </AppText>
             <Ionicons
               name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={15}
-              color="rgba(255,255,255,0.85)"
-              style={styles.expandIcon}
+              size={16}
+              color="#FFFFFF"
+              style={styles.upcomingTotalChevron}
             />
-          </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
 
-          <AppText style={styles.amountValue}>
-            {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(upcomingTotal)}`}
-          </AppText>
-
-          {/* Expanded Yearly Breakdown */}
-          {isExpanded && (
+        {/* Expanded Yearly Breakdown */}
+        {isExpanded && (
             <View
               style={styles.yearlyListContainer}
               onStartShouldSetResponder={() => true}
@@ -215,7 +218,6 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
               )}
             </View>
           )}
-        </View>
 
         {/* Dual Badges Row: Side-by-side equal width */}
         <View style={styles.badgesRow}>
@@ -246,8 +248,12 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
           </TouchableOpacity>
         </View>
 
-        {/* Bottom Snippet */}
-        <View style={styles.footerSnippet}>
+        {/* Bottom Snippet (navigates to screen) */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => onPress()}
+          style={styles.footerSnippet}
+        >
           <Ionicons
             name={pendingCount > 0 ? 'alarm-outline' : 'add-circle-outline'}
             size={14}
@@ -257,9 +263,9 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
           <AppText style={styles.footerText} numberOfLines={1}>
             {nextDueText}
           </AppText>
-        </View>
+        </TouchableOpacity>
       </PremiumCardBackground>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -306,32 +312,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  amountSection: {
-    marginBottom: 14,
+  upcomingTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+    marginBottom: 12,
   },
-  amountLabelRow: {
+  upcomingTotalLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  upcomingTotalValueWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
   },
-  amountLabel: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.85)',
-    textTransform: 'uppercase',
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  expandIcon: {
-    marginLeft: 5,
-  },
-  amountValue: {
-    fontSize: 28,
+  upcomingTotalValue: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 2,
+    color: '#FFFFFF',
+  },
+  upcomingTotalChevron: {
+    marginLeft: 6,
   },
   yearlyListContainer: {
-    marginTop: 10,
+    marginBottom: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.16)',
     borderRadius: 12,
     paddingVertical: 6,
