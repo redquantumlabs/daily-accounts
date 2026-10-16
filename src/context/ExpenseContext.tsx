@@ -70,6 +70,7 @@ interface ExpenseContextType {
   deleteScheduledExpense: (id: string) => Promise<void>;
   executeScheduledExpenseNow: (id: string) => Promise<void>;
   processPendingScheduledExpenses: () => Promise<void>;
+  clearArchivedScheduledExpenses: () => Promise<void>;
   
   updateMonthlyIncome: (monthYear: string, gross: number, deduction: number) => Promise<void>;
   
@@ -143,6 +144,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   deleteScheduledExpense: async () => {},
   executeScheduledExpenseNow: async () => {},
   processPendingScheduledExpenses: async () => {},
+  clearArchivedScheduledExpenses: async () => {},
   updateMonthlyIncome: async () => {},
   addCategory: async () => {},
   updateCategory: async () => {},
@@ -631,6 +633,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await cancelScheduledExpenseTrigger(id);
   };
 
+  const clearArchivedScheduledExpenses = async () => {
+    const updated = scheduledExpenses.filter(item => !item.isProcessed);
+    setScheduledExpenses(updated);
+    await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
+  };
+
   const executeScheduledExpenseNow = async (id: string) => {
     const item = scheduledExpenses.find(i => i.id === id);
     if (!item) return;
@@ -1054,7 +1062,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isPreciseTimeElapsed, togglePreciseTimeElapsed,
       monthlyIncomes,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses, reorderExpensesByDate,
-      scheduleExpense, updateScheduledExpense, deleteScheduledExpense, executeScheduledExpenseNow, processPendingScheduledExpenses,
+      scheduleExpense, updateScheduledExpense, deleteScheduledExpense, executeScheduledExpenseNow, processPendingScheduledExpenses, clearArchivedScheduledExpenses,
       updateMonthlyIncome,
       addCategory, updateCategory, deleteCategory, bulkDeleteCategories,
       addPaymentMode, updatePaymentMode, deletePaymentMode, bulkDeletePaymentModes,
