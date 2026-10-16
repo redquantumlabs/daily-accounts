@@ -13,8 +13,8 @@ export default function HomeScreen({ navigation }: any) {
     navigation.navigate('Settings', { screen: 'Profile' });
   };
 
-  const handleScheduledPress = () => {
-    navigation.navigate('ScheduledExpenses');
+  const handleScheduledPress = (tab?: 'pending' | 'archived') => {
+    navigation.navigate('ScheduledExpenses', { initialTab: tab || 'pending' });
   };
 
   return (

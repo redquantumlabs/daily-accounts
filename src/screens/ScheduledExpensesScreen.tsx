@@ -16,7 +16,7 @@ import ScheduleExpenseModal from '../components/ScheduleExpenseModal';
 
 type ScheduledTab = 'pending' | 'archived';
 
-export default function ScheduledExpensesScreen() {
+export default function ScheduledExpensesScreen({ route }: any) {
   const colors = useThemeColors();
   const { showAlert } = useAlert();
   const {
@@ -31,9 +31,15 @@ export default function ScheduledExpensesScreen() {
     processPendingScheduledExpenses,
   } = useExpenseContext();
 
-  const [activeTab, setActiveTab] = useState<ScheduledTab>('pending');
+  const [activeTab, setActiveTab] = useState<ScheduledTab>(route?.params?.initialTab || 'pending');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedItemToEdit, setSelectedItemToEdit] = useState<ScheduledExpense | null>(null);
+
+  useEffect(() => {
+    if (route?.params?.initialTab) {
+      setActiveTab(route.params.initialTab);
+    }
+  }, [route?.params?.initialTab]);
 
   // Poll for due scheduled items every 5 seconds while on this screen
   useEffect(() => {
