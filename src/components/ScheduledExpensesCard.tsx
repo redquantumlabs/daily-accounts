@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AppText from './AppText';
@@ -14,6 +14,7 @@ interface ScheduledExpensesCardProps {
 export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCardProps) {
   const { scheduledExpenses, currency, isAmountsVisible } = useExpenseContext();
   const colors = useThemeColors();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const pendingItems = useMemo(() => {
     return scheduledExpenses
@@ -31,6 +32,25 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
 
   const upcomingTotal = useMemo(() => {
     return pendingItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  }, [pendingItems]);
+
+  const yearlyTotals = useMemo(() => {
+    const map: Record<number, number> = {};
+    pendingItems.forEach((item) => {
+      let year = new Date().getFullYear();
+      if (item.expenseDate) {
+        const d = new Date(item.expenseDate);
+        if (!isNaN(d.getTime())) year = d.getFullYear();
+      }
+      map[year] = (map[year] || 0) + (Number(item.amount) || 0);
+    });
+    return Object.keys(map)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((year) => ({
+        year,
+        total: map[year],
+      }));
   }, [pendingItems]);
 
   const nextItem = pendingItems[0];
@@ -75,10 +95,53 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
 
         {/* Amount Section */}
         <View style={styles.amountSection}>
-          <AppText style={styles.amountLabel}>Upcoming Total</AppText>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setIsExpanded((prev) => !prev)}
+            style={styles.amountLabelRow}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <AppText style={styles.amountLabel}>Upcoming Total</AppText>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={15}
+              color="rgba(255,255,255,0.85)"
+              style={styles.expandIcon}
+            />
+          </TouchableOpacity>
+
           <AppText style={styles.amountValue}>
             {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(upcomingTotal)}`}
           </AppText>
+
+          {/* Expanded Yearly Breakdown */}
+          {isExpanded && (
+            <View
+              style={styles.yearlyListContainer}
+              onStartShouldSetResponder={() => true}
+            >
+              {yearlyTotals.length === 0 ? (
+                <AppText style={styles.noYearlyText}>No pending scheduled expenses</AppText>
+              ) : (
+                yearlyTotals.map((item, index) => (
+                  <View
+                    key={item.year}
+                    style={[
+                      styles.yearlyRow,
+                      index < yearlyTotals.length - 1 && styles.yearlyRowDivider,
+                    ]}
+                  >
+                    <AppText style={styles.yearlyLabel}>
+                      Upcoming Total of {item.year}:
+                    </AppText>
+                    <AppText style={styles.yearlyValue}>
+                      {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(item.total)}`}
+                    </AppText>
+                  </View>
+                ))
+              )}
+            </View>
+          )}
         </View>
 
         {/* Dual Badges Row: Side-by-side equal width */}
@@ -173,18 +236,62 @@ const styles = StyleSheet.create({
   amountSection: {
     marginBottom: 14,
   },
+  amountLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+  },
   amountLabel: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.85)',
     textTransform: 'uppercase',
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  expandIcon: {
+    marginLeft: 5,
   },
   amountValue: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     marginTop: 2,
+  },
+  yearlyListContainer: {
+    marginTop: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.16)',
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  yearlyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 7,
+  },
+  yearlyRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  yearlyLabel: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
+  },
+  yearlyValue: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  noYearlyText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontStyle: 'italic',
+    paddingVertical: 6,
+    textAlign: 'center',
   },
   badgesRow: {
     flexDirection: 'row',
