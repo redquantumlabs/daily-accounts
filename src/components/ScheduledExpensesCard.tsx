@@ -73,41 +73,41 @@ export default function ScheduledExpensesCard({ onPress }: ScheduledExpensesCard
           </View>
         </View>
 
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.amountCol}>
-            <AppText style={styles.amountLabel}>Upcoming Total</AppText>
-            <AppText style={styles.amountValue}>
-              {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(upcomingTotal)}`}
+        {/* Amount Section */}
+        <View style={styles.amountSection}>
+          <AppText style={styles.amountLabel}>Upcoming Total</AppText>
+          <AppText style={styles.amountValue}>
+            {!isAmountsVisible ? '••••••' : `${currency}${formatAmount(upcomingTotal)}`}
+          </AppText>
+        </View>
+
+        {/* Dual Badges Row: Side-by-side equal width */}
+        <View style={styles.badgesRow}>
+          {/* Pending Badge */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => onPress('pending')}
+            style={[styles.badgePill, styles.pendingPill]}
+          >
+            <Ionicons name="time-outline" size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <AppText style={styles.badgeText}>
+              {pendingCount} Pending
             </AppText>
-          </View>
+            <Ionicons name="chevron-forward" size={12} color="rgba(255,255,255,0.7)" style={{ marginLeft: 4 }} />
+          </TouchableOpacity>
 
-          {/* Badges Column: Pending and Archived Counts */}
-          <View style={styles.badgesCol}>
-            {/* Pending Badge */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => onPress('pending')}
-              style={styles.badgePill}
-            >
-              <Ionicons name="time-outline" size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
-              <AppText style={styles.badgeText}>
-                {pendingCount} Pending
-              </AppText>
-            </TouchableOpacity>
-
-            {/* Archived Badge */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => onPress('archived')}
-              style={[styles.badgePill, styles.archivedBadgePill]}
-            >
-              <Ionicons name="checkmark-done" size={13} color="#A7F3D0" style={{ marginRight: 5 }} />
-              <AppText style={[styles.badgeText, styles.archivedBadgeText]}>
-                {archivedCount} Archived
-              </AppText>
-            </TouchableOpacity>
-          </View>
+          {/* Archived Badge */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => onPress('archived')}
+            style={[styles.badgePill, styles.archivedPill]}
+          >
+            <Ionicons name="checkmark-done" size={15} color="#A7F3D0" style={{ marginRight: 6 }} />
+            <AppText style={[styles.badgeText, styles.archivedBadgeText]}>
+              {archivedCount} Archived
+            </AppText>
+            <Ionicons name="chevron-forward" size={12} color="rgba(167,243,208,0.7)" style={{ marginLeft: 4 }} />
+          </TouchableOpacity>
         </View>
 
         {/* Bottom Snippet */}
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   titleWrap: {
     flexDirection: 'row',
@@ -170,16 +170,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 16,
-    paddingTop: 4,
-  },
-  amountCol: {
-    flex: 1,
-    paddingRight: 10,
+  amountSection: {
+    marginBottom: 14,
   },
   amountLabel: {
     fontSize: 12,
@@ -189,33 +181,39 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   amountValue: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     marginTop: 2,
   },
-  badgesCol: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  badgePill: {
+  badgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 16,
+    gap: 10,
+    marginBottom: 12,
+  },
+  badgePill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 14,
     borderWidth: 1,
+  },
+  pendingPill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     borderColor: 'rgba(255, 255, 255, 0.28)',
+  },
+  archivedPill: {
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderColor: 'rgba(16, 185, 129, 0.35)',
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  archivedBadgePill: {
-    backgroundColor: 'rgba(16, 185, 129, 0.24)',
-    borderColor: 'rgba(16, 185, 129, 0.38)',
+    fontSize: 13,
+    fontWeight: '700',
   },
   archivedBadgeText: {
     color: '#E6FFFA',
