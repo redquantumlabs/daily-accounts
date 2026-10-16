@@ -10,7 +10,7 @@ export default function HomeScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
 
   const handleProfilePress = () => {
-    navigation.navigate('Settings', { screen: 'Profile' });
+    navigation.navigate('Settings', { screen: 'Profile', initial: false });
   };
 
   const handleScheduledPress = (tab?: 'pending' | 'archived') => {

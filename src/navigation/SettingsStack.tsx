@@ -1,6 +1,6 @@
 import React from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import AppText from '../components/AppText';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -45,14 +45,29 @@ export default function SettingsStack() {
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{
+        options={({ navigation }) => ({
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => {
+                if (navigation.canGoBack()) {
+                  navigation.goBack();
+                } else {
+                  navigation.navigate('SettingsMain');
+                }
+              }}
+              style={{ paddingRight: 14, paddingVertical: 4 }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
           headerTitle: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Ionicons name="person" size={22} color={colors.text} style={{ marginRight: 8 }} />
               <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>User Profile</AppText>
             </View>
           )
-        }}
+        })}
       />
       <Stack.Screen
         name="Currency"

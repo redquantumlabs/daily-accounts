@@ -85,6 +85,15 @@ export default function BottomTabs() {
         name="Settings"
         component={SettingsStack}
         options={{ headerShown: false }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            const state = navigation.getState();
+            const currentTab = state.routes[state.index];
+            if (currentTab?.name === 'Settings') {
+              navigation.navigate('Settings', { screen: 'SettingsMain' });
+            }
+          },
+        })}
       />
     </Tab.Navigator>
   );
