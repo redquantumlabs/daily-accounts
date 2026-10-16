@@ -71,6 +71,8 @@ interface ExpenseContextType {
   executeScheduledExpenseNow: (id: string) => Promise<void>;
   processPendingScheduledExpenses: () => Promise<void>;
   clearArchivedScheduledExpenses: () => Promise<void>;
+  clearPendingScheduledExpenses: () => Promise<void>;
+  bulkImportScheduledExpenses: (newItems: ScheduledExpense[]) => Promise<void>;
   
   updateMonthlyIncome: (monthYear: string, gross: number, deduction: number) => Promise<void>;
   
@@ -145,6 +147,8 @@ const ExpenseContext = createContext<ExpenseContextType>({
   executeScheduledExpenseNow: async () => {},
   processPendingScheduledExpenses: async () => {},
   clearArchivedScheduledExpenses: async () => {},
+  clearPendingScheduledExpenses: async () => {},
+  bulkImportScheduledExpenses: async () => {},
   updateMonthlyIncome: async () => {},
   addCategory: async () => {},
   updateCategory: async () => {},
@@ -639,6 +643,38 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
   };
 
+  const clearPendingScheduledExpenses = async () => {
+    const pendingItems = scheduledExpenses.filter(item => !item.isProcessed);
+    const updated = scheduledExpenses.filter(item => item.isProcessed);
+    setScheduledExpenses(updated);
+    await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
+
+    for (const item of pendingItems) {
+      try {
+        await cancelScheduledExpenseTrigger(item.id);
+      } catch (e) {
+        console.warn('Failed to cancel trigger for item', item.id, e);
+      }
+    }
+  };
+
+  const bulkImportScheduledExpenses = async (newItems: ScheduledExpense[]) => {
+    if (newItems.length === 0) return;
+
+    const updated = [...newItems, ...scheduledExpenses];
+    updated.sort((a, b) => new Date(a.scheduleDate).getTime() - new Date(b.scheduleDate).getTime());
+    setScheduledExpenses(updated);
+    await AsyncStorage.setItem(scheduledExpensesStorageKey, JSON.stringify(updated));
+
+    for (const item of newItems) {
+      try {
+        await scheduleExpenseTrigger(item, currency);
+      } catch (e) {
+        console.warn('Failed to schedule trigger for imported item', item.id, e);
+      }
+    }
+  };
+
   const executeScheduledExpenseNow = async (id: string) => {
     const item = scheduledExpenses.find(i => i.id === id);
     if (!item) return;
@@ -1062,7 +1098,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isPreciseTimeElapsed, togglePreciseTimeElapsed,
       monthlyIncomes,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses, reorderExpensesByDate,
-      scheduleExpense, updateScheduledExpense, deleteScheduledExpense, executeScheduledExpenseNow, processPendingScheduledExpenses, clearArchivedScheduledExpenses,
+      scheduleExpense, updateScheduledExpense, deleteScheduledExpense, executeScheduledExpenseNow, processPendingScheduledExpenses, clearArchivedScheduledExpenses, clearPendingScheduledExpenses, bulkImportScheduledExpenses,
       updateMonthlyIncome,
       addCategory, updateCategory, deleteCategory, bulkDeleteCategories,
       addPaymentMode, updatePaymentMode, deletePaymentMode, bulkDeletePaymentModes,

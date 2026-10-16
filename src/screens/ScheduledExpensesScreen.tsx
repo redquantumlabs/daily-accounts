@@ -28,6 +28,7 @@ export default function ScheduledExpensesScreen({ route }: any) {
     executeScheduledExpenseNow,
     deleteScheduledExpense,
     clearArchivedScheduledExpenses,
+    clearPendingScheduledExpenses,
     processPendingScheduledExpenses,
   } = useExpenseContext();
 
@@ -154,6 +155,27 @@ export default function ScheduledExpensesScreen({ route }: any) {
               await clearArchivedScheduledExpenses();
             } catch (err: any) {
               showAlert('Error', err.message || 'Failed to clear archive.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleClearAllPending = () => {
+    showAlert(
+      'Clear All Pending',
+      'Are you sure you want to cancel and delete all pending scheduled expenses?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearPendingScheduledExpenses();
+            } catch (err: any) {
+              showAlert('Error', err.message || 'Failed to clear pending schedules.');
             }
           },
         },
@@ -320,6 +342,13 @@ export default function ScheduledExpensesScreen({ route }: any) {
                 <AppText style={[styles.infoBannerText, { color: colors.textMuted }]}>
                   Expenses will automatically post on their auto-add date with their assigned expense date.
                 </AppText>
+                {pendingItems.length > 0 && (
+                  <TouchableOpacity onPress={handleClearAllPending} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <AppText style={{ color: '#ff4444', fontSize: 13, fontWeight: '700', marginLeft: 8 }}>
+                      Clear All
+                    </AppText>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Pending Items */}

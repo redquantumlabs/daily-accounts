@@ -6,6 +6,7 @@ import { useThemeContext, ACCENT_COLORS } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
 import ImportSheetModal from '../components/ImportSheetModal';
 import ImportTransactionalSheetModal from '../components/ImportTransactionalSheetModal';
+import ImportScheduledExpensesModal from '../components/ImportScheduledExpensesModal';
 import { useExpenseContext } from '../context/ExpenseContext';
 import { useTransactionContext } from '../context/TransactionContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -25,6 +26,7 @@ export default function SettingsScreen({ navigation }: any) {
   const { profileName, refreshAuth } = useAuthContext();
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isImportTxModalVisible, setIsImportTxModalVisible] = useState(false);
+  const [isImportScheduledModalVisible, setIsImportScheduledModalVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [restoreProgress, setRestoreProgress] = useState<number | null>(null);
   const [isAccentExpanded, setIsAccentExpanded] = useState(false);
@@ -618,6 +620,17 @@ export default function SettingsScreen({ navigation }: any) {
         </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity
+          style={styles.row}
+          onPress={() => setIsImportScheduledModalVisible(true)}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="calendar-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Import Scheduled Expenses</AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity
           style={[styles.row, { opacity: isProcessing ? 0.5 : 1 }]}
           onPress={handleBackup}
           disabled={isProcessing}
@@ -703,6 +716,11 @@ export default function SettingsScreen({ navigation }: any) {
       <ImportTransactionalSheetModal
         visible={isImportTxModalVisible}
         onClose={() => setIsImportTxModalVisible(false)}
+      />
+
+      <ImportScheduledExpensesModal
+        visible={isImportScheduledModalVisible}
+        onClose={() => setIsImportScheduledModalVisible(false)}
       />
 
       <Modal visible={isProcessing} transparent animationType="fade">
