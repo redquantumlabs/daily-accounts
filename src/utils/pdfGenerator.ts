@@ -417,6 +417,9 @@ export const generateAnalyticsPDFHTML = (
   categoryChartBase64: string = '',
   paymentChartBase64: string = ''
 ) => {
+  const categoryTotalSum = categoryData.reduce((sum, c) => sum + c.amount, 0);
+  const paymentTotalSum = paymentModeData.reduce((sum, m) => sum + m.amount, 0);
+
   const catRows = categoryData.map(cat => `
     <tr>
       <td>
@@ -493,6 +496,14 @@ export const generateAnalyticsPDFHTML = (
             <tbody>
               ${catRows.length > 0 ? catRows : '<tr><td colspan="3" style="text-align: center;">No data</td></tr>'}
             </tbody>
+            ${catRows.length > 0 ? `
+            <tfoot>
+              <tr style="font-weight: bold; background-color: #f8f9fa;">
+                <td>Total (${categoryData.length})</td>
+                <td style="text-align: right;">100.00%</td>
+                <td style="text-align: right;">${currency}${formatAmount(categoryTotalSum)}</td>
+              </tr>
+            </tfoot>` : ''}
           </table>
         </div>
 
@@ -512,6 +523,14 @@ export const generateAnalyticsPDFHTML = (
             <tbody>
               ${modeRows.length > 0 ? modeRows : '<tr><td colspan="3" style="text-align: center;">No data</td></tr>'}
             </tbody>
+            ${modeRows.length > 0 ? `
+            <tfoot>
+              <tr style="font-weight: bold; background-color: #f8f9fa;">
+                <td>Total (${paymentModeData.length})</td>
+                <td style="text-align: right;">100.00%</td>
+                <td style="text-align: right;">${currency}${formatAmount(paymentTotalSum)}</td>
+              </tr>
+            </tfoot>` : ''}
           </table>
         </div>
 

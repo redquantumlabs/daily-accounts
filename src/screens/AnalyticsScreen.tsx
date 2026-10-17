@@ -133,12 +133,10 @@ export default function AnalyticsScreen() {
         value: categoryTotals[catId],
         color: cat ? cat.color : '#888',
         text: percentage,
-        name: cat ? cat.name : '',
+        name: cat ? cat.name : (catId === 'uncategorized' ? 'Uncategorized' : 'Other'),
         amount: categoryTotals[catId]
       };
     }).sort((a, b) => b.value - a.value);
-
-
 
     return { pieChartData: allData, fullCategoryData: allData };
   }, [filteredExpenses, categories]);
@@ -158,13 +156,21 @@ export default function AnalyticsScreen() {
       const percentage = modeTotalSum > 0 ? ((modeTotals[modeId] / modeTotalSum) * 100).toFixed(2) + '%' : '0.00%';
       return {
         value: modeTotals[modeId],
-        name: mode ? mode.name : '',
+        name: mode ? mode.name : (modeId === 'unknown' ? 'Unknown' : 'Other'),
         amount: modeTotals[modeId],
         color: mode ? mode.color : '#888',
         text: percentage
       };
     }).sort((a, b) => b.amount - a.amount);
   }, [filteredExpenses, paymentModes]);
+
+  const totalCategoryAmount = useMemo(() => {
+    return fullCategoryData.reduce((sum, item) => sum + item.amount, 0);
+  }, [fullCategoryData]);
+
+  const totalPaymentModeAmount = useMemo(() => {
+    return paymentModeData.reduce((sum, item) => sum + item.amount, 0);
+  }, [paymentModeData]);
 
   // Insights
   const highestExpense = useMemo(() => {
@@ -383,9 +389,9 @@ export default function AnalyticsScreen() {
               <View style={{ marginTop: 20 }}>
                 {fullCategoryData.map((cat, index) => (
                   <View key={index} style={styles.paymentModeRow}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
                       <View style={[styles.colorDot, { backgroundColor: cat.color }]} />
-                      <AppText style={{ color: colors.text, fontSize: 12 }}>{cat.name} ({cat.text})</AppText>
+                      <AppText style={{ color: colors.text, fontSize: 12, flexShrink: 1 }} numberOfLines={1}>{cat.name} ({cat.text})</AppText>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <AppText style={{ color: colors.text, fontWeight: 'bold', fontSize: 12 }}>
@@ -394,6 +400,17 @@ export default function AnalyticsScreen() {
                     </View>
                   </View>
                 ))}
+
+                {fullCategoryData.length > 0 && (
+                  <View style={[styles.listTotalRow, { borderTopColor: colors.border }]}>
+                    <AppText style={[styles.listTotalLabel, { color: colors.text }]}>
+                      Total ({fullCategoryData.length})
+                    </AppText>
+                    <AppText style={[styles.listTotalAmount, { color: colors.primary }]}>
+                      {isAmountsHidden ? '••••••' : `${currency}${formatAmount(totalCategoryAmount)}`}
+                    </AppText>
+                  </View>
+                )}
               </View>
             </View>
 
@@ -406,9 +423,9 @@ export default function AnalyticsScreen() {
               <View style={{ marginTop: 20 }}>
                 {paymentModeData.map((mode, index) => (
                   <View key={index} style={styles.paymentModeRow}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
                       <View style={[styles.colorDot, { backgroundColor: mode.color }]} />
-                      <AppText style={{ color: colors.text, fontSize: 12 }}>{mode.name} ({mode.text})</AppText>
+                      <AppText style={{ color: colors.text, fontSize: 12, flexShrink: 1 }} numberOfLines={1}>{mode.name} ({mode.text})</AppText>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <AppText style={{ color: colors.text, fontWeight: 'bold', fontSize: 12 }}>
@@ -417,6 +434,17 @@ export default function AnalyticsScreen() {
                     </View>
                   </View>
                 ))}
+
+                {paymentModeData.length > 0 && (
+                  <View style={[styles.listTotalRow, { borderTopColor: colors.border }]}>
+                    <AppText style={[styles.listTotalLabel, { color: colors.text }]}>
+                      Total ({paymentModeData.length})
+                    </AppText>
+                    <AppText style={[styles.listTotalAmount, { color: colors.primary }]}>
+                      {isAmountsHidden ? '••••••' : `${currency}${formatAmount(totalPaymentModeAmount)}`}
+                    </AppText>
+                  </View>
+                )}
               </View>
             </View>
           </>
@@ -493,6 +521,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
+  },
+  listTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    paddingTop: 12,
+    marginTop: 4,
+  },
+  listTotalLabel: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  listTotalAmount: {
+    fontSize: 13,
+    fontWeight: 'bold',
   },
   emptyState: {
     padding: 40,
