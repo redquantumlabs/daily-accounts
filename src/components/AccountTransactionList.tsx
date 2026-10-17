@@ -21,6 +21,7 @@ import notifee from '@notifee/react-native';
 import { generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
+import DeleteProgressModal from '../components/DeleteProgressModal';
 import ThreeDotsLoader from '../components/ThreeDotsLoader';
 
 interface TransactionListItemProps {
@@ -214,6 +215,8 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState<number | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [displayCount, setDisplayCount] = useState(50);
 
@@ -362,6 +365,33 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
     }
   };
 
+  const executeDeleteWithProgress = async (ids: string[]) => {
+    try {
+      setIsDeleting(true);
+      setDeleteProgress(0);
+
+      const total = ids.length;
+      const steps = Math.min(Math.max(total, 1), 20);
+      const batchSize = Math.max(1, Math.ceil(total / steps));
+      let completed = 0;
+
+      for (let i = 0; i < total; i += batchSize) {
+        completed = Math.min(completed + batchSize, total);
+        setDeleteProgress(Math.round((completed / total) * 100));
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+
+      await bulkDeleteTransactions(ids);
+      setDeleteProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 150));
+    } catch (e: any) {
+      showAlert('Error', 'Failed to delete transactions: ' + (e?.message || e));
+    } finally {
+      setIsDeleting(false);
+      setDeleteProgress(null);
+    }
+  };
+
   const handleDeleteSelected = () => {
     if (selectedIds.length === 0) return;
     showAlert(
@@ -373,9 +403,49 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
           text: "Delete",
           style: "destructive",
           onPress: async () => {
-            await bulkDeleteTransactions(selectedIds);
+            const idsToDelete = [...selectedIds];
             setIsSelectMode(false);
             setSelectedIds([]);
+            await executeDeleteWithProgress(idsToDelete);
+          }
+        }
+      ]
+    );
+  };
+
+  const isFiltered = Boolean(
+    searchQuery ||
+    selectedYears.length > 0 ||
+    selectedMonths.length > 0 ||
+    selectedTypes.length > 0
+  );
+  const targetTransactions = isFiltered ? filteredTransactions : baseTransactions;
+
+  const handleDeleteAll = () => {
+    if (targetTransactions.length === 0) {
+      showAlert('No Transactions', 'There are no transactions to delete.');
+      return;
+    }
+
+    const message = isFiltered
+      ? `Are you sure you want to delete all ${targetTransactions.length} filtered transactions? This action cannot be undone.`
+      : accountFilter
+        ? `Are you sure you want to delete all ${targetTransactions.length} transactions for "${accountFilter}"? This action cannot be undone.`
+        : `Are you sure you want to delete all ${targetTransactions.length} transactions? This action cannot be undone.`;
+
+    showAlert(
+      "Delete All Transactions",
+      message,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete All",
+          style: "destructive",
+          onPress: async () => {
+            const idsToDelete = targetTransactions.map(t => t.id);
+            setIsSelectMode(false);
+            setSelectedIds([]);
+            await executeDeleteWithProgress(idsToDelete);
           }
         }
       ]
@@ -681,11 +751,21 @@ export default function AccountTransactionList({ accountFilter }: AccountTransac
                   )}
                   <AppText style={{ color: colors.text, fontSize: 16 }}>Download</AppText>
                 </TouchableOpacity>
+                <View style={{ height: 1, backgroundColor: colors.border }} />
+                <TouchableOpacity
+                  style={{ padding: 12, flexDirection: 'row', alignItems: 'center', opacity: targetTransactions.length === 0 ? 0.5 : 1 }}
+                  onPress={() => { setIsMenuVisible(false); handleDeleteAll(); }}
+                  disabled={targetTransactions.length === 0}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#ff4444" style={{ marginRight: 8 }} />
+                  <AppText style={{ color: '#ff4444', fontSize: 16 }}>Delete All</AppText>
+                </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+      <DeleteProgressModal visible={isDeleting} progress={deleteProgress} />
     </View>
   );
 }

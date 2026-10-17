@@ -24,6 +24,7 @@ import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { parseISOYear, parseISOMonth, getMonthYearString } from '../utils/dateUtils';
 import { useAlert } from '../context/AlertContext';
 import DownloadProgressModal from '../components/DownloadProgressModal';
+import DeleteProgressModal from '../components/DeleteProgressModal';
 import ThreeDotsLoader from '../components/ThreeDotsLoader';
 const isExpoGo = false;
 
@@ -53,6 +54,8 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState<number | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const draggedItemDateRef = useRef<string | null>(null);
   const [flatDataState, setFlatDataState] = useState<ListItem[]>([]);
@@ -234,6 +237,33 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
     }
   };
 
+  const executeDeleteWithProgress = async (ids: string[]) => {
+    try {
+      setIsDeleting(true);
+      setDeleteProgress(0);
+
+      const total = ids.length;
+      const steps = Math.min(Math.max(total, 1), 20);
+      const batchSize = Math.max(1, Math.ceil(total / steps));
+      let completed = 0;
+
+      for (let i = 0; i < total; i += batchSize) {
+        completed = Math.min(completed + batchSize, total);
+        setDeleteProgress(Math.round((completed / total) * 100));
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+
+      await bulkDeleteExpenses(ids);
+      setDeleteProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 150));
+    } catch (e: any) {
+      showAlert('Error', 'Failed to delete expenses: ' + (e?.message || e));
+    } finally {
+      setIsDeleting(false);
+      setDeleteProgress(null);
+    }
+  };
+
   const handleDeleteSelected = () => {
     if (selectedExpenseIds.length === 0) return;
     showAlert(
@@ -245,9 +275,50 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
           text: "Delete",
           style: "destructive",
           onPress: async () => {
-            await bulkDeleteExpenses(selectedExpenseIds);
+            const idsToDelete = [...selectedExpenseIds];
             setIsSelectMode(false);
             setSelectedExpenseIds([]);
+            await executeDeleteWithProgress(idsToDelete);
+          }
+        }
+      ]
+    );
+  };
+
+  const isFiltered = Boolean(
+    searchQuery ||
+    selectedYears.length > 0 ||
+    selectedMonths.length > 0 ||
+    selectedCategoryIds.length > 0 ||
+    selectedPaymentModeIds.length > 0 ||
+    dateFilter ||
+    monthFilter
+  );
+  const targetExpenses = isFiltered ? filteredExpenses : expenses;
+
+  const handleDeleteAll = () => {
+    if (targetExpenses.length === 0) {
+      showAlert('No Expenses', 'There are no expenses to delete.');
+      return;
+    }
+
+    const message = isFiltered
+      ? `Are you sure you want to delete all ${targetExpenses.length} filtered expenses? This action cannot be undone.`
+      : `Are you sure you want to delete all ${targetExpenses.length} expenses? This action cannot be undone.`;
+
+    showAlert(
+      "Delete All Expenses",
+      message,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete All",
+          style: "destructive",
+          onPress: async () => {
+            const idsToDelete = targetExpenses.map(e => e.id);
+            setIsSelectMode(false);
+            setSelectedExpenseIds([]);
+            await executeDeleteWithProgress(idsToDelete);
           }
         }
       ]
@@ -773,11 +844,21 @@ export default function ExpenseList({ ListHeaderComponent, hideTitle, isExpenses
                   )}
                   <AppText style={{ color: colors.text, fontSize: 16 }}>Download</AppText>
                 </TouchableOpacity>
+                <View style={{ height: 1, backgroundColor: colors.border }} />
+                <TouchableOpacity
+                  style={{ padding: 12, flexDirection: 'row', alignItems: 'center', opacity: targetExpenses.length === 0 ? 0.5 : 1 }}
+                  onPress={() => { setIsMenuVisible(false); handleDeleteAll(); }}
+                  disabled={targetExpenses.length === 0}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#ff4444" style={{ marginRight: 8 }} />
+                  <AppText style={{ color: '#ff4444', fontSize: 16 }}>Delete All</AppText>
+                </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+      <DeleteProgressModal visible={isDeleting} progress={deleteProgress} />
     </View>
   );
 }
