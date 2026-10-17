@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Image, TextInput, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Dimensions } from 'react-native';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
@@ -337,11 +337,13 @@ export default function DashboardScreen({ navigation }: any) {
   }, [navigation, isTabsVisible, colors.text]);
 
   const handleTabPress = useCallback((view: 'expenses' | 'accounts' | 'income') => {
+    setActiveDropdown(null);
     setActiveView(view);
     setVisitedViews(prev => prev[view] ? prev : { ...prev, [view]: true });
   }, []);
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [dropdownCoords, setDropdownCoords] = useState<{ top: number; right: number }>({ top: 120, right: 24 });
 
   const incomeStartYear = 2022;
   const incomeCurrentYearVal = new Date().getFullYear();
@@ -754,7 +756,7 @@ export default function DashboardScreen({ navigation }: any) {
     return (
       <ScaleDecorator>
         <TouchableOpacity
-          style={[isActive && { transform: [{ scale: 1.05 }], elevation: 8, zIndex: activeDropdown === acc ? 100 : 1 }]}
+          style={[isActive && { transform: [{ scale: 1.05 }], elevation: 8 }]}
           onPress={() => {
             if (activeDropdown) {
               setActiveDropdown(null);
@@ -783,51 +785,28 @@ export default function DashboardScreen({ navigation }: any) {
                   <Ionicons name={(hiddenAccounts[acc] ?? !isAmountsVisible) ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => setActiveDropdown(activeDropdown === acc ? null : acc)}
+                  onPress={(e) => {
+                    if (activeDropdown === acc) {
+                      setActiveDropdown(null);
+                    } else {
+                      const pageY = e.nativeEvent?.pageY;
+                      const windowHeight = Dimensions.get('window').height;
+                      const menuHeight = 155;
+                      let top = 120;
+                      if (typeof pageY === 'number' && pageY > 0) {
+                        top = (pageY + menuHeight > windowHeight - 60)
+                          ? Math.max(40, pageY - menuHeight)
+                          : pageY + 8;
+                      }
+                      setDropdownCoords({ top, right: 24 });
+                      setActiveDropdown(acc);
+                    }
+                  }}
                   style={{ padding: 4 }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Ionicons name="ellipsis-vertical" size={20} color="rgba(255,255,255,0.7)" />
                 </TouchableOpacity>
-
-                {activeDropdown === acc && (
-                  <View style={[{ position: 'absolute', top: 30, right: 0, borderRadius: 8, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, minWidth: 120, zIndex: 1000 }, { backgroundColor: colors.surface }]}>
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
-                      onPress={() => {
-                        setActiveDropdown(null);
-                        navigation.navigate('AccountTransactions', { account: acc });
-                      }}
-                    >
-                      <Ionicons name="eye-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
-                      <AppText style={{ color: colors.text }}>View</AppText>
-                    </TouchableOpacity>
-
-                    <View style={{ height: 1, backgroundColor: colors.border }} />
-
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
-                      onPress={() => handleDownloadSingleAccountPDF(acc)}
-                      disabled={isDownloading}
-                    >
-                      {isDownloading ? (
-                        <ActivityIndicator size="small" color={colors.text} style={{ marginRight: 8 }} />
-                      ) : (
-                        <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
-                      )}
-                      <AppText style={{ color: colors.text }}>Download</AppText>
-                    </TouchableOpacity>
-
-                    <View style={{ height: 1, backgroundColor: colors.border }} />
-
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
-                      onPress={() => handleDeleteAccount(acc)}
-                    >
-                      <Ionicons name="trash-outline" size={18} color="#ff4444" style={{ marginRight: 8 }} />
-                      <AppText style={{ color: '#ff4444' }}>Delete</AppText>
-                    </TouchableOpacity>
-                  </View>
-                )}
               </View>
             </View>
             <View style={{ marginTop: 4 }}>
@@ -873,26 +852,29 @@ export default function DashboardScreen({ navigation }: any) {
             <TouchableOpacity onPress={() => setIsTotalBalanceHidden(!isTotalBalanceHidden)} style={{ padding: 4, marginRight: 8 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name={isTotalBalanceHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setActiveDropdown(activeDropdown === 'TOTAL_CARD' ? null : 'TOTAL_CARD')} style={{ padding: 4 }}>
+            <TouchableOpacity
+              onPress={(e) => {
+                if (activeDropdown === 'TOTAL_CARD') {
+                  setActiveDropdown(null);
+                } else {
+                  const pageY = e.nativeEvent?.pageY;
+                  const windowHeight = Dimensions.get('window').height;
+                  const menuHeight = 60;
+                  let top = 120;
+                  if (typeof pageY === 'number' && pageY > 0) {
+                    top = (pageY + menuHeight > windowHeight - 60)
+                      ? Math.max(40, pageY - menuHeight)
+                      : pageY + 8;
+                  }
+                  setDropdownCoords({ top, right: 24 });
+                  setActiveDropdown('TOTAL_CARD');
+                }
+              }}
+              style={{ padding: 4 }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <Ionicons name="ellipsis-vertical" size={20} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
-
-            {activeDropdown === 'TOTAL_CARD' && (
-              <View style={[{ position: 'absolute', top: 30, right: 0, borderRadius: 8, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, minWidth: 120, zIndex: 1000 }, { backgroundColor: colors.surface }]}>
-                <TouchableOpacity
-                  style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
-                  onPress={handleDownloadAllAccountsPDF}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <ActivityIndicator size="small" color={colors.text} style={{ marginRight: 8 }} />
-                  ) : (
-                    <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 8 }} />
-                  )}
-                  <AppText style={{ color: colors.text }}>Download</AppText>
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
         </View>
         <View style={{ marginTop: 4 }}>
@@ -1358,6 +1340,97 @@ export default function DashboardScreen({ navigation }: any) {
           {visitedViews.accounts && (
             <View style={{ flex: 1 }}>
           <DownloadProgressModal visible={isDownloading} message="Generating PDF report…" />
+          <Modal
+            visible={activeDropdown !== null}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setActiveDropdown(null)}
+          >
+            <TouchableWithoutFeedback onPress={() => setActiveDropdown(null)}>
+              <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.1)' }}>
+                <TouchableWithoutFeedback>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: dropdownCoords.top,
+                      right: dropdownCoords.right,
+                      borderRadius: 10,
+                      elevation: 8,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 6,
+                      minWidth: 145,
+                      backgroundColor: colors.surface,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {activeDropdown === 'TOTAL_CARD' ? (
+                      <TouchableOpacity
+                        style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
+                        onPress={handleDownloadAllAccountsPDF}
+                        disabled={isDownloading}
+                      >
+                        {isDownloading ? (
+                          <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 10 }} />
+                        ) : (
+                          <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 10 }} />
+                        )}
+                        <AppText style={{ color: colors.text, fontSize: 15, fontWeight: '500' }}>Download</AppText>
+                      </TouchableOpacity>
+                    ) : activeDropdown ? (
+                      <>
+                        <TouchableOpacity
+                          style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
+                          onPress={() => {
+                            const targetAcc = activeDropdown;
+                            setActiveDropdown(null);
+                            navigation.navigate('AccountTransactions', { account: targetAcc });
+                          }}
+                        >
+                          <Ionicons name="eye-outline" size={18} color={colors.text} style={{ marginRight: 10 }} />
+                          <AppText style={{ color: colors.text, fontSize: 15, fontWeight: '500' }}>View</AppText>
+                        </TouchableOpacity>
+
+                        <View style={{ height: 1, backgroundColor: colors.border }} />
+
+                        <TouchableOpacity
+                          style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
+                          onPress={() => {
+                            const targetAcc = activeDropdown;
+                            handleDownloadSingleAccountPDF(targetAcc);
+                          }}
+                          disabled={isDownloading}
+                        >
+                          {isDownloading ? (
+                            <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 10 }} />
+                          ) : (
+                            <Ionicons name="download-outline" size={18} color={colors.text} style={{ marginRight: 10 }} />
+                          )}
+                          <AppText style={{ color: colors.text, fontSize: 15, fontWeight: '500' }}>Download</AppText>
+                        </TouchableOpacity>
+
+                        <View style={{ height: 1, backgroundColor: colors.border }} />
+
+                        <TouchableOpacity
+                          style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16 }}
+                          onPress={() => {
+                            const targetAcc = activeDropdown;
+                            handleDeleteAccount(targetAcc);
+                          }}
+                        >
+                          <Ionicons name="trash-outline" size={18} color="#ff4444" style={{ marginRight: 10 }} />
+                          <AppText style={{ color: '#ff4444', fontSize: 15, fontWeight: '500' }}>Delete</AppText>
+                        </TouchableOpacity>
+                      </>
+                    ) : null}
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
           <DraggableFlatList
             data={accounts}
             keyExtractor={item => item}
