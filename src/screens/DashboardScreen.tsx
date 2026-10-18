@@ -41,7 +41,7 @@ const formatCompact = (num: number) => {
 
 
 
-const MonthlySpendingCalendar = React.memo(({ expenses, selectedMonth, selectedYear, colors, onPrevMonth, onNextMonth, onDayPress, isCalendarHidden, setIsCalendarHidden, currency, isFlippable }: any) => {
+const MonthlySpendingCalendar = React.memo(({ expenses, selectedMonth, selectedYear, colors, onPrevMonth, onNextMonth, onDayPress, isCalendarHidden, setIsCalendarHidden, currency, isFlippable, onFlip }: any) => {
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1).getDay();
@@ -121,10 +121,15 @@ const MonthlySpendingCalendar = React.memo(({ expenses, selectedMonth, selectedY
         <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
           Daily Spending
         </AppText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: isFlippable ? 38 : 0 }}>
-          <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 10 }}>
             {MONTHS[selectedMonth]} {selectedYear}
           </AppText>
+          {isFlippable && onFlip && (
+            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
+              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -152,7 +157,7 @@ const MonthlySpendingCalendar = React.memo(({ expenses, selectedMonth, selectedY
   );
 });
 
-const YearlySpendingCalendar = React.memo(({ expenses, selectedYear, colors, onMonthPress, onPrevYear, onNextYear, isCalendarHidden, setIsCalendarHidden, currency, isFlippable }: any) => {
+const YearlySpendingCalendar = React.memo(({ expenses, selectedYear, colors, onMonthPress, onPrevYear, onNextYear, isCalendarHidden, setIsCalendarHidden, currency, isFlippable, onFlip }: any) => {
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const today = new Date();
@@ -220,10 +225,15 @@ const YearlySpendingCalendar = React.memo(({ expenses, selectedYear, colors, onM
         <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
           Monthly Spending
         </AppText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: isFlippable ? 38 : 0 }}>
-          <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 10 }}>
             {selectedYear}
           </AppText>
+          {isFlippable && onFlip && (
+            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
+              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -244,7 +254,7 @@ const YearlySpendingCalendar = React.memo(({ expenses, selectedYear, colors, onM
   );
 });
 
-const AllYearsSpendingCalendar = React.memo(({ expenses, availableYears, colors, onYearPress, isCalendarHidden, setIsCalendarHidden, currency, isFlippable }: any) => {
+const AllYearsSpendingCalendar = React.memo(({ expenses, availableYears, colors, onYearPress, isCalendarHidden, setIsCalendarHidden, currency, isFlippable, onFlip }: any) => {
   const currentYearVal = new Date().getFullYear();
 
   const yearTotals = useMemo(() => {
@@ -298,7 +308,12 @@ const AllYearsSpendingCalendar = React.memo(({ expenses, availableYears, colors,
         <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
           Yearly Spending
         </AppText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: isFlippable ? 38 : 0 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {isFlippable && onFlip && (
+            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
+              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -1104,11 +1119,18 @@ export default function DashboardScreen({ navigation }: any) {
   }, [availableYears, expenses]);
 
   const maxYearExpense = Math.max(...yearlyDataForChart.map(d => d.amount), 1);
-  const renderMonthlySpendingCard = (isFlippable = false) => (
+  const renderMonthlySpendingCard = (isFlippable = false, onFlip?: () => void) => (
     <PremiumCardBackground color={colors.primary}>
-      <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsMonthlyCardHidden(!isMonthlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Ionicons name={isMonthlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
-      </TouchableOpacity>
+      <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10, flexDirection: 'row', alignItems: 'center' }}>
+        {isFlippable && onFlip && (
+          <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
+            <Ionicons name="swap-horizontal" size={20} color="rgba(255,255,255,0.85)" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity onPress={() => setIsMonthlyCardHidden(!isMonthlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name={isMonthlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+        </TouchableOpacity>
+      </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View style={{ flex: 1, paddingRight: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -1181,11 +1203,18 @@ export default function DashboardScreen({ navigation }: any) {
     </PremiumCardBackground>
   );
 
-  const renderYearlySpendingCard = (isFlippable = false) => (
+  const renderYearlySpendingCard = (isFlippable = false, onFlip?: () => void) => (
     <PremiumCardBackground color={colors.primary}>
-      <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsYearlyCardHidden(!isYearlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Ionicons name={isYearlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
-      </TouchableOpacity>
+      <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10, flexDirection: 'row', alignItems: 'center' }}>
+        {isFlippable && onFlip && (
+          <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
+            <Ionicons name="swap-horizontal" size={20} color="rgba(255,255,255,0.85)" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity onPress={() => setIsYearlyCardHidden(!isYearlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name={isYearlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+        </TouchableOpacity>
+      </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View style={{ flex: 1, paddingRight: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -1258,7 +1287,7 @@ export default function DashboardScreen({ navigation }: any) {
     </PremiumCardBackground>
   );
 
-  const renderMonthlyCalendarCard = (isFlippable = false) => (
+  const renderMonthlyCalendarCard = (isFlippable = false, onFlip?: () => void) => (
     <MonthlySpendingCalendar
       expenses={expenses}
       selectedMonth={selectedMonth}
@@ -1271,10 +1300,11 @@ export default function DashboardScreen({ navigation }: any) {
       setIsCalendarHidden={setIsMonthlyCalendarHidden}
       currency={currency}
       isFlippable={isFlippable}
+      onFlip={onFlip}
     />
   );
 
-  const renderYearlyCalendarCard = (isFlippable = false) => (
+  const renderYearlyCalendarCard = (isFlippable = false, onFlip?: () => void) => (
     <YearlySpendingCalendar
       expenses={expenses}
       selectedYear={selectedYear}
@@ -1286,10 +1316,11 @@ export default function DashboardScreen({ navigation }: any) {
       setIsCalendarHidden={setIsYearlyCalendarHidden}
       currency={currency}
       isFlippable={isFlippable}
+      onFlip={onFlip}
     />
   );
 
-  const renderAllYearsCalendarCard = (isFlippable = false) => (
+  const renderAllYearsCalendarCard = (isFlippable = false, onFlip?: () => void) => (
     <AllYearsSpendingCalendar
       expenses={expenses}
       availableYears={availableYears}
@@ -1305,19 +1336,25 @@ export default function DashboardScreen({ navigation }: any) {
       setIsCalendarHidden={setIsAllYearsCalendarHidden}
       currency={currency}
       isFlippable={isFlippable}
+      onFlip={onFlip}
     />
   );
 
-  const renderMonthlyChartCard = (isFlippable = false) => (
+  const renderMonthlyChartCard = (isFlippable = false, onFlip?: () => void) => (
     <PremiumCardBackground color={colors.primary}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
         <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
           Monthly Spending Chart
         </AppText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: isFlippable ? 38 : 0 }}>
-          <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 10 }}>
             {selectedYear}
           </AppText>
+          {isFlippable && onFlip && (
+            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
+              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={() => setIsYearlyBarChartHidden(!isYearlyBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isYearlyBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -1386,13 +1423,18 @@ export default function DashboardScreen({ navigation }: any) {
     </PremiumCardBackground>
   );
 
-  const renderYearlyChartCard = (isFlippable = false) => (
+  const renderYearlyChartCard = (isFlippable = false, onFlip?: () => void) => (
     <PremiumCardBackground color={colors.primary}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
         <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
           Yearly Spending Chart
         </AppText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: isFlippable ? 38 : 0 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {isFlippable && onFlip && (
+            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
+              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={() => setIsAllYearsBarChartHidden(!isAllYearsBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isAllYearsBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -1452,22 +1494,22 @@ export default function DashboardScreen({ navigation }: any) {
     </PremiumCardBackground>
   );
 
-  const renderCardContent = (cardId: DashboardCardId, isFlippable: boolean) => {
+  const renderCardContent = (cardId: DashboardCardId, isFlippable: boolean, onFlip?: () => void) => {
     switch (cardId) {
       case 'monthly_spending':
-        return renderMonthlySpendingCard(isFlippable);
+        return renderMonthlySpendingCard(isFlippable, onFlip);
       case 'yearly_spending':
-        return renderYearlySpendingCard(isFlippable);
+        return renderYearlySpendingCard(isFlippable, onFlip);
       case 'monthly_calendar':
-        return renderMonthlyCalendarCard(isFlippable);
+        return renderMonthlyCalendarCard(isFlippable, onFlip);
       case 'yearly_calendar':
-        return renderYearlyCalendarCard(isFlippable);
+        return renderYearlyCalendarCard(isFlippable, onFlip);
       case 'all_years_calendar':
-        return renderAllYearsCalendarCard(isFlippable);
+        return renderAllYearsCalendarCard(isFlippable, onFlip);
       case 'monthly_chart':
-        return renderMonthlyChartCard(isFlippable);
+        return renderMonthlyChartCard(isFlippable, onFlip);
       case 'yearly_chart':
-        return renderYearlyChartCard(isFlippable);
+        return renderYearlyChartCard(isFlippable, onFlip);
       default:
         return null;
     }
@@ -1509,21 +1551,11 @@ export default function DashboardScreen({ navigation }: any) {
       );
 
       if (pair && pair.frontCardId && pair.backCardId) {
-        const isSpending = (id: DashboardCardId) =>
-          id === 'monthly_spending' || id === 'yearly_spending';
-
-        const frontIsSpending = isSpending(pair.frontCardId);
-        const backIsSpending = isSpending(pair.backCardId);
-
         elements.push(
           <DashboardFlipCard
             key={pair.id}
-            front={renderCardContent(pair.frontCardId, true)}
-            back={renderCardContent(pair.backCardId, true)}
-            frontFlipButtonRight={frontIsSpending ? 52 : 16}
-            frontFlipButtonTop={frontIsSpending ? 17 : 14}
-            backFlipButtonRight={backIsSpending ? 52 : 16}
-            backFlipButtonTop={backIsSpending ? 17 : 14}
+            front={(onFlip) => renderCardContent(pair.frontCardId!, true, onFlip)}
+            back={(onFlip) => renderCardContent(pair.backCardId!, true, onFlip)}
           />
         );
 

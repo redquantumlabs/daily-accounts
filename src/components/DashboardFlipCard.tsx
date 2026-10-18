@@ -10,10 +10,11 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface DashboardFlipCardProps {
-  front: React.ReactNode;
-  back: React.ReactNode;
+  front: React.ReactNode | ((onFlip: () => void) => React.ReactNode);
+  back: React.ReactNode | ((onFlip: () => void) => React.ReactNode);
   frontLabel?: string;
   backLabel?: string;
+  showFloatingButton?: boolean;
   flipButtonRight?: number;
   flipButtonTop?: number;
   frontFlipButtonRight?: number;
@@ -27,6 +28,7 @@ export default function DashboardFlipCard({
   back,
   frontLabel,
   backLabel,
+  showFloatingButton,
   flipButtonRight = 52,
   flipButtonTop = 18,
   frontFlipButtonRight,
@@ -86,6 +88,15 @@ export default function DashboardFlipCard({
     ? backHeight || frontHeight || undefined
     : frontHeight || backHeight || undefined;
 
+  const isCustomFront = typeof front === 'function';
+  const isCustomBack = typeof back === 'function';
+
+  const frontContent = isCustomFront ? front(handleFlip) : front;
+  const backContent = isCustomBack ? back(handleFlip) : back;
+
+  const shouldRenderFrontFloating = showFloatingButton ?? !isCustomFront;
+  const shouldRenderBackFloating = showFloatingButton ?? !isCustomBack;
+
   return (
     <View style={[styles.container, activeHeight ? { height: activeHeight } : null]}>
       {/* Front Face */}
@@ -101,24 +112,26 @@ export default function DashboardFlipCard({
           },
         ]}
       >
-        {front}
-        {/* Flip Button on Front Side */}
-        <TouchableOpacity
-          style={[
-            styles.flipBtn,
-            {
-              top: frontFlipButtonTop ?? flipButtonTop,
-              right: frontFlipButtonRight ?? flipButtonRight,
-            },
-          ]}
-          onPress={handleFlip}
-          activeOpacity={0.75}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          accessibilityLabel="Flip card"
-          accessibilityRole="button"
-        >
-          <Ionicons name="swap-horizontal" size={17} color="#FFF" />
-        </TouchableOpacity>
+        {frontContent}
+        {/* Flip Button on Front Side (only if no custom flip button inside card) */}
+        {shouldRenderFrontFloating && (
+          <TouchableOpacity
+            style={[
+              styles.flipBtn,
+              {
+                top: frontFlipButtonTop ?? flipButtonTop,
+                right: frontFlipButtonRight ?? flipButtonRight,
+              },
+            ]}
+            onPress={handleFlip}
+            activeOpacity={0.75}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityLabel="Flip card"
+            accessibilityRole="button"
+          >
+            <Ionicons name="swap-horizontal" size={17} color="#FFF" />
+          </TouchableOpacity>
+        )}
       </Animated.View>
 
       {/* Back Face */}
@@ -134,24 +147,26 @@ export default function DashboardFlipCard({
           },
         ]}
       >
-        {back}
-        {/* Flip Button on Back Side */}
-        <TouchableOpacity
-          style={[
-            styles.flipBtn,
-            {
-              top: backFlipButtonTop ?? flipButtonTop,
-              right: backFlipButtonRight ?? flipButtonRight,
-            },
-          ]}
-          onPress={handleFlip}
-          activeOpacity={0.75}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          accessibilityLabel="Flip card back"
-          accessibilityRole="button"
-        >
-          <Ionicons name="swap-horizontal" size={17} color="#FFF" />
-        </TouchableOpacity>
+        {backContent}
+        {/* Flip Button on Back Side (only if no custom flip button inside card) */}
+        {shouldRenderBackFloating && (
+          <TouchableOpacity
+            style={[
+              styles.flipBtn,
+              {
+                top: backFlipButtonTop ?? flipButtonTop,
+                right: backFlipButtonRight ?? flipButtonRight,
+              },
+            ]}
+            onPress={handleFlip}
+            activeOpacity={0.75}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityLabel="Flip card back"
+            accessibilityRole="button"
+          >
+            <Ionicons name="swap-horizontal" size={17} color="#FFF" />
+          </TouchableOpacity>
+        )}
       </Animated.View>
     </View>
   );

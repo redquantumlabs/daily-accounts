@@ -35,7 +35,7 @@ export default function HomeGreeting({ onProfilePress }: HomeGreetingProps) {
         iconColor: '#EAB308',
         badgeBg: 'rgba(234, 179, 8, 0.12)',
       };
-    } else if (hours >= 18 && hours < 22) {
+    } else if (hours >= 18 && hours < 23) {
       return {
         greeting: 'Good Evening',
         icon: 'partly-sunny-outline',
