@@ -39,6 +39,32 @@ const formatCompact = (num: number) => {
   return Number(num).toFixed(2);
 };
 
+const CardFlipButton = ({ onFlip }: { onFlip?: () => void }) => {
+  if (!onFlip) return null;
+  return (
+    <TouchableOpacity
+      onPress={onFlip}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      activeOpacity={0.7}
+      style={{
+        marginLeft: 8,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.22)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.35)',
+      }}
+      accessibilityRole="button"
+      accessibilityLabel="Flip card"
+    >
+      <Ionicons name="swap-horizontal" size={14} color="#FFF" />
+    </TouchableOpacity>
+  );
+};
+
 
 
 const MonthlySpendingCalendar = React.memo(({ expenses, selectedMonth, selectedYear, colors, onPrevMonth, onNextMonth, onDayPress, isCalendarHidden, setIsCalendarHidden, currency, isFlippable, onFlip }: any) => {
@@ -118,18 +144,16 @@ const MonthlySpendingCalendar = React.memo(({ expenses, selectedMonth, selectedY
   return (
     <PremiumCardBackground color={colors.primary}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
-        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-          Daily Spending
-        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }} numberOfLines={1}>
+            Daily Spending
+          </AppText>
+          {isFlippable && <CardFlipButton onFlip={onFlip} />}
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 10 }}>
             {MONTHS[selectedMonth]} {selectedYear}
           </AppText>
-          {isFlippable && onFlip && (
-            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
-              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-          )}
           <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -222,18 +246,16 @@ const YearlySpendingCalendar = React.memo(({ expenses, selectedYear, colors, onM
   return (
     <PremiumCardBackground color={colors.primary}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
-        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-          Monthly Spending
-        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }} numberOfLines={1}>
+            Monthly Spending
+          </AppText>
+          {isFlippable && <CardFlipButton onFlip={onFlip} />}
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 10 }}>
             {selectedYear}
           </AppText>
-          {isFlippable && onFlip && (
-            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
-              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-          )}
           <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -305,15 +327,13 @@ const AllYearsSpendingCalendar = React.memo(({ expenses, availableYears, colors,
   return (
     <PremiumCardBackground color={colors.primary}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
-        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-          Yearly Spending
-        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }} numberOfLines={1}>
+            Yearly Spending
+          </AppText>
+          {isFlippable && <CardFlipButton onFlip={onFlip} />}
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {isFlippable && onFlip && (
-            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
-              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-          )}
           <TouchableOpacity onPress={() => setIsCalendarHidden(!isCalendarHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isCalendarHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -1121,16 +1141,9 @@ export default function DashboardScreen({ navigation }: any) {
   const maxYearExpense = Math.max(...yearlyDataForChart.map(d => d.amount), 1);
   const renderMonthlySpendingCard = (isFlippable = false, onFlip?: () => void) => (
     <PremiumCardBackground color={colors.primary}>
-      <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10, flexDirection: 'row', alignItems: 'center' }}>
-        {isFlippable && onFlip && (
-          <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
-            <Ionicons name="swap-horizontal" size={20} color="rgba(255,255,255,0.85)" />
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity onPress={() => setIsMonthlyCardHidden(!isMonthlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name={isMonthlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsMonthlyCardHidden(!isMonthlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <Ionicons name={isMonthlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+      </TouchableOpacity>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View style={{ flex: 1, paddingRight: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -1138,6 +1151,7 @@ export default function DashboardScreen({ navigation }: any) {
               <AppText style={{ fontSize: 14, color: '#FFF', opacity: 0.9, fontWeight: '600', textTransform: 'uppercase' }} numberOfLines={1} adjustsFontSizeToFit>{currentMonthName} Spending</AppText>
               <Ionicons name="chevron-down" size={14} color="#FFF" style={{ marginLeft: 4, opacity: 0.9 }} />
             </TouchableOpacity>
+            {isFlippable && <CardFlipButton onFlip={onFlip} />}
           </View>
           <AppText style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 ? (total > monthlyBudget ? '#ff4444' : (total >= monthlyBudget * 0.8 ? '#ffbb33' : '#FFF')) : '#FFF', marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 12 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
             {isMonthlyCardHidden ? '••••••' : `${currency}${formatAmount(total)}`}
@@ -1205,16 +1219,9 @@ export default function DashboardScreen({ navigation }: any) {
 
   const renderYearlySpendingCard = (isFlippable = false, onFlip?: () => void) => (
     <PremiumCardBackground color={colors.primary}>
-      <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10, flexDirection: 'row', alignItems: 'center' }}>
-        {isFlippable && onFlip && (
-          <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
-            <Ionicons name="swap-horizontal" size={20} color="rgba(255,255,255,0.85)" />
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity onPress={() => setIsYearlyCardHidden(!isYearlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name={isYearlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} onPress={() => setIsYearlyCardHidden(!isYearlyCardHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <Ionicons name={isYearlyCardHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+      </TouchableOpacity>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View style={{ flex: 1, paddingRight: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -1222,6 +1229,7 @@ export default function DashboardScreen({ navigation }: any) {
               <AppText style={{ fontSize: 14, color: '#FFF', opacity: 0.9, fontWeight: '600', textTransform: 'uppercase' }} numberOfLines={1} adjustsFontSizeToFit>{selectedYear} Total Spending</AppText>
               <Ionicons name="chevron-down" size={14} color="#FFF" style={{ marginLeft: 4, opacity: 0.9 }} />
             </TouchableOpacity>
+            {isFlippable && <CardFlipButton onFlip={onFlip} />}
           </View>
           <AppText style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 ? (currentYearTotal > yearlyBudget ? '#ff4444' : (currentYearTotal >= yearlyBudget * 0.8 ? '#ffbb33' : '#FFF')) : '#FFF', marginBottom: yearlyBudget > 0 && showYearlyBudget ? 12 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
             {isYearlyCardHidden ? '••••••' : `${currency}${formatAmount(currentYearTotal)}`}
@@ -1343,18 +1351,16 @@ export default function DashboardScreen({ navigation }: any) {
   const renderMonthlyChartCard = (isFlippable = false, onFlip?: () => void) => (
     <PremiumCardBackground color={colors.primary}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
-        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-          Monthly Spending Chart
-        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }} numberOfLines={1}>
+            Monthly Spending Chart
+          </AppText>
+          {isFlippable && <CardFlipButton onFlip={onFlip} />}
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <AppText style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginRight: 10 }}>
             {selectedYear}
           </AppText>
-          {isFlippable && onFlip && (
-            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
-              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-          )}
           <TouchableOpacity onPress={() => setIsYearlyBarChartHidden(!isYearlyBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isYearlyBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -1426,15 +1432,13 @@ export default function DashboardScreen({ navigation }: any) {
   const renderYearlyChartCard = (isFlippable = false, onFlip?: () => void) => (
     <PremiumCardBackground color={colors.primary}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginLeft: 4, marginRight: 4 }}>
-        <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-          Yearly Spending Chart
-        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <AppText style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }} numberOfLines={1}>
+            Yearly Spending Chart
+          </AppText>
+          {isFlippable && <CardFlipButton onFlip={onFlip} />}
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {isFlippable && onFlip && (
-            <TouchableOpacity onPress={onFlip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginRight: 14 }}>
-              <Ionicons name="swap-horizontal" size={18} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-          )}
           <TouchableOpacity onPress={() => setIsAllYearsBarChartHidden(!isAllYearsBarChartHidden)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name={isAllYearsBarChartHidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>

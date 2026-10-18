@@ -8,6 +8,7 @@ import {
   LayoutChangeEvent,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AppText from './AppText';
 
 interface DashboardFlipCardProps {
   front: React.ReactNode | ((onFlip: () => void) => React.ReactNode);
@@ -116,20 +117,15 @@ export default function DashboardFlipCard({
         {/* Flip Button on Front Side (only if no custom flip button inside card) */}
         {shouldRenderFrontFloating && (
           <TouchableOpacity
-            style={[
-              styles.flipBtn,
-              {
-                top: frontFlipButtonTop ?? flipButtonTop,
-                right: frontFlipButtonRight ?? flipButtonRight,
-              },
-            ]}
+            style={styles.flipPillBtn}
             onPress={handleFlip}
             activeOpacity={0.75}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            hitSlop={{ top: 8, bottom: 8, left: 16, right: 16 }}
             accessibilityLabel="Flip card"
             accessibilityRole="button"
           >
-            <Ionicons name="swap-horizontal" size={17} color="#FFF" />
+            <Ionicons name="swap-horizontal" size={13} color="#FFF" style={{ marginRight: 5 }} />
+            <AppText style={styles.flipPillText}>{frontLabel || 'Flip'}</AppText>
           </TouchableOpacity>
         )}
       </Animated.View>
@@ -151,20 +147,15 @@ export default function DashboardFlipCard({
         {/* Flip Button on Back Side (only if no custom flip button inside card) */}
         {shouldRenderBackFloating && (
           <TouchableOpacity
-            style={[
-              styles.flipBtn,
-              {
-                top: backFlipButtonTop ?? flipButtonTop,
-                right: backFlipButtonRight ?? flipButtonRight,
-              },
-            ]}
+            style={styles.flipPillBtn}
             onPress={handleFlip}
             activeOpacity={0.75}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            hitSlop={{ top: 8, bottom: 8, left: 16, right: 16 }}
             accessibilityLabel="Flip card back"
             accessibilityRole="button"
           >
-            <Ionicons name="swap-horizontal" size={17} color="#FFF" />
+            <Ionicons name="swap-horizontal" size={13} color="#FFF" style={{ marginRight: 5 }} />
+            <AppText style={styles.flipPillText}>{backLabel || 'Flip'}</AppText>
           </TouchableOpacity>
         )}
       </Animated.View>
@@ -190,27 +181,35 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  flipBtn: {
+  flipPillBtn: {
     position: 'absolute',
+    bottom: 30,
+    alignSelf: 'center',
     zIndex: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    borderRadius: 14,
-    width: 28,
-    height: 28,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    paddingVertical: 5,
+    paddingHorizontal: 16,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
+    borderColor: 'rgba(255, 255, 255, 0.28)',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 2,
       },
       android: {
-        elevation: 3,
+        elevation: 2,
       },
     }),
+  },
+  flipPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFF',
+    letterSpacing: 0.3,
   },
 });
