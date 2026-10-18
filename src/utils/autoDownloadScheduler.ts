@@ -67,7 +67,6 @@ export const scheduleAutoDownloadTriggers = async () => {
             circularLargeIcon: true,
             showTimestamp: true,
             autoCancel: true,
-            timeoutAfter: 60000,
             ongoing: true,
             onlyAlertOnce: true,
             progress: {

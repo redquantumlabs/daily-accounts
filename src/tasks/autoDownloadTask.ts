@@ -6,7 +6,7 @@ import { generatePDF } from 'react-native-html-to-pdf';
 import { parseISOYear } from '../utils/dateUtils';
 import { DOWNLOAD_SILENT_CHANNEL_ID } from '../utils/autoDownloadConstants';
 
-const generatePDFWithTimeout = (options: any, timeoutMs: number = 15000): Promise<any> => {
+const generatePDFWithTimeout = (options: any, timeoutMs: number = 30000): Promise<any> => {
   let timeoutHandle: any;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutHandle = setTimeout(() => reject(new Error('PDF generation timed out')), timeoutMs);
@@ -60,7 +60,7 @@ export const performAutoDownloadTask = async (
     const downloadPathUri = await AsyncStorage.getItem('@app_download_path');
     if (!downloadPathUri) {
       if (progressNotificationId) {
-        await notifee.cancelNotification(progressNotificationId).catch(() => {});
+        await notifee.cancelNotification(progressNotificationId).catch(() => { });
       }
       return;
     }
@@ -129,7 +129,7 @@ export const performAutoDownloadTask = async (
           base64: true
         };
 
-        await delay(1000);
+        await delay(300);
 
         let expenseFile: any = null;
         try {
@@ -178,7 +178,7 @@ export const performAutoDownloadTask = async (
           base64: true
         };
 
-        await delay(1000);
+        await delay(300);
 
         let accFile: any = null;
         try {
@@ -213,7 +213,7 @@ export const performAutoDownloadTask = async (
     }
 
     // Dismiss the progress notification
-    await notifee.cancelNotification(targetNotificationId).catch(() => {});
+    await notifee.cancelNotification(targetNotificationId).catch(() => { });
 
     // Show generated final notification
     await notifee.displayNotification({
@@ -230,7 +230,7 @@ export const performAutoDownloadTask = async (
 
   } catch (err: any) {
     if (targetNotificationId) {
-      await notifee.cancelNotification(targetNotificationId).catch(() => {});
+      await notifee.cancelNotification(targetNotificationId).catch(() => { });
     }
     await AsyncStorage.setItem('@app_pending_auto_download', 'true');
     await notifee.displayNotification({

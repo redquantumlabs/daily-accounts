@@ -1,0 +1,28 @@
+diff --git a/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/HeadlessTask.java b/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/HeadlessTask.java
+index 24d3c9d..5d416eb 100644
+--- a/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/HeadlessTask.java
++++ b/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/HeadlessTask.java
+@@ -97,8 +97,8 @@ import java.util.concurrent.atomic.AtomicInteger;
+ 
+ public class HeadlessTask {
+   private static final String HEADLESS_TASK_NAME = "NotifeeHeadlessJS";
+-  // Hard-coded time-limit for headless-tasks is 60000 @todo configurable?
+-  private static final int TASK_TIMEOUT = 60000;
++  // Hard-coded time-limit for headless-tasks is 600000 (10 minutes)
++  private static final int TASK_TIMEOUT = 600000;
+   private static final AtomicInteger sLastTaskId = new AtomicInteger(0);
+ 
+   static synchronized int getNextTaskId() {
+diff --git a/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/NotifeeEventSubscriber.java b/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/NotifeeEventSubscriber.java
+index 00ecd14..abe7f7d 100644
+--- a/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/NotifeeEventSubscriber.java
++++ b/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/NotifeeEventSubscriber.java
+@@ -61,7 +61,7 @@ public class NotifeeEventSubscriber implements EventListener {
+       NotifeeReactUtils.sendEvent(NOTIFICATION_EVENT_KEY, eventMap);
+     } else {
+       eventMap.putBoolean(KEY_HEADLESS, true);
+-      NotifeeReactUtils.startHeadlessTask(NOTIFICATION_EVENT_KEY, eventMap, 60000, null);
++      NotifeeReactUtils.startHeadlessTask(NOTIFICATION_EVENT_KEY, eventMap, 600000, null);
+     }
+   }
+ 
