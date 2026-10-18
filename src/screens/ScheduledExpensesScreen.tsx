@@ -13,6 +13,7 @@ import { useExpenseContext, ScheduledExpense } from '../context/ExpenseContext';
 import { useAlert } from '../context/AlertContext';
 import { formatAmount } from '../utils/format';
 import ScheduleExpenseModal from '../components/ScheduleExpenseModal';
+import { parseDateToTimestamp } from '../utils/dateUtils';
 
 type ScheduledTab = 'pending' | 'archived';
 
@@ -55,16 +56,28 @@ export default function ScheduledExpensesScreen({ route }: any) {
   const pendingItems = useMemo(() => {
     return scheduledExpenses
       .filter((item) => !item.isProcessed)
-      .sort((a, b) => new Date(a.scheduleDate).getTime() - new Date(b.scheduleDate).getTime());
+      .sort((a, b) => {
+        const timeA = parseDateToTimestamp(a.expenseDate);
+        const timeB = parseDateToTimestamp(b.expenseDate);
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+        return parseDateToTimestamp(a.scheduleDate) - parseDateToTimestamp(b.scheduleDate);
+      });
   }, [scheduledExpenses]);
 
   const archivedItems = useMemo(() => {
     return scheduledExpenses
       .filter((item) => item.isProcessed)
       .sort((a, b) => {
-        const timeA = new Date(a.processedAt || a.scheduleDate).getTime();
-        const timeB = new Date(b.processedAt || b.scheduleDate).getTime();
-        return timeB - timeA;
+        const timeA = parseDateToTimestamp(a.expenseDate);
+        const timeB = parseDateToTimestamp(b.expenseDate);
+        if (timeA !== timeB) {
+          return timeB - timeA;
+        }
+        const procA = parseDateToTimestamp(a.processedAt || a.scheduleDate);
+        const procB = parseDateToTimestamp(b.processedAt || b.scheduleDate);
+        return procB - procA;
       });
   }, [scheduledExpenses]);
 
