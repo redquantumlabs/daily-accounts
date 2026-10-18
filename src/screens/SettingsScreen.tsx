@@ -401,7 +401,9 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8, opacity: 0.7 }}>
-              {flipCardConfig.isEnabled ? `${flipCardConfig.pairs.length} Active` : 'Off'}
+              {flipCardConfig.isEnabled
+                ? `${flipCardConfig.pairs.filter((p) => Boolean(p.frontCardId && p.backCardId)).length} Active`
+                : 'Off'}
             </AppText>
             <Ionicons name="chevron-forward" size={20} color={colors.text} />
           </View>

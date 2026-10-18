@@ -9,8 +9,8 @@ export type DashboardCardId =
 
 export interface FlipCardPair {
   id: string;
-  frontCardId: DashboardCardId;
-  backCardId: DashboardCardId;
+  frontCardId?: DashboardCardId | null;
+  backCardId?: DashboardCardId | null;
 }
 
 export interface FlipCardConfig {
@@ -72,16 +72,5 @@ export const AVAILABLE_DASHBOARD_CARDS: DashboardCardMeta[] = [
 
 export const DEFAULT_FLIP_CARD_CONFIG: FlipCardConfig = {
   isEnabled: false,
-  pairs: [
-    {
-      id: 'pair_spending_cards',
-      frontCardId: 'monthly_spending',
-      backCardId: 'yearly_spending',
-    },
-    {
-      id: 'pair_spending_charts',
-      frontCardId: 'monthly_chart',
-      backCardId: 'yearly_chart',
-    },
-  ],
+  pairs: [],
 };

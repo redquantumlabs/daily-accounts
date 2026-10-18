@@ -6,7 +6,7 @@ import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
 import { scheduleAllNotifications } from '../utils/notificationScheduler';
 import { roundAmount } from '../utils/format';
 import { scheduleExpenseTrigger, cancelScheduledExpenseTrigger, notifyScheduledExpenseAdded } from '../utils/scheduledExpenseScheduler';
-import { FlipCardConfig, DEFAULT_FLIP_CARD_CONFIG } from '../types/flipCard';
+import { FlipCardConfig, FlipCardPair, DEFAULT_FLIP_CARD_CONFIG } from '../types/flipCard';
 
 export interface Expense {
   id: string;
@@ -417,7 +417,17 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         try {
           const parsedFlip = JSON.parse(storedFlipConfig);
           if (parsedFlip && typeof parsedFlip.isEnabled === 'boolean' && Array.isArray(parsedFlip.pairs)) {
-            setFlipCardConfig(parsedFlip);
+            const cleanedPairs = parsedFlip.pairs.filter(
+              (p: FlipCardPair) =>
+                p.id !== 'pair_spending_cards' &&
+                p.id !== 'pair_spending_charts' &&
+                p.id !== 'default-pair-1' &&
+                p.id !== 'default-pair-2'
+            );
+            setFlipCardConfig({
+              ...parsedFlip,
+              pairs: cleanedPairs,
+            });
           } else {
             setFlipCardConfig(DEFAULT_FLIP_CARD_CONFIG);
           }

@@ -17,7 +17,6 @@ import {
   DashboardCardId,
   FlipCardPair,
   AVAILABLE_DASHBOARD_CARDS,
-  DEFAULT_FLIP_CARD_CONFIG,
 } from '../types/flipCard';
 
 export default function FlipCardSettingsScreen({ navigation }: any) {
@@ -32,7 +31,8 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
     side: 'front' | 'back';
   } | null>(null);
 
-  const getCardMeta = useCallback((cardId: string) => {
+  const getCardMeta = useCallback((cardId?: string | null) => {
+    if (!cardId) return undefined;
     return AVAILABLE_DASHBOARD_CARDS.find((c) => c.id === cardId);
   }, []);
 
@@ -81,15 +81,29 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
 
   // Add new flip card pair
   const handleAddPair = async () => {
+    // If there is already an incomplete pair, open the picker for its missing side
+    const incompletePair = flipCardConfig.pairs.find(
+      (p) => !p.frontCardId || !p.backCardId
+    );
+    if (incompletePair) {
+      if (!incompletePair.frontCardId) {
+        handleOpenPicker(incompletePair.id, 'front');
+      } else {
+        handleOpenPicker(incompletePair.id, 'back');
+      }
+      return;
+    }
+
     if (unassignedCards.length < 2) {
       showAlert('Notice', 'You need at least 2 unassigned cards to create a new flip card.');
       return;
     }
 
+    const newPairId = `pair_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newPair: FlipCardPair = {
-      id: `pair_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      frontCardId: unassignedCards[0].id,
-      backCardId: unassignedCards[1].id,
+      id: newPairId,
+      frontCardId: null,
+      backCardId: null,
     };
 
     const updatedPairs = [...flipCardConfig.pairs, newPair];
@@ -97,10 +111,23 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
       ...flipCardConfig,
       pairs: updatedPairs,
     });
+
+    // Automatically open the picker for the Front card so user can select it manually
+    handleOpenPicker(newPairId, 'front');
   };
 
   // Delete a flip card pair
   const handleDeletePair = (pairId: string) => {
+    const pair = flipCardConfig.pairs.find((p) => p.id === pairId);
+    if (!pair?.frontCardId && !pair?.backCardId) {
+      const updatedPairs = flipCardConfig.pairs.filter((p) => p.id !== pairId);
+      updateFlipCardConfig({
+        ...flipCardConfig,
+        pairs: updatedPairs,
+      });
+      return;
+    }
+
     showAlert('Remove Flip Card', 'Are you sure you want to remove this flip card? Both cards will be shown separately on the dashboard.', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -146,11 +173,13 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
   const handleSelectCard = async (cardId: DashboardCardId) => {
     if (!activeTarget) return;
 
+    const { pairId, side } = activeTarget;
+
     const updatedPairs = flipCardConfig.pairs.map((p) => {
-      if (p.id === activeTarget.pairId) {
+      if (p.id === pairId) {
         return {
           ...p,
-          [activeTarget.side === 'front' ? 'frontCardId' : 'backCardId']: cardId,
+          [side === 'front' ? 'frontCardId' : 'backCardId']: cardId,
         };
       }
       return p;
@@ -163,27 +192,15 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
 
     setPickerModalVisible(false);
     setActiveTarget(null);
-  };
 
-  // Reset to default pairs
-  const handleResetToDefaults = () => {
-    showAlert(
-      'Reset Flip Cards',
-      'Reset flip cards to default setup? (Monthly/Yearly Spending & Monthly/Yearly Chart)',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            await updateFlipCardConfig({
-              ...flipCardConfig,
-              pairs: DEFAULT_FLIP_CARD_CONFIG.pairs,
-            });
-          },
-        },
-      ]
-    );
+    // If user just selected the Front card and Back card is not selected yet,
+    // automatically open the picker for the Back card next
+    const targetPair = updatedPairs.find((p) => p.id === pairId);
+    if (side === 'front' && targetPair && !targetPair.backCardId) {
+      setTimeout(() => {
+        handleOpenPicker(pairId, 'back');
+      }, 300);
+    }
   };
 
   return (
@@ -230,13 +247,6 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
               <AppText style={[styles.sectionTitle, { color: colors.text }]}>
                 Configured Flip Cards ({flipCardConfig.pairs.length})
               </AppText>
-              {flipCardConfig.pairs.length > 0 && (
-                <TouchableOpacity onPress={handleResetToDefaults} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <AppText style={{ color: colors.primary, fontSize: 13, fontWeight: '600' }}>
-                    Reset Defaults
-                  </AppText>
-                </TouchableOpacity>
-              )}
             </View>
 
             {flipCardConfig.pairs.length === 0 ? (
@@ -251,8 +261,8 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
               </View>
             ) : (
               flipCardConfig.pairs.map((pair, index) => {
-                const frontMeta = getCardMeta(pair.frontCardId);
-                const backMeta = getCardMeta(pair.backCardId);
+                const frontMeta = pair.frontCardId ? getCardMeta(pair.frontCardId) : undefined;
+                const backMeta = pair.backCardId ? getCardMeta(pair.backCardId) : undefined;
 
                 return (
                   <View
@@ -288,7 +298,9 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
                           styles.sideSlot,
                           {
                             backgroundColor: colors.surface,
-                            borderColor: colors.border,
+                            borderColor: frontMeta ? colors.border : `${colors.primary}80`,
+                            borderStyle: frontMeta ? 'solid' : 'dashed',
+                            borderWidth: frontMeta ? 1 : 1.5,
                           },
                         ]}
                         activeOpacity={0.7}
@@ -304,13 +316,22 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
                         </View>
                         <View style={styles.sideCardInfo}>
                           <Ionicons
-                            name={(frontMeta?.icon as any) || 'document-outline'}
+                            name={(frontMeta?.icon as any) || 'add-circle-outline'}
                             size={20}
                             color={colors.primary}
                             style={{ marginRight: 10 }}
                           />
                           <View style={{ flex: 1 }}>
-                            <AppText style={[styles.cardNameText, { color: colors.text }]} numberOfLines={1}>
+                            <AppText
+                              style={[
+                                styles.cardNameText,
+                                {
+                                  color: frontMeta ? colors.text : colors.primary,
+                                  fontWeight: frontMeta ? '600' : 'bold',
+                                },
+                              ]}
+                              numberOfLines={1}
+                            >
                               {frontMeta?.name || 'Select Front Card'}
                             </AppText>
                             <AppText style={[styles.cardCategoryText, { color: colors.textMuted }]}>
@@ -324,8 +345,16 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
                       <View style={styles.swapDividerRow}>
                         <View style={[styles.swapLine, { backgroundColor: colors.border }]} />
                         <TouchableOpacity
-                          style={[styles.swapButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-                          onPress={() => handleSwapSides(pair.id)}
+                          style={[
+                            styles.swapButton,
+                            {
+                              backgroundColor: colors.card,
+                              borderColor: colors.border,
+                              opacity: (frontMeta || backMeta) ? 1 : 0.4,
+                            },
+                          ]}
+                          onPress={() => (frontMeta || backMeta) && handleSwapSides(pair.id)}
+                          disabled={!frontMeta && !backMeta}
                           activeOpacity={0.75}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
@@ -340,7 +369,9 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
                           styles.sideSlot,
                           {
                             backgroundColor: colors.surface,
-                            borderColor: colors.border,
+                            borderColor: backMeta ? colors.border : '#10B98180',
+                            borderStyle: backMeta ? 'solid' : 'dashed',
+                            borderWidth: backMeta ? 1 : 1.5,
                           },
                         ]}
                         activeOpacity={0.7}
@@ -356,13 +387,22 @@ export default function FlipCardSettingsScreen({ navigation }: any) {
                         </View>
                         <View style={styles.sideCardInfo}>
                           <Ionicons
-                            name={(backMeta?.icon as any) || 'document-outline'}
+                            name={(backMeta?.icon as any) || 'add-circle-outline'}
                             size={20}
                             color="#10B981"
                             style={{ marginRight: 10 }}
                           />
                           <View style={{ flex: 1 }}>
-                            <AppText style={[styles.cardNameText, { color: colors.text }]} numberOfLines={1}>
+                            <AppText
+                              style={[
+                                styles.cardNameText,
+                                {
+                                  color: backMeta ? colors.text : '#10B981',
+                                  fontWeight: backMeta ? '600' : 'bold',
+                                },
+                              ]}
+                              numberOfLines={1}
+                            >
                               {backMeta?.name || 'Select Back Card'}
                             </AppText>
                             <AppText style={[styles.cardCategoryText, { color: colors.textMuted }]}>

@@ -1505,10 +1505,10 @@ export default function DashboardScreen({ navigation }: any) {
       if (renderedCardIds.has(cardId)) return;
 
       const pair = flipCardConfig.pairs?.find(
-        (p) => p.frontCardId === cardId || p.backCardId === cardId
+        (p) => Boolean(p.frontCardId && p.backCardId) && (p.frontCardId === cardId || p.backCardId === cardId)
       );
 
-      if (pair) {
+      if (pair && pair.frontCardId && pair.backCardId) {
         const isSpending = (id: DashboardCardId) =>
           id === 'monthly_spending' || id === 'yearly_spending';
 
