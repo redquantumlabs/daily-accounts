@@ -200,7 +200,7 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
-  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility, isPreciseTimeElapsed, togglePreciseTimeElapsed } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility, isPreciseTimeElapsed, togglePreciseTimeElapsed, flipCardConfig } = useExpenseContext();
   const { accounts, excludedFromTotal, toggleAccountInTotal, refreshTransactionData, showCardStats, toggleShowCardStats } = useTransactionContext();
 
   const handleNav = (screen: string) => {
@@ -387,6 +387,22 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8, opacity: 0.7 }}>{analyticsChartType}</AppText>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} />
+          </View>
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => handleNav('FlipCardSettings')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="swap-horizontal-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Flip Cards</AppText>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8, opacity: 0.7 }}>
+              {flipCardConfig.isEnabled ? `${flipCardConfig.pairs.length} Active` : 'Off'}
+            </AppText>
             <Ionicons name="chevron-forward" size={20} color={colors.text} />
           </View>
         </TouchableOpacity>

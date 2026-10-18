@@ -13,6 +13,7 @@ import CategoriesScreen from '../screens/CategoriesScreen';
 import PaymentModesScreen from '../screens/PaymentModesScreen';
 import ManageAccountsScreen from '../screens/ManageAccountsScreen';
 import AnalyticsChartSettingsScreen from '../screens/AnalyticsChartSettingsScreen';
+import FlipCardSettingsScreen from '../screens/FlipCardSettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -138,6 +139,18 @@ export default function SettingsStack() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -20 }}>
               <Ionicons name="bar-chart" size={22} color={colors.text} style={{ marginRight: 8 }} />
               <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>Analytics Chart</AppText>
+            </View>
+          )
+        }}
+      />
+      <Stack.Screen
+        name="FlipCardSettings"
+        component={FlipCardSettingsScreen}
+        options={{
+          headerTitle: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -20 }}>
+              <Ionicons name="swap-horizontal" size={22} color={colors.text} style={{ marginRight: 8 }} />
+              <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>Flip Cards</AppText>
             </View>
           )
         }}

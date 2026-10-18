@@ -6,6 +6,7 @@ import { parseISOYear, parseISOMonth } from '../utils/dateUtils';
 import { scheduleAllNotifications } from '../utils/notificationScheduler';
 import { roundAmount } from '../utils/format';
 import { scheduleExpenseTrigger, cancelScheduledExpenseTrigger, notifyScheduledExpenseAdded } from '../utils/scheduledExpenseScheduler';
+import { FlipCardConfig, DEFAULT_FLIP_CARD_CONFIG } from '../types/flipCard';
 
 export interface Expense {
   id: string;
@@ -58,6 +59,9 @@ interface ExpenseContextType {
   chartStyle: 'Classic' | '3D' | 'Spaced' | 'Semi-Circle';
   isPreciseTimeElapsed: boolean;
   togglePreciseTimeElapsed: (val: boolean) => Promise<void>;
+  flipCardConfig: FlipCardConfig;
+  updateFlipCardConfig: (config: FlipCardConfig) => Promise<void>;
+  toggleFlipCardEnabled: (val: boolean) => Promise<void>;
   monthlyIncomes: Record<string, { gross: number; deduction: number }>;
   addExpense: (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
@@ -135,6 +139,9 @@ const ExpenseContext = createContext<ExpenseContextType>({
   chartStyle: 'Classic',
   isPreciseTimeElapsed: false,
   togglePreciseTimeElapsed: async () => {},
+  flipCardConfig: DEFAULT_FLIP_CARD_CONFIG,
+  updateFlipCardConfig: async () => {},
+  toggleFlipCardEnabled: async () => {},
   monthlyIncomes: {},
   addExpense: async () => {},
   updateExpense: async () => {},
@@ -210,6 +217,7 @@ const REMINDER_TIME_KEY = '@app_reminder_time';
 const AUTO_BACKUP_TIMES_KEY = '@app_auto_backup_times';
 const AUTO_DOWNLOAD_TIMES_KEY = '@app_auto_download_times';
 const PRECISE_TIME_ELAPSED_KEY = '@app_precise_time_elapsed';
+const FLIP_CARD_CONFIG_KEY = '@app_flip_card_config';
 
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -226,6 +234,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [analyticsChartType, setAnalyticsChartType] = useState<'Pie' | 'Donut'>('Pie');
   const [chartStyle, setChartStyle] = useState<'Classic' | '3D' | 'Spaced' | 'Semi-Circle'>('Classic');
   const [isPreciseTimeElapsed, setIsPreciseTimeElapsed] = useState(false);
+  const [flipCardConfig, setFlipCardConfig] = useState<FlipCardConfig>(DEFAULT_FLIP_CARD_CONFIG);
   const [downloadPathUri, setDownloadPathUri] = useState<string | null>(null);
   const [backupPathUri, setBackupPathUri] = useState<string | null>(null);
   const [monthlyIncomes, setMonthlyIncomes] = useState<Record<string, { gross: number; deduction: number }>>({});
@@ -257,11 +266,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const autoBackupTimesStorageKey = AUTO_BACKUP_TIMES_KEY;
   const autoDownloadTimesStorageKey = AUTO_DOWNLOAD_TIMES_KEY;
   const preciseTimeElapsedStorageKey = PRECISE_TIME_ELAPSED_KEY;
+  const flipCardConfigStorageKey = FLIP_CARD_CONFIG_KEY;
 
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const keys = [storageKey, scheduledExpensesStorageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
+      const keys = [storageKey, scheduledExpensesStorageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, flipCardConfigStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
       const data = await AsyncStorage.getMany(keys);
       const storedExpenses = data[storageKey];
       let initialExpenses: Expense[] = [];
@@ -400,6 +410,22 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsPreciseTimeElapsed(storedPreciseTime === 'true');
       } else {
         setIsPreciseTimeElapsed(false);
+      }
+
+      const storedFlipConfig = data[flipCardConfigStorageKey];
+      if (storedFlipConfig) {
+        try {
+          const parsedFlip = JSON.parse(storedFlipConfig);
+          if (parsedFlip && typeof parsedFlip.isEnabled === 'boolean' && Array.isArray(parsedFlip.pairs)) {
+            setFlipCardConfig(parsedFlip);
+          } else {
+            setFlipCardConfig(DEFAULT_FLIP_CARD_CONFIG);
+          }
+        } catch {
+          setFlipCardConfig(DEFAULT_FLIP_CARD_CONFIG);
+        }
+      } else {
+        setFlipCardConfig(DEFAULT_FLIP_CARD_CONFIG);
       }
 
       const storedDownloadPath = data[downloadPathStorageKey];
@@ -957,6 +983,20 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(preciseTimeElapsedStorageKey, val.toString());
   };
 
+  const updateFlipCardConfig = async (config: FlipCardConfig) => {
+    setFlipCardConfig(config);
+    await AsyncStorage.setItem(flipCardConfigStorageKey, JSON.stringify(config));
+  };
+
+  const toggleFlipCardEnabled = async (val: boolean) => {
+    const updated: FlipCardConfig = {
+      ...flipCardConfig,
+      isEnabled: val,
+    };
+    setFlipCardConfig(updated);
+    await AsyncStorage.setItem(flipCardConfigStorageKey, JSON.stringify(updated));
+  };
+
   const updateAnalyticsChartType = async (type: 'Pie' | 'Donut') => {
     setAnalyticsChartType(type);
     await AsyncStorage.setItem(analyticsChartTypeStorageKey, type);
@@ -1077,7 +1117,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY, SHOW_YEAR_CARD_KEY,
       ANALYTICS_CHART_TYPE_KEY, CHART_STYLE_KEY, DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY,
       SUMMARY_TIME_KEY, REMINDER_TIME_KEY, AUTO_BACKUP_TIMES_KEY, AUTO_DOWNLOAD_TIMES_KEY,
-      AMOUNTS_VISIBLE_KEY, PRECISE_TIME_ELAPSED_KEY
+      AMOUNTS_VISIBLE_KEY, PRECISE_TIME_ELAPSED_KEY, FLIP_CARD_CONFIG_KEY
     ];
 
     for (const key of keys) {
@@ -1096,6 +1136,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       expenses, scheduledExpenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
       showMonthlyBudget, showYearlyBudget, showYearCard, isAmountsVisible, analyticsChartType, chartStyle,
       isPreciseTimeElapsed, togglePreciseTimeElapsed,
+      flipCardConfig, updateFlipCardConfig, toggleFlipCardEnabled,
       monthlyIncomes,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses, reorderExpensesByDate,
       scheduleExpense, updateScheduledExpense, deleteScheduledExpense, executeScheduledExpenseNow, processPendingScheduledExpenses, clearArchivedScheduledExpenses, clearPendingScheduledExpenses, bulkImportScheduledExpenses,
