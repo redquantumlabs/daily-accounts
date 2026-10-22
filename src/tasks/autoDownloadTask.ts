@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SAF from 'react-native-saf-x';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, AndroidForegroundServiceType } from '@notifee/react-native';
 import { generateDashboardPDFHTML, generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
 import { generatePDF } from 'react-native-html-to-pdf';
 import { parseISOYear } from '../utils/dateUtils';
@@ -17,6 +17,40 @@ const generatePDFWithTimeout = (options: any, timeoutMs: number = 60000): Promis
 };
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const savePdfFileSafely = async (
+  downloadPathUri: string,
+  fileName: string,
+  base64Data: string
+) => {
+  const fullFileName = `${fileName}.pdf`;
+  const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
+
+  try {
+    const fileExists = await SAF.exists(fileUriString);
+    if (fileExists) {
+      await SAF.unlink(fileUriString).catch(() => {});
+    }
+  } catch (e) {}
+
+  let fileUri: any;
+  try {
+    fileUri = await SAF.createFile(fileUriString, {
+      mimeType: 'application/pdf',
+    });
+  } catch (createErr) {
+    try {
+      await SAF.unlink(fileUriString).catch(() => {});
+      fileUri = await SAF.createFile(fileUriString, {
+        mimeType: 'application/pdf',
+      });
+    } catch (retryErr) {
+      fileUri = { uri: fileUriString };
+    }
+  }
+
+  await SAF.writeFile(fileUri.uri, base64Data, { encoding: 'base64' });
+};
 
 let isPerformingAutoDownload = false;
 
@@ -41,6 +75,8 @@ export const performAutoDownloadTask = async (
         android: {
           channelId: DOWNLOAD_SILENT_CHANNEL_ID,
           importance: AndroidImportance.LOW,
+          asForegroundService: true,
+          foregroundServiceTypes: [AndroidForegroundServiceType.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE],
           smallIcon: 'ic_notification',
           largeIcon: 'ic_launcher',
           circularLargeIcon: true,
@@ -59,13 +95,40 @@ export const performAutoDownloadTask = async (
         },
       });
     } catch (e) {
-      console.warn('[performAutoDownloadTask] Failed to update progress notification:', e);
+      console.warn('[performAutoDownloadTask] Failed to update progress notification with foreground service:', e);
+      try {
+        await notifee.displayNotification({
+          id: targetNotificationId,
+          title: 'Auto Download',
+          body: `${statusText} (${percent}%)`,
+          android: {
+            channelId: DOWNLOAD_SILENT_CHANNEL_ID,
+            importance: AndroidImportance.LOW,
+            smallIcon: 'ic_notification',
+            largeIcon: 'ic_launcher',
+            circularLargeIcon: true,
+            showTimestamp: true,
+            ongoing: true,
+            autoCancel: false,
+            pressAction: {
+              id: 'default',
+            },
+            onlyAlertOnce: true,
+            progress: {
+              max: 100,
+              current: Math.min(100, Math.max(0, percent)),
+              indeterminate: false,
+            },
+          },
+        });
+      } catch (inner) {}
     }
   };
 
   try {
     const downloadPathUri = await AsyncStorage.getItem('@app_download_path');
     if (!downloadPathUri) {
+      await notifee.stopForegroundService().catch(() => {});
       if (progressNotificationId) {
         await notifee.cancelNotification(progressNotificationId).catch(() => { });
       }
@@ -151,19 +214,7 @@ export const performAutoDownloadTask = async (
         if (expenseFile && expenseFile.base64) {
           const midPercent = Math.round(10 + (currentReportIndex + 0.6) * reportWeight);
           await updateProgress(midPercent, `Saving Account - ${year}`);
-
-          const fullFileName = `${fileName}.pdf`;
-          const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
-
-          const fileExists = await SAF.exists(fileUriString);
-          if (fileExists) {
-            await SAF.unlink(fileUriString);
-          }
-
-          const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
-            mimeType: 'application/pdf'
-          });
-          await SAF.writeFile(fileUri.uri, expenseFile.base64, { encoding: 'base64' });
+          await savePdfFileSafely(downloadPathUri, fileName, expenseFile.base64);
         }
 
         currentReportIndex++;
@@ -200,19 +251,7 @@ export const performAutoDownloadTask = async (
         if (accFile && accFile.base64) {
           const midPercent = Math.round(10 + (currentReportIndex + 0.6) * reportWeight);
           await updateProgress(midPercent, `Saving Transactional Accounts`);
-
-          const fullFileName = `${fileName}.pdf`;
-          const fileUriString = downloadPathUri + '%2F' + encodeURIComponent(fullFileName);
-
-          const fileExists = await SAF.exists(fileUriString);
-          if (fileExists) {
-            await SAF.unlink(fileUriString);
-          }
-
-          const fileUri = await SAF.createFile(downloadPathUri + '%2F' + encodeURIComponent(fullFileName), {
-            mimeType: 'application/pdf'
-          });
-          await SAF.writeFile(fileUri.uri, accFile.base64, { encoding: 'base64' });
+          await savePdfFileSafely(downloadPathUri, fileName, accFile.base64);
         }
 
         currentReportIndex++;
@@ -222,7 +261,8 @@ export const performAutoDownloadTask = async (
       await delay(300);
     }
 
-    // Dismiss the progress notification
+    // Stop foreground service and dismiss the progress notification
+    await notifee.stopForegroundService().catch(() => { });
     await notifee.cancelNotification(targetNotificationId).catch(() => { });
     await AsyncStorage.removeItem('@app_pending_auto_download').catch(() => { });
 
@@ -240,6 +280,7 @@ export const performAutoDownloadTask = async (
     });
 
   } catch (err: any) {
+    await notifee.stopForegroundService().catch(() => { });
     if (targetNotificationId) {
       await notifee.cancelNotification(targetNotificationId).catch(() => { });
     }

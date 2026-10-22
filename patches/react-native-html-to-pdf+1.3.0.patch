@@ -1,8 +1,151 @@
+diff --git a/node_modules/react-native-html-to-pdf/android/.classpath b/node_modules/react-native-html-to-pdf/android/.classpath
+new file mode 100644
+index 0000000..bbe97e5
+--- /dev/null
++++ b/node_modules/react-native-html-to-pdf/android/.classpath
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<classpath>
++	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17/"/>
++	<classpathentry kind="con" path="org.eclipse.buildship.core.gradleclasspathcontainer"/>
++	<classpathentry kind="output" path="bin/default"/>
++</classpath>
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/checksums/checksums.lock b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/checksums/checksums.lock
+new file mode 100644
+index 0000000..07d96e2
+Binary files /dev/null and b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/checksums/checksums.lock differ
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileChanges/last-build.bin b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileChanges/last-build.bin
+new file mode 100644
+index 0000000..f76dd23
+Binary files /dev/null and b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileChanges/last-build.bin differ
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileHashes/fileHashes.bin b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileHashes/fileHashes.bin
+new file mode 100644
+index 0000000..e43b471
+Binary files /dev/null and b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileHashes/fileHashes.bin differ
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileHashes/fileHashes.lock b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileHashes/fileHashes.lock
+new file mode 100644
+index 0000000..bec50ba
+Binary files /dev/null and b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/fileHashes/fileHashes.lock differ
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/gc.properties b/node_modules/react-native-html-to-pdf/android/.gradle/9.2.0/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/checksums/checksums.lock b/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/checksums/checksums.lock
+new file mode 100644
+index 0000000..540c5f6
+Binary files /dev/null and b/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/checksums/checksums.lock differ
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/fileChanges/last-build.bin b/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/fileChanges/last-build.bin
+new file mode 100644
+index 0000000..f76dd23
+Binary files /dev/null and b/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/fileChanges/last-build.bin differ
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/fileHashes/fileHashes.lock b/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/fileHashes/fileHashes.lock
+new file mode 100644
+index 0000000..25837f5
+Binary files /dev/null and b/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/fileHashes/fileHashes.lock differ
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/gc.properties b/node_modules/react-native-html-to-pdf/android/.gradle/9.7.1/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock b/node_modules/react-native-html-to-pdf/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+new file mode 100644
+index 0000000..4c0e519
+Binary files /dev/null and b/node_modules/react-native-html-to-pdf/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock differ
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/buildOutputCleanup/cache.properties b/node_modules/react-native-html-to-pdf/android/.gradle/buildOutputCleanup/cache.properties
+new file mode 100644
+index 0000000..fb298bf
+--- /dev/null
++++ b/node_modules/react-native-html-to-pdf/android/.gradle/buildOutputCleanup/cache.properties
+@@ -0,0 +1,2 @@
++#Thu Oct 22 10:27:09 IST 2026
++gradle.version=9.7.1
+diff --git a/node_modules/react-native-html-to-pdf/android/.gradle/vcs-1/gc.properties b/node_modules/react-native-html-to-pdf/android/.gradle/vcs-1/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-html-to-pdf/android/.project b/node_modules/react-native-html-to-pdf/android/.project
+new file mode 100644
+index 0000000..52a3045
+--- /dev/null
++++ b/node_modules/react-native-html-to-pdf/android/.project
+@@ -0,0 +1,34 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<projectDescription>
++	<name>react-native-html-to-pdf</name>
++	<comment>Project react-native-html-to-pdf created by Buildship.</comment>
++	<projects>
++	</projects>
++	<buildSpec>
++		<buildCommand>
++			<name>org.eclipse.jdt.core.javabuilder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++		<buildCommand>
++			<name>org.eclipse.buildship.core.gradleprojectbuilder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++	</buildSpec>
++	<natures>
++		<nature>org.eclipse.jdt.core.javanature</nature>
++		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
++	</natures>
++	<filteredResources>
++		<filter>
++			<id>1792643909258</id>
++			<name></name>
++			<type>30</type>
++			<matcher>
++				<id>org.eclipse.core.resources.regexFilterMatcher</id>
++				<arguments>node_modules|\.git|__CREATED_BY_JAVA_LANGUAGE_SERVER__</arguments>
++			</matcher>
++		</filter>
++	</filteredResources>
++</projectDescription>
+diff --git a/node_modules/react-native-html-to-pdf/android/.settings/org.eclipse.buildship.core.prefs b/node_modules/react-native-html-to-pdf/android/.settings/org.eclipse.buildship.core.prefs
+new file mode 100644
+index 0000000..1675490
+--- /dev/null
++++ b/node_modules/react-native-html-to-pdf/android/.settings/org.eclipse.buildship.core.prefs
+@@ -0,0 +1,2 @@
++connection.project.dir=../../../android
++eclipse.preferences.version=1
+diff --git a/node_modules/react-native-html-to-pdf/android/.settings/org.eclipse.jdt.core.prefs b/node_modules/react-native-html-to-pdf/android/.settings/org.eclipse.jdt.core.prefs
+new file mode 100644
+index 0000000..626e0e1
+--- /dev/null
++++ b/node_modules/react-native-html-to-pdf/android/.settings/org.eclipse.jdt.core.prefs
+@@ -0,0 +1,4 @@
++eclipse.preferences.version=1
++org.eclipse.jdt.core.compiler.codegen.targetPlatform=17
++org.eclipse.jdt.core.compiler.compliance=17
++org.eclipse.jdt.core.compiler.source=17
 diff --git a/node_modules/react-native-html-to-pdf/android/src/main/java/android/print/PdfConverter.kt b/node_modules/react-native-html-to-pdf/android/src/main/java/android/print/PdfConverter.kt
-index b95a9d2..b5e6fcb 100644
+index b95a9d2..bf6fd59 100644
 --- a/node_modules/react-native-html-to-pdf/android/src/main/java/android/print/PdfConverter.kt
 +++ b/node_modules/react-native-html-to-pdf/android/src/main/java/android/print/PdfConverter.kt
-@@ -51,7 +51,7 @@ class PdfConverter private constructor() : Runnable {
+@@ -2,11 +2,15 @@ package android.print
+ 
+ import android.content.Context
+ import android.os.Build
++import android.os.Bundle
++import android.os.CancellationSignal
+ import android.os.Handler
+ import android.os.Looper
+ import android.os.ParcelFileDescriptor
+ import android.util.Base64
+ import android.util.Log
++import android.view.View
++import android.view.ViewGroup
+ import android.webkit.WebSettings
+ import android.webkit.WebView
+ import android.webkit.WebViewClient
+@@ -43,6 +47,7 @@ class PdfConverter private constructor() : Runnable {
+     private var mHtmlString: String? = null
+     private var mPdfFile: File? = null
+     private var mPdfPrintAttrs: PrintAttributes? = null
++    @Volatile
+     private var mIsCurrentlyConverting = false
+     private var mWebView: WebView? = null
+     private var mShouldEncode = false
+@@ -51,123 +56,161 @@ class PdfConverter private constructor() : Runnable {
      private var mBaseURL: String? = null
      private var mTimeoutHandler: Handler? = null
      private var mTimeoutRunnable: Runnable? = null
@@ -11,10 +154,30 @@ index b95a9d2..b5e6fcb 100644
  
      override fun run() {
          try {
-@@ -69,76 +69,88 @@ class PdfConverter private constructor() : Runnable {
-                                         getPdfPrintAttrs(), 
-                                         null, 
-                                         object : PrintDocumentAdapter.LayoutResultCallback() {
+             mContext?.let { context ->
+                 mWebView = WebView(context).apply {
++                    layoutParams = ViewGroup.LayoutParams(1080, 1920)
++
++                    settings.apply {
++                        textZoom = 100
++                        defaultTextEncodingName = "utf-8"
++                        allowFileAccess = true
++                        javaScriptEnabled = true
++                        domStorageEnabled = true
++                    }
++
+                     webViewClient = object : WebViewClient() {
+                         override fun onPageFinished(view: WebView?, url: String?) {
+-                            try {
+-                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+-                                    throw RuntimeException("call requires API level 19")
+-                                } else {
+-                                    val documentAdapter = createPrintDocumentAdapter()
+-                                    documentAdapter.onLayout(
+-                                        null, 
+-                                        getPdfPrintAttrs(), 
+-                                        null, 
+-                                        object : PrintDocumentAdapter.LayoutResultCallback() {
 -                                            override fun onLayoutFailed(error: CharSequence?) {
 -                                                Log.e(TAG, "PDF layout failed: $error")
 -                                                mPromise?.reject("PDF_LAYOUT_FAILED", error?.toString() ?: "Layout failed")
@@ -30,129 +193,215 @@ index b95a9d2..b5e6fcb 100644
 -                                        null,
 -                                        object : PrintDocumentAdapter.WriteResultCallback() {
 -                                            override fun onWriteFinished(pages: Array<PageRange>?) {
-+                                            override fun onLayoutFinished(info: PrintDocumentInfo?, changed: Boolean) {
-                                                 try {
+-                                                try {
 -                                                    var base64 = ""
 -                                                    if (mShouldEncode) {
 -                                                        mPdfFile?.let { file ->
 -                                                            base64 = encodeFromFile(file)
 -                                                        }
-+                                                    val outputFileDescriptor = getOutputFileDescriptor()
-+                                                    if (outputFileDescriptor == null) {
-+                                                        mPromise?.reject("PDF_FD_ERROR", "Failed to open output file descriptor")
-+                                                        destroy()
-+                                                        return
-                                                     }
+-                                                    }
 -
 -                                                    mPdfFile?.let { file ->
 -                                                        val myDocument = PDDocument.load(file)
 -                                                        val pagesToBePrinted = myDocument.numberOfPages
--
++                            // Give WebView 250ms to reflow and render before capturing print layout
++                            view?.postDelayed({
++                                try {
++                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
++                                        throw RuntimeException("call requires API level 19")
++                                    } else {
++                                        // Ensure explicit dimensions for offscreen renderer
++                                        view.measure(
++                                            View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
++                                            View.MeasureSpec.makeMeasureSpec(1920, View.MeasureSpec.EXACTLY)
++                                        )
++                                        view.layout(0, 0, 1080, 1920)
++
++                                        val documentAdapter = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
++                                            view.createPrintDocumentAdapter(mPdfFile?.name ?: "document")
++                                        } else {
++                                            view.createPrintDocumentAdapter()
++                                        }
+ 
 -                                                        mResultMap?.apply {
 -                                                            putString("filePath", file.absolutePath)
 -                                                            putString("numberOfPages", pagesToBePrinted.toString())
 -                                                            putString("base64", base64)
-+                                                    documentAdapter.onWrite(
-+                                                        arrayOf(PageRange.ALL_PAGES),
-+                                                        outputFileDescriptor,
-+                                                        null,
-+                                                        object : PrintDocumentAdapter.WriteResultCallback() {
-+                                                            override fun onWriteFinished(pages: Array<PageRange>?) {
-+                                                                try {
-+                                                                    var base64 = ""
-+                                                                    if (mShouldEncode) {
-+                                                                        mPdfFile?.let { file ->
-+                                                                            base64 = encodeFromFile(file)
-+                                                                        }
-+                                                                    }
-+
-+                                                                    mPdfFile?.let { file ->
-+                                                                        val myDocument = PDDocument.load(file)
-+                                                                        val pagesToBePrinted = myDocument.numberOfPages
-+
-+                                                                        mResultMap?.apply {
-+                                                                            putString("filePath", file.absolutePath)
-+                                                                            putString("numberOfPages", pagesToBePrinted.toString())
-+                                                                            putString("base64", base64)
-+                                                                        }
-+                                                                        mPromise?.resolve(mResultMap)
-+                                                                        myDocument.close()
-+                                                                    }
-+                                                                } catch (e: Exception) {
-+                                                                    Log.e(TAG, "Error finishing PDF write", e)
-+                                                                    mPromise?.reject("PDF_WRITE_ERROR", e.message, e)
-+                                                                } finally {
-+                                                                    destroy()
-+                                                                }
-+                                                            }
-+
-+                                                            override fun onWriteFailed(error: CharSequence?) {
-+                                                                val errorResult = error?.toString() 
-+                                                                    ?: "Please retry, Error occurred generating the pdf"
-+                                                                Log.e(TAG, "PDF write failed: $errorResult")
-+                                                                mPromise?.reject("PDF_WRITE_FAILED", errorResult)
-+                                                                destroy()
-+                                                            }
-+
-+                                                            override fun onWriteCancelled() {
-+                                                                Log.d(TAG, "PDF write cancelled")
-+                                                                mPromise?.reject("PDF_WRITE_CANCELLED", "PDF generation was cancelled")
-+                                                                destroy()
-+                                                            }
++                                        documentAdapter.onStart()
++                                        val layoutCancellationSignal = CancellationSignal()
++                                        documentAdapter.onLayout(
++                                            null, 
++                                            getPdfPrintAttrs(), 
++                                            layoutCancellationSignal, 
++                                            object : PrintDocumentAdapter.LayoutResultCallback() {
++                                                override fun onLayoutFinished(info: PrintDocumentInfo?, changed: Boolean) {
++                                                    try {
++                                                        val outputFileDescriptor = getOutputFileDescriptor()
++                                                        if (outputFileDescriptor == null) {
++                                                            mPromise?.reject("PDF_FD_ERROR", "Failed to open output file descriptor")
++                                                            documentAdapter.onFinish()
++                                                            destroy()
++                                                            return
                                                          }
 -                                                        mPromise?.resolve(mResultMap)
 -                                                        myDocument.close()
--                                                    }
-+                                                    )
-                                                 } catch (e: Exception) {
++                                                        val writeCancellationSignal = CancellationSignal()
++                                                        documentAdapter.onWrite(
++                                                            arrayOf(PageRange.ALL_PAGES),
++                                                            outputFileDescriptor,
++                                                            writeCancellationSignal,
++                                                            object : PrintDocumentAdapter.WriteResultCallback() {
++                                                                override fun onWriteFinished(pages: Array<PageRange>?) {
++                                                                    try {
++                                                                        var base64 = ""
++                                                                        if (mShouldEncode) {
++                                                                            mPdfFile?.let { file ->
++                                                                                base64 = encodeFromFile(file)
++                                                                            }
++                                                                        }
++
++                                                                        mPdfFile?.let { file ->
++                                                                            val myDocument = PDDocument.load(file)
++                                                                            val pagesToBePrinted = myDocument.numberOfPages
++
++                                                                            mResultMap?.apply {
++                                                                                putString("filePath", file.absolutePath)
++                                                                                putString("numberOfPages", pagesToBePrinted.toString())
++                                                                                putString("base64", base64)
++                                                                            }
++                                                                            mPromise?.resolve(mResultMap)
++                                                                            myDocument.close()
++                                                                        }
++                                                                    } catch (e: Exception) {
++                                                                        Log.e(TAG, "Error finishing PDF write", e)
++                                                                        mPromise?.reject("PDF_WRITE_ERROR", e.message, e)
++                                                                    } finally {
++                                                                        documentAdapter.onFinish()
++                                                                        destroy()
++                                                                    }
++                                                                }
++
++                                                                override fun onWriteFailed(error: CharSequence?) {
++                                                                    val errorResult = error?.toString() 
++                                                                        ?: "Please retry, Error occurred generating the pdf"
++                                                                    Log.e(TAG, "PDF write failed: $errorResult")
++                                                                    mPromise?.reject("PDF_WRITE_FAILED", errorResult)
++                                                                    documentAdapter.onFinish()
++                                                                    destroy()
++                                                                }
++
++                                                                override fun onWriteCancelled() {
++                                                                    Log.d(TAG, "PDF write cancelled")
++                                                                    mPromise?.reject("PDF_WRITE_CANCELLED", "PDF generation was cancelled")
++                                                                    documentAdapter.onFinish()
++                                                                    destroy()
++                                                                }
++                                                            }
++                                                        )
++                                                    } catch (e: Exception) {
++                                                        Log.e(TAG, "Error initiating PDF write in onLayoutFinished", e)
++                                                        mPromise?.reject("PDF_WRITE_SETUP_ERROR", e.message, e)
++                                                        documentAdapter.onFinish()
++                                                        destroy()
+                                                     }
+-                                                } catch (e: Exception) {
 -                                                    Log.e(TAG, "Error finishing PDF write", e)
 -                                                    mPromise?.reject("PDF_WRITE_ERROR", e.message, e)
 -                                                } finally {
 -                                                    // Force reset the flag FIRST, before attempting cleanup
 -                                                    mIsCurrentlyConverting = false
-+                                                    Log.e(TAG, "Error initiating PDF write in onLayoutFinished", e)
-+                                                    mPromise?.reject("PDF_WRITE_SETUP_ERROR", e.message, e)
-                                                     destroy()
+-                                                    destroy()
                                                  }
-                                             }
- 
+-                                            }
+-
 -                                            override fun onWriteFailed(error: CharSequence?) {
 -                                                val errorResult = error?.toString() 
 -                                                    ?: "Please retry, Error occurred generating the pdf"
 -                                                Log.e(TAG, "PDF write failed: $errorResult")
 -                                                mPromise?.reject("PDF_WRITE_FAILED", errorResult)
--                                                
--                                                mIsCurrentlyConverting = false
-+                                            override fun onLayoutFailed(error: CharSequence?) {
-+                                                Log.e(TAG, "PDF layout failed: $error")
-+                                                mPromise?.reject("PDF_LAYOUT_FAILED", error?.toString() ?: "Layout failed")
-                                                 destroy()
-                                             }
  
+-                                                mIsCurrentlyConverting = false
+-                                                destroy()
+-                                            }
+-
 -                                            override fun onWriteCancelled() {
 -                                                Log.d(TAG, "PDF write cancelled")
 -                                                mPromise?.reject("PDF_WRITE_CANCELLED", "PDF generation was cancelled")
--                                                
++                                                override fun onLayoutFailed(error: CharSequence?) {
++                                                    Log.e(TAG, "PDF layout failed: $error")
++                                                    mPromise?.reject("PDF_LAYOUT_FAILED", error?.toString() ?: "Layout failed")
++                                                    documentAdapter.onFinish()
++                                                    destroy()
++                                                }
+ 
 -                                                mIsCurrentlyConverting = false
-+                                            override fun onLayoutCancelled() {
-+                                                Log.d(TAG, "PDF layout cancelled")
-+                                                mPromise?.reject("PDF_LAYOUT_CANCELLED", "PDF layout was cancelled")
-                                                 destroy()
-                                             }
+-                                                destroy()
+-                                            }
 -                                        }
-+                                        },
-+                                        null
-                                     )
+-                                    )
++                                                override fun onLayoutCancelled() {
++                                                    Log.d(TAG, "PDF layout cancelled")
++                                                    mPromise?.reject("PDF_LAYOUT_CANCELLED", "PDF layout was cancelled")
++                                                    documentAdapter.onFinish()
++                                                    destroy()
++                                                }
++                                            },
++                                            Bundle()
++                                        )
++                                    }
++                                } catch (e: Exception) {
++                                    Log.e(TAG, "Error in delayed print setup", e)
++                                    mPromise?.reject("PDF_SETUP_ERROR", "Error setting up PDF print adapter: ${e.message}", e)
++                                    destroy()
                                  }
-                             } catch (e: Exception) {
-                                 Log.e(TAG, "Error in onPageFinished", e)
-                                 mPromise?.reject("PDF_PAGE_LOAD_ERROR", "Error processing loaded page: ${e.message}", e)
+-                            } catch (e: Exception) {
+-                                Log.e(TAG, "Error in onPageFinished", e)
+-                                mPromise?.reject("PDF_PAGE_LOAD_ERROR", "Error processing loaded page: ${e.message}", e)
 -                                
 -                                mIsCurrentlyConverting = false
-                                 destroy()
-                             }
+-                                destroy()
+-                            }
++                            }, 250)
                          }
-@@ -270,9 +282,11 @@ class PdfConverter private constructor() : Runnable {
+ 
+                         override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                             Log.e(TAG, "WebView error: $description (code: $errorCode)")
+                             mPromise?.reject("WEBVIEW_ERROR", "WebView error: $description")
+-                            
+                             mIsCurrentlyConverting = false
+                             destroy()
+                         }
+                     }
+ 
+-                    settings.apply {
+-                        textZoom = 100
+-                        defaultTextEncodingName = "utf-8"
+-                        allowFileAccess = true
+-                        javaScriptEnabled = true
+-                    }
+-
+                     mHtmlString?.let { html ->
+-                        loadDataWithBaseURL(mBaseURL, html, "text/HTML", "utf-8", null)
++                        loadDataWithBaseURL(mBaseURL, html, "text/html", "utf-8", null)
+                     }
+                 }
+             }
+         } catch (e: Exception) {
+             Log.e(TAG, "Error in run method", e)
+             mPromise?.reject("PDF_WEBVIEW_SETUP_ERROR", "Failed to setup WebView for PDF conversion: ${e.message}", e)
+-            
+             mIsCurrentlyConverting = false
+             destroy()
+         }
+@@ -186,6 +229,7 @@ class PdfConverter private constructor() : Runnable {
+      */
+     fun forceReset() {
+         Log.w(TAG, "Force resetting PdfConverter state")
++        mIsCurrentlyConverting = false
+         destroy()
+     }
+     
+@@ -270,9 +314,11 @@ class PdfConverter private constructor() : Runnable {
      }
  
      private fun runOnUiThread(runnable: Runnable) {
@@ -167,7 +416,7 @@ index b95a9d2..b5e6fcb 100644
          }
      }
  
-@@ -298,36 +312,38 @@ class PdfConverter private constructor() : Runnable {
+@@ -298,36 +344,39 @@ class PdfConverter private constructor() : Runnable {
      }
  
      private fun destroy() {
@@ -182,6 +431,7 @@ index b95a9d2..b5e6fcb 100644
 -                    webView.destroy()
 -                } catch (e: Exception) {
 -                    Log.w(TAG, "Error destroying WebView", e)
++        mIsCurrentlyConverting = false
 +        runOnUiThread {
 +            try {
 +                // Cancel timeout first
@@ -197,7 +447,7 @@ index b95a9d2..b5e6fcb 100644
 +                    }
                  }
 -            }
--            
+                 
 -            // Reset all state variables
 -            mContext = null
 -            mHtmlString = null
@@ -209,7 +459,7 @@ index b95a9d2..b5e6fcb 100644
 -            mPromise = null
 -            mBaseURL = null
 -            mIsCurrentlyConverting = false
-                 
+-            
 -        } catch (e: Exception) {
 -            Log.e(TAG, "Error in destroy() method", e)
 -            // Even if everything else fails, we MUST reset the converting flag
