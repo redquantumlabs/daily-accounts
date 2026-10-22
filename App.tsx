@@ -38,10 +38,16 @@ export default function App() {
         await performBackgroundTasks('Auto Backup', notificationId);
         await scheduleAutoBackupTriggers();
       } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(DOWNLOAD_TRIGGER_PREFIX)) {
-        await performAutoDownloadTask('Auto Download', notificationId);
+        await notifee.cancelNotification(notificationId).catch(() => {});
         await scheduleAutoDownloadTriggers();
+        await performAutoDownloadTask('Auto Download');
       } else if (type === EventType.DELIVERED && notificationId && notificationId.startsWith(SCHEDULED_EXPENSES_TRIGGER_PREFIX)) {
         await performScheduledExpenseTask(notificationId);
+      } else if (type === EventType.ACTION_PRESS && detail.pressAction?.id === 'retry_auto_download') {
+        if (notificationId) {
+          await notifee.cancelNotification(notificationId).catch(() => {});
+        }
+        await performAutoDownloadTask('Auto Download (Retry)');
       }
     });
 

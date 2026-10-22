@@ -1,12 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SAF from 'react-native-saf-x';
-import notifee, { AndroidImportance, AndroidForegroundServiceType } from '@notifee/react-native';
+import notifee, { AndroidImportance } from '@notifee/react-native';
 import { generateDashboardPDFHTML, generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
 import { generatePDF } from 'react-native-html-to-pdf';
 import { parseISOYear } from '../utils/dateUtils';
 import { DOWNLOAD_SILENT_CHANNEL_ID } from '../utils/autoDownloadConstants';
 
-const generatePDFWithTimeout = (options: any, timeoutMs: number = 60000): Promise<any> => {
+const generatePDFWithTimeout = (options: any, timeoutMs: number = 30000): Promise<any> => {
   let timeoutHandle: any;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutHandle = setTimeout(() => reject(new Error('PDF generation timed out')), timeoutMs);
@@ -75,8 +75,6 @@ export const performAutoDownloadTask = async (
         android: {
           channelId: DOWNLOAD_SILENT_CHANNEL_ID,
           importance: AndroidImportance.LOW,
-          asForegroundService: true,
-          foregroundServiceTypes: [AndroidForegroundServiceType.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE],
           smallIcon: 'ic_notification',
           largeIcon: 'ic_launcher',
           circularLargeIcon: true,
@@ -95,33 +93,7 @@ export const performAutoDownloadTask = async (
         },
       });
     } catch (e) {
-      console.warn('[performAutoDownloadTask] Failed to update progress notification with foreground service:', e);
-      try {
-        await notifee.displayNotification({
-          id: targetNotificationId,
-          title: 'Auto Download',
-          body: `${statusText} (${percent}%)`,
-          android: {
-            channelId: DOWNLOAD_SILENT_CHANNEL_ID,
-            importance: AndroidImportance.LOW,
-            smallIcon: 'ic_notification',
-            largeIcon: 'ic_launcher',
-            circularLargeIcon: true,
-            showTimestamp: true,
-            ongoing: true,
-            autoCancel: false,
-            pressAction: {
-              id: 'default',
-            },
-            onlyAlertOnce: true,
-            progress: {
-              max: 100,
-              current: Math.min(100, Math.max(0, percent)),
-              indeterminate: false,
-            },
-          },
-        });
-      } catch (inner) {}
+      console.warn('[performAutoDownloadTask] Failed to update progress notification:', e);
     }
   };
 
@@ -177,6 +149,8 @@ export const performAutoDownloadTask = async (
     const hasAccountReport = accountGroups.length > 0;
     const totalReports = uniqueYears.length + (hasAccountReport ? 1 : 0);
 
+    let generatedCount = 0;
+
     if (totalReports === 0) {
       await updateProgress(100, 'Report generation completed');
       await delay(300);
@@ -200,18 +174,17 @@ export const performAutoDownloadTask = async (
           forceReset: true,
         };
 
-        await delay(500);
+        await delay(300);
 
         let expenseFile: any = null;
         try {
-          expenseFile = await generatePDFWithTimeout(expenseOptions);
+          expenseFile = await generatePDFWithTimeout(expenseOptions, 30000);
         } catch (e) {
           console.warn(`[AutoDownloadTask] Failed to generate PDF for year ${year}:`, e);
-          currentReportIndex++;
-          continue;
         }
 
         if (expenseFile && expenseFile.base64) {
+          generatedCount++;
           const midPercent = Math.round(10 + (currentReportIndex + 0.6) * reportWeight);
           await updateProgress(midPercent, `Saving Account - ${year}`);
           await savePdfFileSafely(downloadPathUri, fileName, expenseFile.base64);
@@ -239,16 +212,17 @@ export const performAutoDownloadTask = async (
           forceReset: true,
         };
 
-        await delay(500);
+        await delay(300);
 
         let accFile: any = null;
         try {
-          accFile = await generatePDFWithTimeout(accOptions);
+          accFile = await generatePDFWithTimeout(accOptions, 30000);
         } catch (e) {
           console.warn(`[AutoDownloadTask] Failed to generate Transactional Accounts PDF:`, e);
         }
 
         if (accFile && accFile.base64) {
+          generatedCount++;
           const midPercent = Math.round(10 + (currentReportIndex + 0.6) * reportWeight);
           await updateProgress(midPercent, `Saving Transactional Accounts`);
           await savePdfFileSafely(downloadPathUri, fileName, accFile.base64);
@@ -264,20 +238,43 @@ export const performAutoDownloadTask = async (
     // Stop foreground service and dismiss the progress notification
     await notifee.stopForegroundService().catch(() => { });
     await notifee.cancelNotification(targetNotificationId).catch(() => { });
-    await AsyncStorage.removeItem('@app_pending_auto_download').catch(() => { });
 
-    // Show generated final notification
-    await notifee.displayNotification({
-      title: "Auto Download",
-      body: `${downloadLabel} generated successfully.`,
-      android: {
-        channelId: 'daily_accounts',
-        showTimestamp: true,
-        smallIcon: 'ic_notification',
-        largeIcon: 'ic_launcher',
-        circularLargeIcon: true,
-      }
-    });
+    if (totalReports > 0 && generatedCount === 0) {
+      await AsyncStorage.setItem('@app_pending_auto_download', 'true');
+      await notifee.displayNotification({
+        title: "Auto Download Failed",
+        body: "Could not generate reports. Tap to retry.",
+        android: {
+          channelId: 'daily_accounts',
+          showTimestamp: true,
+          smallIcon: 'ic_notification',
+          largeIcon: 'ic_launcher',
+          circularLargeIcon: true,
+          pressAction: { id: 'default' },
+          actions: [
+            {
+              title: 'Retry',
+              pressAction: {
+                id: 'retry_auto_download'
+              }
+            }
+          ]
+        }
+      });
+    } else {
+      await AsyncStorage.removeItem('@app_pending_auto_download').catch(() => { });
+      await notifee.displayNotification({
+        title: "Auto Download",
+        body: `${downloadLabel} generated successfully.`,
+        android: {
+          channelId: 'daily_accounts',
+          showTimestamp: true,
+          smallIcon: 'ic_notification',
+          largeIcon: 'ic_launcher',
+          circularLargeIcon: true,
+        }
+      });
+    }
 
   } catch (err: any) {
     await notifee.stopForegroundService().catch(() => { });
@@ -309,4 +306,3 @@ export const performAutoDownloadTask = async (
     isPerformingAutoDownload = false;
   }
 };
-
