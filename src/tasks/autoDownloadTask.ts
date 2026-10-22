@@ -6,7 +6,7 @@ import { generatePDF } from 'react-native-html-to-pdf';
 import { parseISOYear } from '../utils/dateUtils';
 import { DOWNLOAD_SILENT_CHANNEL_ID } from '../utils/autoDownloadConstants';
 
-const generatePDFWithTimeout = (options: any, timeoutMs: number = 30000): Promise<any> => {
+const generatePDFWithTimeout = (options: any, timeoutMs: number = 60000): Promise<any> => {
   let timeoutHandle: any;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutHandle = setTimeout(() => reject(new Error('PDF generation timed out')), timeoutMs);
@@ -27,7 +27,10 @@ export const performAutoDownloadTask = async (
   if (isPerformingAutoDownload) return;
   isPerformingAutoDownload = true;
 
-  const targetNotificationId = progressNotificationId || 'daily_accounts_download_progress';
+  // Never use a trigger prefix ID for ongoing progress notifications to prevent recursive trigger delivery loops
+  const targetNotificationId = (progressNotificationId && !progressNotificationId.startsWith('daily_accounts_download_trigger_'))
+    ? progressNotificationId
+    : 'daily_accounts_download_progress';
 
   const updateProgress = async (percent: number, statusText: string) => {
     try {
@@ -43,6 +46,10 @@ export const performAutoDownloadTask = async (
           circularLargeIcon: true,
           showTimestamp: true,
           ongoing: true,
+          autoCancel: false,
+          pressAction: {
+            id: 'default',
+          },
           onlyAlertOnce: true,
           progress: {
             max: 100,
@@ -126,10 +133,11 @@ export const performAutoDownloadTask = async (
           html: expenseHtml,
           fileName: fileName + `_${new Date().getTime()}`,
           directory: 'Documents',
-          base64: true
+          base64: true,
+          forceReset: true,
         };
 
-        await delay(300);
+        await delay(500);
 
         let expenseFile: any = null;
         try {
@@ -161,6 +169,7 @@ export const performAutoDownloadTask = async (
         currentReportIndex++;
         const donePercent = Math.round(10 + currentReportIndex * reportWeight);
         await updateProgress(donePercent, `Completed Account - ${year}`);
+        await delay(300);
       }
 
       // 2. Generate Transactional Accounts report
@@ -175,10 +184,11 @@ export const performAutoDownloadTask = async (
           html: accHtml,
           fileName: fileName + `_${new Date().getTime()}`,
           directory: 'Documents',
-          base64: true
+          base64: true,
+          forceReset: true,
         };
 
-        await delay(300);
+        await delay(500);
 
         let accFile: any = null;
         try {
@@ -214,6 +224,7 @@ export const performAutoDownloadTask = async (
 
     // Dismiss the progress notification
     await notifee.cancelNotification(targetNotificationId).catch(() => { });
+    await AsyncStorage.removeItem('@app_pending_auto_download').catch(() => { });
 
     // Show generated final notification
     await notifee.displayNotification({

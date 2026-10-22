@@ -65,8 +65,10 @@ export const scheduleAutoDownloadTriggers = async () => {
             smallIcon: 'ic_notification',
             largeIcon: 'ic_launcher',
             circularLargeIcon: true,
-            showTimestamp: true,
-            autoCancel: true,
+            autoCancel: false,
+            pressAction: {
+              id: 'default',
+            },
             ongoing: true,
             onlyAlertOnce: true,
             progress: {

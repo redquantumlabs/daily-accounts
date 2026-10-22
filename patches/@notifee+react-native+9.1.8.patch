@@ -1,8 +1,16 @@
 diff --git a/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/HeadlessTask.java b/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/HeadlessTask.java
-index 24d3c9d..5d416eb 100644
+index 24d3c9d..bcfbb0e 100644
 --- a/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/HeadlessTask.java
 +++ b/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/HeadlessTask.java
-@@ -97,8 +97,8 @@ import java.util.concurrent.atomic.AtomicInteger;
+@@ -35,6 +35,7 @@ package io.invertase.notifee;
+ import android.content.Context;
+ import android.os.Handler;
+ import android.os.Looper;
++import android.os.PowerManager;
+ import android.util.Log;
+ import androidx.annotation.NonNull;
+ import androidx.annotation.Nullable;
+@@ -97,10 +98,41 @@ import java.util.concurrent.atomic.AtomicInteger;
  
  public class HeadlessTask {
    private static final String HEADLESS_TASK_NAME = "NotifeeHeadlessJS";
@@ -12,7 +20,66 @@ index 24d3c9d..5d416eb 100644
 +  private static final int TASK_TIMEOUT = 600000;
    private static final AtomicInteger sLastTaskId = new AtomicInteger(0);
  
++  private static PowerManager.WakeLock sWakeLock = null;
++
++  public static synchronized void acquireWakeLock(Context context) {
++    try {
++      if (sWakeLock == null && context != null) {
++        PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
++        if (pm != null) {
++          sWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "notifee:headless_task");
++          sWakeLock.setReferenceCounted(false);
++        }
++      }
++      if (sWakeLock != null && !sWakeLock.isHeld()) {
++        sWakeLock.acquire(TASK_TIMEOUT);
++        Log.d(HEADLESS_TASK_NAME, "Acquired WakeLock for headless task");
++      }
++    } catch (Exception e) {
++      Log.e(HEADLESS_TASK_NAME, "Failed to acquire WakeLock: " + e.getMessage());
++    }
++  }
++
++  public static synchronized void releaseWakeLock() {
++    try {
++      if (sWakeLock != null && sWakeLock.isHeld()) {
++        sWakeLock.release();
++        Log.d(HEADLESS_TASK_NAME, "Released WakeLock for headless task");
++      }
++    } catch (Exception e) {
++      Log.e(HEADLESS_TASK_NAME, "Failed to release WakeLock: " + e.getMessage());
++    }
++  }
++
    static synchronized int getNextTaskId() {
+     return sLastTaskId.incrementAndGet();
+   }
+@@ -115,6 +147,7 @@ public class HeadlessTask {
+     for (TaskConfig task : mTaskQueue) {
+       onFinishHeadlessTask(task.getTaskId());
+     }
++    releaseWakeLock();
+   }
+ 
+   /**
+@@ -168,6 +201,7 @@ public class HeadlessTask {
+    */
+   public void startTask(Context context, final TaskConfig taskConfig) throws AssertionError {
+     UiThreadUtil.assertOnUiThread();
++    acquireWakeLock(context);
+ 
+     // push this HeadlessEvent onto the taskQueue, to be drained once the React context is finished
+     // initializing,
+@@ -229,6 +263,9 @@ public class HeadlessTask {
+                     if (taskConfig.getCallback() != null) {
+                       taskConfig.getCallback().call();
+                     }
++                    if (mTaskQueue.isEmpty()) {
++                      releaseWakeLock();
++                    }
+                   } else {
+                     Log.w(HEADLESS_TASK_NAME, "Failed to find taskId: " + taskId);
+                   }
 diff --git a/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/NotifeeEventSubscriber.java b/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/NotifeeEventSubscriber.java
 index 00ecd14..abe7f7d 100644
 --- a/node_modules/@notifee/react-native/android/src/main/java/io/invertase/notifee/NotifeeEventSubscriber.java
