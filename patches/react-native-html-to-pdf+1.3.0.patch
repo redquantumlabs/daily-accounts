@@ -221,7 +221,7 @@ index b95a9d2..1f247c0 100644
 +                mWebView?.let { webView ->
 +                    try {
 +                        webView.stopLoading()
-+                        webView.webViewClient = null
++                        webView.webViewClient = WebViewClient()
 +                        webView.destroy()
 +                    } catch (e: Exception) {
 +                        Log.w(TAG, "Error destroying WebView", e)
