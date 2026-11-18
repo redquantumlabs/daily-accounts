@@ -2,6 +2,7 @@ import { Expense } from '../context/ExpenseContext';
 import notifee, { TriggerType, TimestampTrigger, RepeatFrequency } from '@notifee/react-native';
 import { BACKUP_TRIGGER_PREFIX } from './backupConstants';
 import { DOWNLOAD_TRIGGER_PREFIX } from './autoDownloadConstants';
+import { roundAmount } from './format';
 
 const SUMMARY_PREFIX = 'summary_';
 const REMINDER_PREFIX = 'reminder_';
@@ -11,7 +12,7 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
   try {
     const existingIds = await notifee.getTriggerNotificationIds();
     const idsToCancel = existingIds.filter(
-      id => !id.startsWith(BACKUP_TRIGGER_PREFIX) && !id.startsWith(DOWNLOAD_TRIGGER_PREFIX)
+      id => id.startsWith(SUMMARY_PREFIX) || id.startsWith(REMINDER_PREFIX) || id.startsWith(MONTHLY_PREFIX)
     );
 
     if (idsToCancel.length > 0) {
@@ -33,16 +34,27 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     const yesterdayStr = yesterdayDate.toDateString();
 
     const todayExpenses = expenses.filter(e => new Date(e.date).toDateString() === todayStr);
-    const todayTotal = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
+    const todayTotal = roundAmount(todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0));
 
     const yesterdayExpenses = expenses.filter(e => new Date(e.date).toDateString() === yesterdayStr);
-    const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
+    const yesterdayTotal = roundAmount(yesterdayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0));
 
     const currentMonthExpenses = expenses.filter(e => {
       const d = new Date(e.date);
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
-    const currentMonthTotal = currentMonthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0);
+    const currentMonthTotal = roundAmount(currentMonthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0));
+
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthExpenses = expenses.filter(e => {
+      const d = new Date(e.date);
+      return d.getMonth() === prevMonthDate.getMonth() && d.getFullYear() === prevMonthDate.getFullYear();
+    });
+    const prevMonthTotal = roundAmount(prevMonthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount as any) || 0), 0));
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const currentMonthName = monthNames[now.getMonth()];
+    const prevMonthName = monthNames[prevMonthDate.getMonth()];
 
     const promises: Promise<any>[] = [];
 
@@ -159,19 +171,60 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     // ==========================================
     // 3. SCHEDULE MONTHLY SUMMARY
     // ==========================================
+    const isFirstDayOfMonth = now.getDate() === 1;
+
+    // --- A. TODAY'S MONTHLY SUMMARY (If today is 1st of the month and summary time hasn't passed) ---
+    if (isFirstDayOfMonth && isSummaryFuture) {
+      const todayMonthly = new Date(now);
+      todayMonthly.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
+
+      const triggerTodayMonthly: TimestampTrigger = {
+        type: TriggerType.TIMESTAMP,
+        timestamp: Math.max(todayMonthly.getTime() + 3000, Date.now() + 1500),
+        alarmManager: { allowWhileIdle: true }
+      };
+
+      promises.push(
+        notifee.createTriggerNotification({
+          id: `${MONTHLY_PREFIX}0_${RUN_ID}`,
+          title: "Monthly Summary \uD83D\uDCCA",
+          body: `Your total expense for ${prevMonthName} was ${currency}${prevMonthTotal}.`,
+          android: {
+            channelId: 'daily_accounts',
+            showTimestamp: true,
+            smallIcon: 'ic_notification',
+            largeIcon: 'ic_launcher',
+            circularLargeIcon: true,
+            pressAction: { id: 'default' }
+          }
+        }, triggerTodayMonthly).catch(e => console.warn(`Failed to schedule today monthly summary:`, e))
+      );
+    }
+
+    // --- B. NEXT MONTH'S SUMMARY (Scheduled for 1st of next month) ---
     const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     nextMonthDate.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const currentMonthName = monthNames[now.getMonth()];
 
-    const triggerMonthly: TimestampTrigger = { type: TriggerType.TIMESTAMP, timestamp: nextMonthDate.getTime() + 5000, alarmManager: { allowWhileIdle: true } };
+    const triggerNextMonthly: TimestampTrigger = {
+      type: TriggerType.TIMESTAMP,
+      timestamp: nextMonthDate.getTime() + 3000,
+      alarmManager: { allowWhileIdle: true }
+    };
+
     promises.push(
       notifee.createTriggerNotification({
-        id: `${MONTHLY_PREFIX}_${RUN_ID}`,
+        id: `${MONTHLY_PREFIX}1_${RUN_ID}`,
         title: "Monthly Summary \uD83D\uDCCA",
         body: `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`,
-        android: { channelId: 'daily_accounts', showTimestamp: true, smallIcon: 'ic_notification', largeIcon: 'ic_launcher', circularLargeIcon: true, pressAction: { id: 'default' } }
-      }, triggerMonthly).catch(e => console.warn(`Failed to schedule monthly summary:`, e))
+        android: {
+          channelId: 'daily_accounts',
+          showTimestamp: true,
+          smallIcon: 'ic_notification',
+          largeIcon: 'ic_launcher',
+          circularLargeIcon: true,
+          pressAction: { id: 'default' }
+        }
+      }, triggerNextMonthly).catch(e => console.warn(`Failed to schedule next monthly summary:`, e))
     );
 
     await Promise.all(promises);
