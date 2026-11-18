@@ -25,7 +25,13 @@ notifee.registerForegroundService((notification) => {
   return new Promise(async (resolve) => {
     try {
       const label = notification.data?.label || 'Auto Download';
-      await performAutoDownloadTask(label);
+      let targets;
+      if (notification.data?.skippedReports) {
+        try {
+          targets = JSON.parse(notification.data.skippedReports);
+        } catch (e) {}
+      }
+      await performAutoDownloadTask(label, undefined, targets);
     } catch (e) {
       console.warn('[ForegroundService] Error performing auto download:', e);
     } finally {
@@ -97,6 +103,7 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
     if (notificationId) {
       await notifee.cancelNotification(notificationId).catch(() => {});
     }
+    const skippedReports = detail.notification?.data?.skippedReports;
     // Launch Foreground Service for retry
     await notifee.displayNotification({
       id: 'daily_accounts_download_progress',
@@ -104,6 +111,7 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
       body: 'Preparing reports... (0%)',
       data: {
         label: 'Auto Download (Retry)',
+        skippedReports: (typeof skippedReports === 'string' ? skippedReports : '') || '',
       },
       android: {
         channelId: DOWNLOAD_SILENT_CHANNEL_ID,

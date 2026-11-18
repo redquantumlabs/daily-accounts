@@ -620,8 +620,15 @@ export default function DashboardScreen({ navigation }: any) {
         const pending = await AsyncStorage.getItem('@app_pending_auto_download');
         if (pending === 'true') {
           await AsyncStorage.removeItem('@app_pending_auto_download');
+          let targets: string[] | undefined;
+          try {
+            const savedSkipped = await AsyncStorage.getItem('@app_skipped_auto_download_reports');
+            if (savedSkipped) {
+              targets = JSON.parse(savedSkipped);
+            }
+          } catch (e) {}
           const { performAutoDownloadTask } = require('../tasks/autoDownloadTask');
-          await performAutoDownloadTask('Auto');
+          await performAutoDownloadTask('Auto Download (Retry)', undefined, targets);
         }
       } catch (e) {
         console.warn('Error checking pending auto download:', e);

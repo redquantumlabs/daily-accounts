@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SAF from 'react-native-saf-x';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, AndroidStyle } from '@notifee/react-native';
 import { generateDashboardPDFHTML, generateAccountTransactionsPDFHTML } from '../utils/pdfGenerator';
 import { generatePDF } from 'react-native-html-to-pdf';
 import { parseISOYear } from '../utils/dateUtils';
@@ -56,7 +56,8 @@ let isPerformingAutoDownload = false;
 
 export const performAutoDownloadTask = async (
   downloadLabel: string = 'Auto',
-  progressNotificationId?: string
+  progressNotificationId?: string,
+  targetReports?: string[]
 ) => {
   if (isPerformingAutoDownload) return;
   isPerformingAutoDownload = true;
@@ -147,103 +148,163 @@ export const performAutoDownloadTask = async (
     })).filter((group: any) => group.transactions.length > 0);
 
     const hasAccountReport = accountGroups.length > 0;
-    const totalReports = uniqueYears.length + (hasAccountReport ? 1 : 0);
 
+    let activeTargetReports = targetReports;
+    if (!activeTargetReports && downloadLabel.toLowerCase().includes('retry')) {
+      try {
+        const saved = await AsyncStorage.getItem('@app_skipped_auto_download_reports');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            activeTargetReports = parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('[AutoDownloadTask] Failed to read saved skipped reports:', e);
+      }
+    }
+
+    const yearsToRun = uniqueYears.filter((year: any) =>
+      !activeTargetReports || activeTargetReports.includes(`Account - ${year}`)
+    );
+
+    const shouldRunAccountReport = hasAccountReport && (
+      !activeTargetReports || activeTargetReports.includes('Transactional Accounts')
+    );
+
+    const totalReportsToRun = yearsToRun.length + (shouldRunAccountReport ? 1 : 0);
+    const skippedReports: string[] = [];
     let generatedCount = 0;
 
-    if (totalReports === 0) {
+    if (totalReportsToRun === 0) {
       await updateProgress(100, 'Report generation completed');
       await delay(300);
-    } else {
-      let currentReportIndex = 0;
-      const reportWeight = 85 / totalReports;
+      await notifee.stopForegroundService().catch(() => { });
+      await notifee.cancelNotification(targetNotificationId).catch(() => { });
+      await AsyncStorage.removeItem('@app_pending_auto_download').catch(() => { });
+      await AsyncStorage.removeItem('@app_skipped_auto_download_reports').catch(() => { });
+      return;
+    }
 
-      // 1. Generate Expense Report for each unique year
-      for (const year of uniqueYears) {
-        const yearExpenses = expenses.filter((exp: any) => parseISOYear(exp.date) === year);
-        const startPercent = Math.round(10 + currentReportIndex * reportWeight);
-        await updateProgress(startPercent, `Generating Account - ${year}`);
+    let currentReportIndex = 0;
+    const reportWeight = 85 / totalReportsToRun;
 
-        const expenseHtml = generateDashboardPDFHTML(yearExpenses, categories, paymentModes, currency);
-        const fileName = `Account - ${year}`;
-        const expenseOptions = {
-          html: expenseHtml,
-          fileName: fileName + `_${new Date().getTime()}`,
-          directory: 'Documents',
-          base64: true,
-          forceReset: true,
-        };
+    // 1. Generate Expense Report for each targeted unique year
+    for (const year of yearsToRun) {
+      const reportName = `Account - ${year}`;
+      const yearExpenses = expenses.filter((exp: any) => parseISOYear(exp.date) === year);
+      const startPercent = Math.round(10 + currentReportIndex * reportWeight);
+      await updateProgress(startPercent, `Generating ${reportName}`);
 
-        await delay(300);
+      const expenseHtml = generateDashboardPDFHTML(yearExpenses, categories, paymentModes, currency);
+      const fileName = reportName;
+      const expenseOptions = {
+        html: expenseHtml,
+        fileName: fileName + `_${new Date().getTime()}`,
+        directory: 'Documents',
+        base64: true,
+        forceReset: true,
+      };
 
-        let expenseFile: any = null;
+      await delay(300);
+
+      let expenseFile: any = null;
+      try {
+        expenseFile = await generatePDFWithTimeout(expenseOptions, 30000);
+      } catch (e) {
+        console.warn(`[AutoDownloadTask] Failed to generate PDF for ${reportName}:`, e);
+      }
+
+      let isSaved = false;
+      if (expenseFile && expenseFile.base64) {
         try {
-          expenseFile = await generatePDFWithTimeout(expenseOptions, 30000);
-        } catch (e) {
-          console.warn(`[AutoDownloadTask] Failed to generate PDF for year ${year}:`, e);
-        }
-
-        if (expenseFile && expenseFile.base64) {
-          generatedCount++;
           const midPercent = Math.round(10 + (currentReportIndex + 0.6) * reportWeight);
-          await updateProgress(midPercent, `Saving Account - ${year}`);
+          await updateProgress(midPercent, `Saving ${reportName}`);
           await savePdfFileSafely(downloadPathUri, fileName, expenseFile.base64);
-        }
-
-        currentReportIndex++;
-        const donePercent = Math.round(10 + currentReportIndex * reportWeight);
-        await updateProgress(donePercent, `Completed Account - ${year}`);
-        await delay(300);
-      }
-
-      // 2. Generate Transactional Accounts report
-      if (hasAccountReport) {
-        const startPercent = Math.round(10 + currentReportIndex * reportWeight);
-        await updateProgress(startPercent, `Generating Transactional Accounts`);
-
-        const accHtml = generateAccountTransactionsPDFHTML(accountGroups, currency);
-        const fileName = 'Transactional Accounts';
-
-        const accOptions = {
-          html: accHtml,
-          fileName: fileName + `_${new Date().getTime()}`,
-          directory: 'Documents',
-          base64: true,
-          forceReset: true,
-        };
-
-        await delay(300);
-
-        let accFile: any = null;
-        try {
-          accFile = await generatePDFWithTimeout(accOptions, 30000);
-        } catch (e) {
-          console.warn(`[AutoDownloadTask] Failed to generate Transactional Accounts PDF:`, e);
-        }
-
-        if (accFile && accFile.base64) {
+          isSaved = true;
           generatedCount++;
-          const midPercent = Math.round(10 + (currentReportIndex + 0.6) * reportWeight);
-          await updateProgress(midPercent, `Saving Transactional Accounts`);
-          await savePdfFileSafely(downloadPathUri, fileName, accFile.base64);
+        } catch (saveErr) {
+          console.warn(`[AutoDownloadTask] Failed to save PDF for ${reportName}:`, saveErr);
         }
-
-        currentReportIndex++;
       }
 
-      await updateProgress(100, 'Report generation completed');
+      if (!isSaved) {
+        skippedReports.push(reportName);
+      }
+
+      currentReportIndex++;
+      const donePercent = Math.round(10 + currentReportIndex * reportWeight);
+      await updateProgress(donePercent, isSaved ? `Completed ${reportName}` : `Skipped ${reportName}`);
       await delay(300);
     }
+
+    // 2. Generate Transactional Accounts report
+    if (shouldRunAccountReport) {
+      const reportName = 'Transactional Accounts';
+      const startPercent = Math.round(10 + currentReportIndex * reportWeight);
+      await updateProgress(startPercent, `Generating ${reportName}`);
+
+      const accHtml = generateAccountTransactionsPDFHTML(accountGroups, currency);
+      const fileName = reportName;
+
+      const accOptions = {
+        html: accHtml,
+        fileName: fileName + `_${new Date().getTime()}`,
+        directory: 'Documents',
+        base64: true,
+        forceReset: true,
+      };
+
+      await delay(300);
+
+      let accFile: any = null;
+      try {
+        accFile = await generatePDFWithTimeout(accOptions, 30000);
+      } catch (e) {
+        console.warn(`[AutoDownloadTask] Failed to generate ${reportName} PDF:`, e);
+      }
+
+      let isSaved = false;
+      if (accFile && accFile.base64) {
+        try {
+          const midPercent = Math.round(10 + (currentReportIndex + 0.6) * reportWeight);
+          await updateProgress(midPercent, `Saving ${reportName}`);
+          await savePdfFileSafely(downloadPathUri, fileName, accFile.base64);
+          isSaved = true;
+          generatedCount++;
+        } catch (saveErr) {
+          console.warn(`[AutoDownloadTask] Failed to save ${reportName} PDF:`, saveErr);
+        }
+      }
+
+      if (!isSaved) {
+        skippedReports.push(reportName);
+      }
+
+      currentReportIndex++;
+      const donePercent = Math.round(10 + currentReportIndex * reportWeight);
+      await updateProgress(donePercent, isSaved ? `Completed ${reportName}` : `Skipped ${reportName}`);
+      await delay(300);
+    }
+
+    await updateProgress(100, 'Report generation completed');
+    await delay(300);
 
     // Stop foreground service and dismiss the progress notification
     await notifee.stopForegroundService().catch(() => { });
     await notifee.cancelNotification(targetNotificationId).catch(() => { });
 
-    if (totalReports > 0 && generatedCount === 0) {
-      await AsyncStorage.setItem('@app_pending_auto_download', 'true');
+    if (skippedReports.length === 0) {
+      await AsyncStorage.removeItem('@app_pending_auto_download').catch(() => { });
+      await AsyncStorage.removeItem('@app_skipped_auto_download_reports').catch(() => { });
+
+      const successBody = activeTargetReports && activeTargetReports.length > 0
+        ? `${activeTargetReports.join(', ')} generated successfully.`
+        : `${downloadLabel} generated successfully.`;
+
       await notifee.displayNotification({
-        title: "Auto Download Failed",
-        body: "Could not generate reports. Tap to retry.",
+        title: "Auto Download",
+        body: successBody,
         android: {
           channelId: 'daily_accounts',
           showTimestamp: true,
@@ -251,28 +312,48 @@ export const performAutoDownloadTask = async (
           largeIcon: 'ic_launcher',
           circularLargeIcon: true,
           pressAction: { id: 'default' },
-          actions: [
-            {
-              title: 'Retry',
-              pressAction: {
-                id: 'retry_auto_download'
-              }
-            }
-          ]
         }
       });
     } else {
-      await AsyncStorage.removeItem('@app_pending_auto_download').catch(() => { });
+      await AsyncStorage.setItem('@app_pending_auto_download', 'true');
+      await AsyncStorage.setItem('@app_skipped_auto_download_reports', JSON.stringify(skippedReports));
+
+      const skippedListStr = skippedReports.join(', ');
+      const notifBody = generatedCount > 0
+        ? `Generated ${generatedCount}/${totalReportsToRun} reports. Skipped: ${skippedListStr}.`
+        : `Could not generate reports. Skipped: ${skippedListStr}.`;
+
+      const bigText = generatedCount > 0
+        ? `${downloadLabel} completed with ${generatedCount} of ${totalReportsToRun} reports generated successfully.\n\nSkipped: ${skippedListStr}.\nTap Retry to download the skipped report.`
+        : `Failed to generate reports.\n\nSkipped: ${skippedListStr}.\nTap Retry to download the skipped report.`;
+
       await notifee.displayNotification({
         title: "Auto Download",
-        body: `${downloadLabel} generated successfully.`,
+        body: notifBody,
+        data: {
+          label: 'Auto Download (Retry)',
+          skippedReports: JSON.stringify(skippedReports),
+        },
         android: {
           channelId: 'daily_accounts',
           showTimestamp: true,
           smallIcon: 'ic_notification',
           largeIcon: 'ic_launcher',
           circularLargeIcon: true,
-        }
+          pressAction: { id: 'default' },
+          style: {
+            type: AndroidStyle.BIGTEXT,
+            text: bigText,
+          },
+          actions: [
+            {
+              title: 'Retry',
+              pressAction: {
+                id: 'retry_auto_download',
+              },
+            },
+          ],
+        },
       });
     }
 

@@ -47,7 +47,13 @@ export default function App() {
         if (notificationId) {
           await notifee.cancelNotification(notificationId).catch(() => {});
         }
-        await performAutoDownloadTask('Auto Download (Retry)');
+        let targets: string[] | undefined;
+        if (detail.notification?.data?.skippedReports) {
+          try {
+            targets = JSON.parse(detail.notification.data.skippedReports as string);
+          } catch (e) {}
+        }
+        await performAutoDownloadTask('Auto Download (Retry)', undefined, targets);
       }
     });
 
