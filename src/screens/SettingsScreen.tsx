@@ -31,10 +31,11 @@ export default function SettingsScreen({ navigation }: any) {
   const [restoreProgress, setRestoreProgress] = useState<number | null>(null);
   const [isAccentExpanded, setIsAccentExpanded] = useState(false);
   const [isTotalBalanceExpanded, setIsTotalBalanceExpanded] = useState(false);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [isRemindersExpanded, setIsRemindersExpanded] = useState(false);
   const [isAutoBackupExpanded, setIsAutoBackupExpanded] = useState(false);
   const [isAutoDownloadExpanded, setIsAutoDownloadExpanded] = useState(false);
-  const [activePicker, setActivePicker] = useState<'summary' | 'reminder' | 'backup' | 'download' | null>(null);
+  const [activePicker, setActivePicker] = useState<'summary' | 'monthlySummary' | 'reminder' | 'backup' | 'download' | null>(null);
 
   const formatPath = (uri: string | null) => {
     if (!uri) return 'Not Set';
@@ -200,7 +201,7 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
-  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, updateSummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility, isPreciseTimeElapsed, togglePreciseTimeElapsed, flipCardConfig } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, monthlySummaryTime, updateSummaryTime, updateMonthlySummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility, isPreciseTimeElapsed, togglePreciseTimeElapsed, flipCardConfig } = useExpenseContext();
   const { accounts, excludedFromTotal, toggleAccountInTotal, refreshTransactionData, showCardStats, toggleShowCardStats } = useTransactionContext();
 
   const handleNav = (screen: string) => {
@@ -476,18 +477,54 @@ export default function SettingsScreen({ navigation }: any) {
       <View style={[styles.group, { backgroundColor: colors.card }]}>
         <AppText style={[styles.sectionTitle, { color: colors.text }]}>Automation & Notifications</AppText>
 
-        <TouchableOpacity style={styles.row} onPress={() => setActivePicker('summary')}>
+        <TouchableOpacity style={styles.row} onPress={() => setIsSummaryExpanded(!isSummaryExpanded)}>
           <View style={styles.rowLeft}>
             <Ionicons name="notifications-outline" size={22} color={colors.primary} style={styles.icon} />
             <AppText style={[styles.text, { color: colors.text }]}>Summary Notification</AppText>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
-              {summaryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8 }}>
+              2 active
             </AppText>
-            <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            <Ionicons name={isSummaryExpanded ? "chevron-down" : "chevron-forward"} size={20} color={colors.text} />
           </View>
         </TouchableOpacity>
+
+        {isSummaryExpanded && (
+          <View style={{ backgroundColor: isDarkTheme ? '#1e293b' : '#f8fafc', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 12, marginHorizontal: 16, marginBottom: 16 }}>
+            <TouchableOpacity
+              style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 0 }]}
+              onPress={() => setActivePicker('summary')}
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="time-outline" size={20} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
+                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Yesterday's Expense</AppText>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
+                  {summaryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </AppText>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: 0, borderBottomColor: colors.border, marginBottom: 0 }]}
+              onPress={() => setActivePicker('monthlySummary')}
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="calendar-outline" size={20} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
+                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Current Month Expense</AppText>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
+                  {monthlySummaryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </AppText>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.divider} />
 
         <TouchableOpacity style={styles.row} onPress={() => setIsRemindersExpanded(!isRemindersExpanded)}>
@@ -754,7 +791,7 @@ export default function SettingsScreen({ navigation }: any) {
 
       {activePicker && (
         <DateTimePicker
-          value={new Date()}
+          value={activePicker === 'monthlySummary' ? monthlySummaryTime : activePicker === 'summary' ? summaryTime : new Date()}
           mode="time"
           is24Hour={false}
           display="default"
@@ -763,6 +800,7 @@ export default function SettingsScreen({ navigation }: any) {
             setActivePicker(null);
             if (selectedDate && event.type !== 'dismissed') {
               if (currentPicker === 'summary') updateSummaryTime(selectedDate);
+              else if (currentPicker === 'monthlySummary') updateMonthlySummaryTime(selectedDate);
               else if (currentPicker === 'reminder') addReminderTime(selectedDate);
               else if (currentPicker === 'backup') addAutoBackupTime(selectedDate);
               else if (currentPicker === 'download') addAutoDownloadTime(selectedDate);

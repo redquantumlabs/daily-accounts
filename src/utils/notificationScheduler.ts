@@ -8,7 +8,7 @@ const SUMMARY_PREFIX = 'summary_';
 const REMINDER_PREFIX = 'reminder_';
 const MONTHLY_PREFIX = 'monthly_';
 
-export const scheduleAllNotifications = async (expenses: Expense[], currency: string, summaryTime: Date, reminderTimes: Date[]) => {
+export const scheduleAllNotifications = async (expenses: Expense[], currency: string, summaryTime: Date, monthlySummaryTime: Date, reminderTimes: Date[]) => {
   try {
     const existingIds = await notifee.getTriggerNotificationIds();
     const idsToCancel = existingIds.filter(
@@ -171,24 +171,33 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
     // ==========================================
     // 3. SCHEDULE MONTHLY SUMMARY
     // ==========================================
+    const isSameTimeAsDaily = summaryTime.getHours() === monthlySummaryTime.getHours() && summaryTime.getMinutes() === monthlySummaryTime.getMinutes();
+    const monthlyOffsetMs = isSameTimeAsDaily ? 3000 : 0;
+
+    const isMonthlySummaryFuture = (now.getHours() < monthlySummaryTime.getHours() || (now.getHours() === monthlySummaryTime.getHours() && now.getMinutes() < monthlySummaryTime.getMinutes()));
     const isFirstDayOfMonth = now.getDate() === 1;
 
-    // --- A. TODAY'S MONTHLY SUMMARY (If today is 1st of the month and summary time hasn't passed) ---
-    if (isFirstDayOfMonth && isSummaryFuture) {
+    // --- A. TODAY'S MONTHLY SUMMARY ---
+    if (isMonthlySummaryFuture) {
       const todayMonthly = new Date(now);
-      todayMonthly.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
+      todayMonthly.setHours(monthlySummaryTime.getHours(), monthlySummaryTime.getMinutes(), 0, 0);
 
       const triggerTodayMonthly: TimestampTrigger = {
         type: TriggerType.TIMESTAMP,
-        timestamp: Math.max(todayMonthly.getTime() + 3000, Date.now() + 1500),
+        timestamp: Math.max(todayMonthly.getTime() + monthlyOffsetMs, Date.now() + 1500),
         alarmManager: { allowWhileIdle: true }
       };
+
+      const todayMonthlyTitle = isFirstDayOfMonth ? "Monthly Summary \uD83D\uDCCA" : "Current Month's Summary \uD83D\uDCCA";
+      const todayMonthlyBody = isFirstDayOfMonth
+        ? `Your total expense for ${prevMonthName} was ${currency}${prevMonthTotal}.`
+        : `Your total expense for ${currentMonthName} is ${currency}${currentMonthTotal}.`;
 
       promises.push(
         notifee.createTriggerNotification({
           id: `${MONTHLY_PREFIX}0_${RUN_ID}`,
-          title: "Monthly Summary \uD83D\uDCCA",
-          body: `Your total expense for ${prevMonthName} was ${currency}${prevMonthTotal}.`,
+          title: todayMonthlyTitle,
+          body: todayMonthlyBody,
           android: {
             channelId: 'daily_accounts',
             showTimestamp: true,
@@ -201,19 +210,80 @@ export const scheduleAllNotifications = async (expenses: Expense[], currency: st
       );
     }
 
-    // --- B. NEXT MONTH'S SUMMARY (Scheduled for 1st of next month) ---
-    const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    nextMonthDate.setHours(summaryTime.getHours(), summaryTime.getMinutes(), 0, 0);
+    // --- B. TOMORROW'S MONTHLY SUMMARY ---
+    const tomorrowMonthly = new Date(now);
+    tomorrowMonthly.setDate(tomorrowMonthly.getDate() + 1);
+    tomorrowMonthly.setHours(monthlySummaryTime.getHours(), monthlySummaryTime.getMinutes(), 0, 0);
 
-    const triggerNextMonthly: TimestampTrigger = {
+    const isTomorrowFirstDayOfMonth = tomorrowMonthly.getDate() === 1;
+    const tomorrowMonthlyTitle = isTomorrowFirstDayOfMonth ? "Monthly Summary \uD83D\uDCCA" : "Current Month's Summary \uD83D\uDCCA";
+    const tomorrowMonthlyBody = isTomorrowFirstDayOfMonth
+      ? `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`
+      : `Your total expense for ${currentMonthName} is ${currency}${currentMonthTotal}.`;
+
+    const triggerTomorrowMonthly: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
-      timestamp: nextMonthDate.getTime() + 3000,
+      timestamp: tomorrowMonthly.getTime() + monthlyOffsetMs,
       alarmManager: { allowWhileIdle: true }
     };
 
     promises.push(
       notifee.createTriggerNotification({
         id: `${MONTHLY_PREFIX}1_${RUN_ID}`,
+        title: tomorrowMonthlyTitle,
+        body: tomorrowMonthlyBody,
+        android: {
+          channelId: 'daily_accounts',
+          showTimestamp: true,
+          smallIcon: 'ic_notification',
+          largeIcon: 'ic_launcher',
+          circularLargeIcon: true,
+          pressAction: { id: 'default' }
+        }
+      }, triggerTomorrowMonthly).catch(e => console.warn(`Failed to schedule tomorrow monthly summary:`, e))
+    );
+
+    // --- C. REPEATING DAILY MONTHLY SUMMARY (Starting day after tomorrow) ---
+    const dayAfterTomorrowMonthly = new Date(now);
+    dayAfterTomorrowMonthly.setDate(dayAfterTomorrowMonthly.getDate() + 2);
+    dayAfterTomorrowMonthly.setHours(monthlySummaryTime.getHours(), monthlySummaryTime.getMinutes(), 0, 0);
+
+    const repeatingMonthlyTrigger: TimestampTrigger = {
+      type: TriggerType.TIMESTAMP,
+      timestamp: dayAfterTomorrowMonthly.getTime() + monthlyOffsetMs,
+      repeatFrequency: RepeatFrequency.DAILY,
+      alarmManager: { allowWhileIdle: true }
+    };
+
+    promises.push(
+      notifee.createTriggerNotification({
+        id: `${MONTHLY_PREFIX}REPEAT_${RUN_ID}`,
+        title: "Monthly Summary \uD83D\uDCCA",
+        body: `Your monthly expense summary for ${currentMonthName} is ready. Open the app to view it!`,
+        android: {
+          channelId: 'daily_accounts',
+          showTimestamp: true,
+          smallIcon: 'ic_notification',
+          largeIcon: 'ic_launcher',
+          circularLargeIcon: true,
+          pressAction: { id: 'default' }
+        }
+      }, repeatingMonthlyTrigger).catch(e => console.warn(`Failed to schedule repeating monthly summary:`, e))
+    );
+
+    // --- D. 1ST OF NEXT MONTH PREVIOUS MONTH SUMMARY ---
+    const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    nextMonthDate.setHours(monthlySummaryTime.getHours(), monthlySummaryTime.getMinutes(), 0, 0);
+
+    const triggerNextMonthly: TimestampTrigger = {
+      type: TriggerType.TIMESTAMP,
+      timestamp: nextMonthDate.getTime() + monthlyOffsetMs,
+      alarmManager: { allowWhileIdle: true }
+    };
+
+    promises.push(
+      notifee.createTriggerNotification({
+        id: `${MONTHLY_PREFIX}NEXT1_${RUN_ID}`,
         title: "Monthly Summary \uD83D\uDCCA",
         body: `Your total expense for ${currentMonthName} was ${currency}${currentMonthTotal}.`,
         android: {

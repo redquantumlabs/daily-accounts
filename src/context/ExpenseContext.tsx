@@ -111,10 +111,12 @@ interface ExpenseContextType {
   updateBackupPath: (uri: string | null) => Promise<void>;
   migrateUserEmail: (oldEmail: string, newEmail: string) => Promise<void>;
   summaryTime: Date;
+  monthlySummaryTime: Date;
   reminderTimes: Date[];
   autoBackupTimes: Date[];
   autoDownloadTimes: Date[];
   updateSummaryTime: (date: Date) => Promise<void>;
+  updateMonthlySummaryTime: (date: Date) => Promise<void>;
   addReminderTime: (date: Date) => Promise<void>;
   removeReminderTime: (index: number) => Promise<void>;
   addAutoBackupTime: (date: Date) => Promise<void>;
@@ -184,10 +186,12 @@ const ExpenseContext = createContext<ExpenseContextType>({
   updateBackupPath: async () => {},
   migrateUserEmail: async () => {},
   summaryTime: new Date(new Date().setHours(8, 0, 0, 0)),
+  monthlySummaryTime: new Date(new Date().setHours(8, 0, 0, 0)),
   reminderTimes: [new Date(new Date().setHours(18, 0, 0, 0))],
   autoBackupTimes: [new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))],
   autoDownloadTimes: [new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))],
   updateSummaryTime: async () => {},
+  updateMonthlySummaryTime: async () => {},
   addReminderTime: async () => {},
   removeReminderTime: async () => {},
   addAutoBackupTime: async () => {},
@@ -213,6 +217,7 @@ const CHART_STYLE_KEY = '@app_chart_style';
 const DOWNLOAD_PATH_KEY = '@app_download_path';
 const BACKUP_PATH_KEY = '@app_backup_path';
 const SUMMARY_TIME_KEY = '@app_summary_time';
+const MONTHLY_SUMMARY_TIME_KEY = '@app_monthly_summary_time';
 const REMINDER_TIME_KEY = '@app_reminder_time';
 const AUTO_BACKUP_TIMES_KEY = '@app_auto_backup_times';
 const AUTO_DOWNLOAD_TIMES_KEY = '@app_auto_download_times';
@@ -240,6 +245,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [monthlyIncomes, setMonthlyIncomes] = useState<Record<string, { gross: number; deduction: number }>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [summaryTime, setSummaryTime] = useState<Date>(new Date(new Date().setHours(8, 0, 0, 0)));
+  const [monthlySummaryTime, setMonthlySummaryTime] = useState<Date>(new Date(new Date().setHours(8, 0, 0, 0)));
   const [reminderTimes, setReminderTimes] = useState<Date[]>([new Date(new Date().setHours(18, 0, 0, 0))]);
   const [autoBackupTimes, setAutoBackupTimes] = useState<Date[]>([new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))]);
   const [autoDownloadTimes, setAutoDownloadTimes] = useState<Date[]>([new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))]);
@@ -262,6 +268,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const monthlyIncomesStorageKey = '@app_monthly_incomes';
   
   const summaryTimeStorageKey = SUMMARY_TIME_KEY;
+  const monthlySummaryTimeStorageKey = MONTHLY_SUMMARY_TIME_KEY;
   const reminderTimeStorageKey = REMINDER_TIME_KEY;
   const autoBackupTimesStorageKey = AUTO_BACKUP_TIMES_KEY;
   const autoDownloadTimesStorageKey = AUTO_DOWNLOAD_TIMES_KEY;
@@ -271,7 +278,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const keys = [storageKey, scheduledExpensesStorageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, flipCardConfigStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
+      const keys = [storageKey, scheduledExpensesStorageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, monthlySummaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, flipCardConfigStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
       const data = await AsyncStorage.getMany(keys);
       const storedExpenses = data[storageKey];
       let initialExpenses: Expense[] = [];
@@ -476,6 +483,10 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (storedSummaryTime) setSummaryTime(new Date(storedSummaryTime));
       else setSummaryTime(new Date(new Date().setHours(8, 0, 0, 0)));
 
+      const storedMonthlySummaryTime = data[monthlySummaryTimeStorageKey];
+      if (storedMonthlySummaryTime) setMonthlySummaryTime(new Date(storedMonthlySummaryTime));
+      else setMonthlySummaryTime(new Date(new Date().setHours(8, 0, 0, 0)));
+
       const storedReminderTime = data[reminderTimeStorageKey];
       if (storedReminderTime) {
         try {
@@ -539,7 +550,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     loadData();
-  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, amountsVisibleStorageKey, preciseTimeElapsedStorageKey]);
+  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, monthlySummaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, amountsVisibleStorageKey, preciseTimeElapsedStorageKey]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -547,7 +558,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let timeoutId: any;
     const task = InteractionManager.runAfterInteractions(() => {
       timeoutId = setTimeout(() => {
-        scheduleAllNotifications(expenses, currency, summaryTime, reminderTimes);
+        scheduleAllNotifications(expenses, currency, summaryTime, monthlySummaryTime, reminderTimes);
         
         const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
         const { scheduleAutoDownloadTriggers } = require('../utils/autoDownloadScheduler');
@@ -561,7 +572,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       task.cancel();
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [expenses, currency, isLoading, summaryTime, reminderTimes]);
+  }, [expenses, currency, isLoading, summaryTime, monthlySummaryTime, reminderTimes]);
 
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
     const newExpense: Expense = {
@@ -1040,6 +1051,11 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(summaryTimeStorageKey, date.toISOString());
   };
 
+  const updateMonthlySummaryTime = async (date: Date) => {
+    setMonthlySummaryTime(date);
+    await AsyncStorage.setItem(monthlySummaryTimeStorageKey, date.toISOString());
+  };
+
   const addReminderTime = async (date: Date) => {
     const newTimes = [...reminderTimes, date];
     newTimes.sort((a, b) => {
@@ -1160,8 +1176,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       downloadPathUri, updateDownloadPath,
       backupPathUri, updateBackupPath,
       migrateUserEmail,
-      summaryTime, reminderTimes, autoBackupTimes, autoDownloadTimes,
-      updateSummaryTime, addReminderTime, removeReminderTime, addAutoBackupTime, removeAutoBackupTime, addAutoDownloadTime, removeAutoDownloadTime
+      summaryTime, monthlySummaryTime, reminderTimes, autoBackupTimes, autoDownloadTimes,
+      updateSummaryTime, updateMonthlySummaryTime, addReminderTime, removeReminderTime, addAutoBackupTime, removeAutoBackupTime, addAutoDownloadTime, removeAutoDownloadTime
     }}>
       {children}
     </ExpenseContext.Provider>
