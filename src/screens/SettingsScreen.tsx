@@ -7,6 +7,8 @@ import { useAuthContext } from '../context/AuthContext';
 import ImportSheetModal from '../components/ImportSheetModal';
 import ImportTransactionalSheetModal from '../components/ImportTransactionalSheetModal';
 import ImportScheduledExpensesModal from '../components/ImportScheduledExpensesModal';
+import PreviousMonthSummaryModal from '../components/PreviousMonthSummaryModal';
+import { getOrdinalSuffix } from '../utils/format';
 import { useExpenseContext } from '../context/ExpenseContext';
 import { useTransactionContext } from '../context/TransactionContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -32,6 +34,7 @@ export default function SettingsScreen({ navigation }: any) {
   const [isAccentExpanded, setIsAccentExpanded] = useState(false);
   const [isTotalBalanceExpanded, setIsTotalBalanceExpanded] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const [isPrevMonthModalVisible, setIsPrevMonthModalVisible] = useState(false);
   const [isRemindersExpanded, setIsRemindersExpanded] = useState(false);
   const [isAutoBackupExpanded, setIsAutoBackupExpanded] = useState(false);
   const [isAutoDownloadExpanded, setIsAutoDownloadExpanded] = useState(false);
@@ -201,7 +204,7 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
-  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, monthlySummaryTime, updateSummaryTime, updateMonthlySummaryTime, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility, isPreciseTimeElapsed, togglePreciseTimeElapsed, flipCardConfig } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType, summaryTime, monthlySummaryTime, prevMonthSummaryDay, prevMonthSummaryTime, updateSummaryTime, updateMonthlySummaryTime, updatePrevMonthSummary, reminderTimes, addReminderTime, removeReminderTime, autoBackupTimes, addAutoBackupTime, removeAutoBackupTime, autoDownloadTimes, addAutoDownloadTime, removeAutoDownloadTime, isAmountsVisible, toggleAmountsVisibility, isPreciseTimeElapsed, togglePreciseTimeElapsed, flipCardConfig } = useExpenseContext();
   const { accounts, excludedFromTotal, toggleAccountInTotal, refreshTransactionData, showCardStats, toggleShowCardStats } = useTransactionContext();
 
   const handleNav = (screen: string) => {
@@ -484,7 +487,7 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8 }}>
-              2 active
+              3 active
             </AppText>
             <Ionicons name={isSummaryExpanded ? "chevron-down" : "chevron-forward"} size={20} color={colors.text} />
           </View>
@@ -509,7 +512,7 @@ export default function SettingsScreen({ navigation }: any) {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: 0, borderBottomColor: colors.border, marginBottom: 0 }]}
+              style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 0 }]}
               onPress={() => setActivePicker('monthlySummary')}
             >
               <View style={styles.rowLeft}>
@@ -519,6 +522,22 @@ export default function SettingsScreen({ navigation }: any) {
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
                   {monthlySummaryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </AppText>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: 0, borderBottomColor: colors.border, marginBottom: 0 }]}
+              onPress={() => setIsPrevMonthModalVisible(true)}
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="calendar-number-outline" size={20} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
+                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Previous Month Expense</AppText>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
+                  {getOrdinalSuffix(prevMonthSummaryDay)}, {prevMonthSummaryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </AppText>
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </View>
@@ -776,6 +795,14 @@ export default function SettingsScreen({ navigation }: any) {
       <ImportScheduledExpensesModal
         visible={isImportScheduledModalVisible}
         onClose={() => setIsImportScheduledModalVisible(false)}
+      />
+
+      <PreviousMonthSummaryModal
+        visible={isPrevMonthModalVisible}
+        onClose={() => setIsPrevMonthModalVisible(false)}
+        day={prevMonthSummaryDay}
+        time={prevMonthSummaryTime}
+        onSave={(day, time) => updatePrevMonthSummary(day, time)}
       />
 
       <Modal visible={isProcessing} transparent animationType="fade">

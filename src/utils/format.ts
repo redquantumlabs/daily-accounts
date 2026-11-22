@@ -10,3 +10,18 @@ export const roundAmount = (amount: number): number => {
   if (isNaN(amount) || amount === null) return 0;
   return Math.sign(amount) * Math.round((Math.abs(amount) + 1e-9) * 100) / 100;
 };
+
+export const getOrdinalSuffix = (day: number): string => {
+  const j = day % 10;
+  const k = day % 100;
+  if (j === 1 && k !== 11) {
+    return `${day}st`;
+  }
+  if (j === 2 && k !== 12) {
+    return `${day}nd`;
+  }
+  if (j === 3 && k !== 13) {
+    return `${day}rd`;
+  }
+  return `${day}th`;
+};

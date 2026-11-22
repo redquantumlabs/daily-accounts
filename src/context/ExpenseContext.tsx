@@ -112,11 +112,16 @@ interface ExpenseContextType {
   migrateUserEmail: (oldEmail: string, newEmail: string) => Promise<void>;
   summaryTime: Date;
   monthlySummaryTime: Date;
+  prevMonthSummaryDay: number;
+  prevMonthSummaryTime: Date;
   reminderTimes: Date[];
   autoBackupTimes: Date[];
   autoDownloadTimes: Date[];
   updateSummaryTime: (date: Date) => Promise<void>;
   updateMonthlySummaryTime: (date: Date) => Promise<void>;
+  updatePrevMonthSummaryDay: (day: number) => Promise<void>;
+  updatePrevMonthSummaryTime: (date: Date) => Promise<void>;
+  updatePrevMonthSummary: (day: number, date: Date) => Promise<void>;
   addReminderTime: (date: Date) => Promise<void>;
   removeReminderTime: (index: number) => Promise<void>;
   addAutoBackupTime: (date: Date) => Promise<void>;
@@ -187,11 +192,16 @@ const ExpenseContext = createContext<ExpenseContextType>({
   migrateUserEmail: async () => {},
   summaryTime: new Date(new Date().setHours(8, 0, 0, 0)),
   monthlySummaryTime: new Date(new Date().setHours(8, 0, 0, 0)),
+  prevMonthSummaryDay: 1,
+  prevMonthSummaryTime: new Date(new Date().setHours(8, 0, 0, 0)),
   reminderTimes: [new Date(new Date().setHours(18, 0, 0, 0))],
   autoBackupTimes: [new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))],
   autoDownloadTimes: [new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))],
   updateSummaryTime: async () => {},
   updateMonthlySummaryTime: async () => {},
+  updatePrevMonthSummaryDay: async () => {},
+  updatePrevMonthSummaryTime: async () => {},
+  updatePrevMonthSummary: async () => {},
   addReminderTime: async () => {},
   removeReminderTime: async () => {},
   addAutoBackupTime: async () => {},
@@ -218,6 +228,8 @@ const DOWNLOAD_PATH_KEY = '@app_download_path';
 const BACKUP_PATH_KEY = '@app_backup_path';
 const SUMMARY_TIME_KEY = '@app_summary_time';
 const MONTHLY_SUMMARY_TIME_KEY = '@app_monthly_summary_time';
+const PREV_MONTH_SUMMARY_DAY_KEY = '@app_prev_month_summary_day';
+const PREV_MONTH_SUMMARY_TIME_KEY = '@app_prev_month_summary_time';
 const REMINDER_TIME_KEY = '@app_reminder_time';
 const AUTO_BACKUP_TIMES_KEY = '@app_auto_backup_times';
 const AUTO_DOWNLOAD_TIMES_KEY = '@app_auto_download_times';
@@ -246,6 +258,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState(true);
   const [summaryTime, setSummaryTime] = useState<Date>(new Date(new Date().setHours(8, 0, 0, 0)));
   const [monthlySummaryTime, setMonthlySummaryTime] = useState<Date>(new Date(new Date().setHours(8, 0, 0, 0)));
+  const [prevMonthSummaryDay, setPrevMonthSummaryDay] = useState<number>(1);
+  const [prevMonthSummaryTime, setPrevMonthSummaryTime] = useState<Date>(new Date(new Date().setHours(8, 0, 0, 0)));
   const [reminderTimes, setReminderTimes] = useState<Date[]>([new Date(new Date().setHours(18, 0, 0, 0))]);
   const [autoBackupTimes, setAutoBackupTimes] = useState<Date[]>([new Date(new Date().setHours(9, 0, 0, 0)), new Date(new Date().setHours(21, 0, 0, 0))]);
   const [autoDownloadTimes, setAutoDownloadTimes] = useState<Date[]>([new Date(new Date().setHours(10, 0, 0, 0)), new Date(new Date().setHours(22, 0, 0, 0))]);
@@ -269,6 +283,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
   const summaryTimeStorageKey = SUMMARY_TIME_KEY;
   const monthlySummaryTimeStorageKey = MONTHLY_SUMMARY_TIME_KEY;
+  const prevMonthSummaryDayStorageKey = PREV_MONTH_SUMMARY_DAY_KEY;
+  const prevMonthSummaryTimeStorageKey = PREV_MONTH_SUMMARY_TIME_KEY;
   const reminderTimeStorageKey = REMINDER_TIME_KEY;
   const autoBackupTimesStorageKey = AUTO_BACKUP_TIMES_KEY;
   const autoDownloadTimesStorageKey = AUTO_DOWNLOAD_TIMES_KEY;
@@ -278,7 +294,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const keys = [storageKey, scheduledExpensesStorageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, monthlySummaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, flipCardConfigStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
+      const keys = [storageKey, scheduledExpensesStorageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, amountsVisibleStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, monthlyIncomesStorageKey, summaryTimeStorageKey, monthlySummaryTimeStorageKey, prevMonthSummaryDayStorageKey, prevMonthSummaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, preciseTimeElapsedStorageKey, flipCardConfigStorageKey, '@app_auto_backup_time_morning', '@app_auto_backup_time_evening'];
       const data = await AsyncStorage.getMany(keys);
       const storedExpenses = data[storageKey];
       let initialExpenses: Expense[] = [];
@@ -487,6 +503,22 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (storedMonthlySummaryTime) setMonthlySummaryTime(new Date(storedMonthlySummaryTime));
       else setMonthlySummaryTime(new Date(new Date().setHours(8, 0, 0, 0)));
 
+      const storedPrevMonthSummaryDay = data[prevMonthSummaryDayStorageKey];
+      if (storedPrevMonthSummaryDay) {
+        const parsedDay = parseInt(storedPrevMonthSummaryDay, 10);
+        if (!isNaN(parsedDay) && parsedDay >= 1 && parsedDay <= 31) {
+          setPrevMonthSummaryDay(parsedDay);
+        } else {
+          setPrevMonthSummaryDay(1);
+        }
+      } else {
+        setPrevMonthSummaryDay(1);
+      }
+
+      const storedPrevMonthSummaryTime = data[prevMonthSummaryTimeStorageKey];
+      if (storedPrevMonthSummaryTime) setPrevMonthSummaryTime(new Date(storedPrevMonthSummaryTime));
+      else setPrevMonthSummaryTime(new Date(new Date().setHours(8, 0, 0, 0)));
+
       const storedReminderTime = data[reminderTimeStorageKey];
       if (storedReminderTime) {
         try {
@@ -550,7 +582,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     loadData();
-  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, monthlySummaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, amountsVisibleStorageKey, preciseTimeElapsedStorageKey]);
+  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, chartStyleStorageKey, downloadPathStorageKey, backupPathStorageKey, summaryTimeStorageKey, monthlySummaryTimeStorageKey, prevMonthSummaryDayStorageKey, prevMonthSummaryTimeStorageKey, reminderTimeStorageKey, autoBackupTimesStorageKey, autoDownloadTimesStorageKey, amountsVisibleStorageKey, preciseTimeElapsedStorageKey]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -558,7 +590,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let timeoutId: any;
     const task = InteractionManager.runAfterInteractions(() => {
       timeoutId = setTimeout(() => {
-        scheduleAllNotifications(expenses, currency, summaryTime, monthlySummaryTime, reminderTimes);
+        scheduleAllNotifications(expenses, currency, summaryTime, monthlySummaryTime, prevMonthSummaryDay, prevMonthSummaryTime, reminderTimes);
         
         const { scheduleAutoBackupTriggers } = require('../utils/autoBackupScheduler');
         const { scheduleAutoDownloadTriggers } = require('../utils/autoDownloadScheduler');
@@ -572,7 +604,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       task.cancel();
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [expenses, currency, isLoading, summaryTime, monthlySummaryTime, reminderTimes]);
+  }, [expenses, currency, isLoading, summaryTime, monthlySummaryTime, prevMonthSummaryDay, prevMonthSummaryTime, reminderTimes]);
 
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
     const newExpense: Expense = {
@@ -1056,6 +1088,39 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(monthlySummaryTimeStorageKey, date.toISOString());
   };
 
+  const updatePrevMonthSummaryDay = async (day: number) => {
+    try {
+      const clamped = Math.max(1, Math.min(31, Math.round(day)));
+      setPrevMonthSummaryDay(clamped);
+      await AsyncStorage.setItem(prevMonthSummaryDayStorageKey, clamped.toString());
+    } catch (e) {
+      console.error('Failed to save prev month summary day', e);
+    }
+  };
+
+  const updatePrevMonthSummaryTime = async (date: Date) => {
+    try {
+      setPrevMonthSummaryTime(date);
+      await AsyncStorage.setItem(prevMonthSummaryTimeStorageKey, date.toISOString());
+    } catch (e) {
+      console.error('Failed to save prev month summary time', e);
+    }
+  };
+
+  const updatePrevMonthSummary = async (day: number, date: Date) => {
+    try {
+      const clamped = Math.max(1, Math.min(31, Math.round(day)));
+      setPrevMonthSummaryDay(clamped);
+      setPrevMonthSummaryTime(date);
+      await Promise.all([
+        AsyncStorage.setItem(prevMonthSummaryDayStorageKey, clamped.toString()),
+        AsyncStorage.setItem(prevMonthSummaryTimeStorageKey, date.toISOString()),
+      ]);
+    } catch (e) {
+      console.error('Failed to save prev month summary', e);
+    }
+  };
+
   const addReminderTime = async (date: Date) => {
     const newTimes = [...reminderTimes, date];
     newTimes.sort((a, b) => {
@@ -1142,7 +1207,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       EXPENSES_KEY, SCHEDULED_EXPENSES_KEY, CATEGORIES_KEY, PAYMENT_MODES_KEY, CURRENCY_KEY,
       BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY, SHOW_YEAR_CARD_KEY,
       ANALYTICS_CHART_TYPE_KEY, CHART_STYLE_KEY, DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY,
-      SUMMARY_TIME_KEY, REMINDER_TIME_KEY, AUTO_BACKUP_TIMES_KEY, AUTO_DOWNLOAD_TIMES_KEY,
+      SUMMARY_TIME_KEY, MONTHLY_SUMMARY_TIME_KEY, PREV_MONTH_SUMMARY_DAY_KEY, PREV_MONTH_SUMMARY_TIME_KEY,
+      REMINDER_TIME_KEY, AUTO_BACKUP_TIMES_KEY, AUTO_DOWNLOAD_TIMES_KEY,
       AMOUNTS_VISIBLE_KEY, PRECISE_TIME_ELAPSED_KEY, FLIP_CARD_CONFIG_KEY
     ];
 
@@ -1176,8 +1242,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       downloadPathUri, updateDownloadPath,
       backupPathUri, updateBackupPath,
       migrateUserEmail,
-      summaryTime, monthlySummaryTime, reminderTimes, autoBackupTimes, autoDownloadTimes,
-      updateSummaryTime, updateMonthlySummaryTime, addReminderTime, removeReminderTime, addAutoBackupTime, removeAutoBackupTime, addAutoDownloadTime, removeAutoDownloadTime
+      summaryTime, monthlySummaryTime, prevMonthSummaryDay, prevMonthSummaryTime, reminderTimes, autoBackupTimes, autoDownloadTimes,
+      updateSummaryTime, updateMonthlySummaryTime, updatePrevMonthSummaryDay, updatePrevMonthSummaryTime, updatePrevMonthSummary, addReminderTime, removeReminderTime, addAutoBackupTime, removeAutoBackupTime, addAutoDownloadTime, removeAutoDownloadTime
     }}>
       {children}
     </ExpenseContext.Provider>
