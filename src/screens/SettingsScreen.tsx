@@ -494,20 +494,20 @@ export default function SettingsScreen({ navigation }: any) {
         </TouchableOpacity>
 
         {isSummaryExpanded && (
-          <View style={{ backgroundColor: isDarkTheme ? '#1e293b' : '#f8fafc', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 12, marginHorizontal: 16, marginBottom: 16 }}>
+          <View style={{ backgroundColor: isDarkTheme ? '#1e293b' : '#f8fafc', paddingVertical: 4, paddingHorizontal: 14, borderRadius: 12, marginHorizontal: 12, marginBottom: 16 }}>
             <TouchableOpacity
               style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 0 }]}
               onPress={() => setActivePicker('summary')}
             >
-              <View style={styles.rowLeft}>
-                <Ionicons name="time-outline" size={20} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
-                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Yesterday's Expense</AppText>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
+                <Ionicons name="time-outline" size={20} color={colors.primary} style={{ marginRight: 10 }} />
+                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]} numberOfLines={1}>Yesterday</AppText>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
+                <AppText style={{ color: colors.primary, fontSize: 14, fontWeight: '600', marginRight: 6 }}>
                   {summaryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </AppText>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </View>
             </TouchableOpacity>
 
@@ -515,15 +515,15 @@ export default function SettingsScreen({ navigation }: any) {
               style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 0 }]}
               onPress={() => setActivePicker('monthlySummary')}
             >
-              <View style={styles.rowLeft}>
-                <Ionicons name="calendar-outline" size={20} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
-                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Current Month Expense</AppText>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
+                <Ionicons name="calendar-outline" size={20} color={colors.primary} style={{ marginRight: 10 }} />
+                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]} numberOfLines={1}>Current Month</AppText>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
+                <AppText style={{ color: colors.primary, fontSize: 14, fontWeight: '600', marginRight: 6 }}>
                   {monthlySummaryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </AppText>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </View>
             </TouchableOpacity>
 
@@ -531,15 +531,15 @@ export default function SettingsScreen({ navigation }: any) {
               style={[styles.row, { paddingHorizontal: 0, paddingVertical: 12, borderBottomWidth: 0, borderBottomColor: colors.border, marginBottom: 0 }]}
               onPress={() => setIsPrevMonthModalVisible(true)}
             >
-              <View style={styles.rowLeft}>
-                <Ionicons name="calendar-number-outline" size={20} color={colors.primary} style={[styles.icon, { marginLeft: 0 }]} />
-                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]}>Previous Month Expense</AppText>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
+                <Ionicons name="calendar-number-outline" size={20} color={colors.primary} style={{ marginRight: 10 }} />
+                <AppText style={[styles.text, { color: colors.text, fontSize: 15 }]} numberOfLines={1}>Previous Month</AppText>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
+                <AppText style={{ color: colors.primary, fontSize: 14, fontWeight: '600', marginRight: 6 }}>
                   {getOrdinalSuffix(prevMonthSummaryDay)}, {prevMonthSummaryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </AppText>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </View>
             </TouchableOpacity>
           </View>
