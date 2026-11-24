@@ -89,13 +89,13 @@ export default function PreviousMonthSummaryModal({
                 </AppText>
 
                 {/* Day of Month Selector */}
-                <View style={styles.section}>
+                <View style={[styles.section, styles.daySection]}>
                   <View style={styles.sectionHeaderRow}>
                     <AppText style={[styles.sectionTitle, { color: colors.text }]}>
                       Day of the Month
                     </AppText>
                     <View style={[styles.dayBadge, { backgroundColor: colors.primary + '20' }]}>
-                      <AppText style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>
+                      <AppText style={{ color: colors.primary, fontWeight: '800', fontSize: 12 }}>
                         {getOrdinalSuffix(selectedDay)} of every month
                       </AppText>
                     </View>
@@ -113,20 +113,20 @@ export default function PreviousMonthSummaryModal({
                               backgroundColor: isSelected
                                 ? colors.primary
                                 : isDarkTheme
-                                ? '#1e293b'
-                                : '#f1f5f9',
+                                  ? '#1e293b'
+                                  : '#f1f5f9',
                               borderColor: isSelected ? colors.primary : colors.border,
                             },
                           ]}
                           onPress={() => setSelectedDay(d)}
-                          activeOpacity={0.7}
+                          activeOpacity={0.8}
                         >
                           <AppText
                             style={[
                               styles.dayText,
                               {
                                 color: isSelected ? '#ffffff' : colors.text,
-                                fontWeight: isSelected ? '700' : '500',
+                                fontWeight: isSelected ? '800' : '500',
                               },
                             ]}
                           >
@@ -159,13 +159,13 @@ export default function PreviousMonthSummaryModal({
                       },
                     ]}
                     onPress={() => setShowTimePicker(true)}
-                    activeOpacity={0.7}
+                    activeOpacity={0.8}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Ionicons name="time-outline" size={22} color={colors.primary} style={{ marginRight: 10 }} />
                       <View>
                         <AppText style={{ fontSize: 12, color: colors.textMuted }}>Delivery Time</AppText>
-                        <AppText style={{ fontSize: 16, fontWeight: '700', color: colors.primary }}>
+                        <AppText style={{ fontSize: 16, fontWeight: '800', color: colors.primary }}>
                           {formattedTime}
                         </AppText>
                       </View>
@@ -192,11 +192,11 @@ export default function PreviousMonthSummaryModal({
                   <Ionicons name="information-circle" size={22} color={colors.primary} style={{ marginRight: 10, marginTop: 1 }} />
                   <AppText style={[styles.previewText, { color: colors.text }]}>
                     Notification triggers on the{' '}
-                    <AppText style={{ fontWeight: '700', color: colors.primary }}>
+                    <AppText style={{ fontWeight: '800', color: colors.primary }}>
                       {getOrdinalSuffix(selectedDay)}
                     </AppText>{' '}
                     of each month at{' '}
-                    <AppText style={{ fontWeight: '700', color: colors.primary }}>
+                    <AppText style={{ fontWeight: '800', color: colors.primary }}>
                       {formattedTime}
                     </AppText>{' '}
                     with the total expenses of the previous month.
@@ -261,21 +261,24 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   description: {
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 18,
+    marginBottom: 10,
   },
   section: {
-    marginBottom: 18,
+    marginBottom: 10,
+  },
+  daySection: {
+    marginBottom: 0,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 15,
@@ -290,17 +293,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
-    marginTop: 4,
+    alignContent: 'flex-start',
   },
   dayCell: {
     width: '12%',
-    marginHorizontal: '1.14%',
+    marginHorizontal: '1%',
     aspectRatio: 1,
     borderRadius: 20,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 4,
+    marginVertical: 3,
   },
   dayText: {
     fontSize: 14,
@@ -308,8 +311,8 @@ const styles = StyleSheet.create({
   hintText: {
     fontSize: 12,
     fontStyle: 'italic',
-    marginTop: 6,
-    lineHeight: 16,
+    lineHeight: 12,
+    marginBottom: 8,
   },
   timeButton: {
     flexDirection: 'row',
@@ -325,7 +328,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: 12,
     alignItems: 'flex-start',
   },
   previewText: {
@@ -342,6 +345,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });
